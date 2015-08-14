@@ -5,6 +5,7 @@ This guide will show you how to get up and running with the Shout to Me Android 
 ### Prerequisites
 - A Shout to Me client access token
 - [Android Studio](http://developer.android.com/tools/studio/index.html) and all its dependencies. This quickstart guide was developed using Android Studio version 1.3
+
 ### Create an Android application
 Run through the Android Studio’s Create New Project wizard.  The minimum Android SDK required is **API 11: Android 3.0 (Honeycomb)**.  For the rest of the options, you can leave them set to their defaults.
 ![Create new project step 1](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-1.png)
