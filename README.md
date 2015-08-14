@@ -8,6 +8,7 @@ This guide will show you how to get up and running with the Shout to Me Android 
 
 ### Create an Android application
 Run through the Android Studio’s Create New Project wizard.  The minimum Android SDK required is **API 11: Android 3.0 (Honeycomb)**.  For the rest of the options, you can leave them set to their defaults.
+
 ![Create new project step 1](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-1.png)
 ![Create new project step 2](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-2.png)
 ![Create new project step 3](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-3.png)
