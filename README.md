@@ -29,6 +29,8 @@ Add the following highlighted lines to the build.gradle under your app module di
        compile fileTree(dir: 'libs', include: ['*.jar'])
        compile 'com.android.support:appcompat-v7:22.2.1'
        compile(name:'stm-sdk', ext:'aar')
+       compile 'com.mcxiaoke.volley:library:1.0.18'
+       compile 'com.google.android.gms:play-services-location:7.8.0'
     }
     
 Then click:  `Tools -> Android -> Sync Project with Gradle Files`
