@@ -14,10 +14,10 @@ Run through the Android Studio’s Create New Project wizard.  The minimum Andro
 ![Create new project step 3](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-3.png)
 ![Create new project step 4](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-4.png)
 ### Add the Shout to Me Android SDK
-Add the stm-sdk.aar file into the new app by dragging it into the libs directory.
+Copy the shout-to-me-sdk-release.aar file into the app/libs directory of the project.
 ![Add stm-sdk.aar to libs](https://s3-us-west-2.amazonaws.com/sdk-public-images/stm-aar-libs.png)
 
-Add the following highlighted lines to the build.gradle under your app module directory (or whatever name you used when setting up the project.)
+Add the following highlighted lines to the build.gradle under your app module directory (or whatever name you used when setting up the project.)  Note the dependencies to [Volley](https://developer.android.com/training/volley/index.html) and [Google Play Services](https://developers.google.com/android/guides/overview).
 
     repositories{
        flatDir{
@@ -60,13 +60,13 @@ import android.widget.EditText;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 
-import me.shoutto.sdk.android.Callback;
-import me.shoutto.sdk.android.StmResponse;
-import me.shoutto.sdk.android.StmError;
-import me.shoutto.sdk.android.StmRecorderActivity;
-import me.shoutto.sdk.android.StmService;
-import me.shoutto.sdk.android.StmShout;
-import me.shoutto.sdk.android.StmUser;
+import me.shoutto.sdk.Callback;
+import me.shoutto.sdk.StmResponse;
+import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.StmRecorderActivity;
+import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.StmShout;
+import me.shoutto.sdk.StmUser;
 
 public class MainActivity extends Activity {
 
@@ -378,6 +378,74 @@ Unbinding
 ```java    
 unbindService(stmServiceConnection);
 ```
+
+#### Getting the user's authentication token
+In order to send direct requests to the Shout to Me REST API, you will need the user's authentication token.
+To get the auth token, call the following method on StmService.  The first time this method is called,
+it blocks until the auth token is retrieved.  Therefore, either call this method on a background thread,
+or be prepared to handle an error in the event that the auth token has not yet been retrieved.
+
+Once retrieved from the server, the auth token is stored in the device shared preferences to save time on
+future retrievals and across app sessions.
+
+```java
+stmService.getUserAuthToken();
+```
+
+#### Hand wave gesture initiated Shout recording
+The Shout to Me SDK includes a usability feature design to help make the app driver safe.  When
+enabled, a driver need only wave their hand in front of the phone to launch the
+[StmRecorderActivity](#stm-recorder-activity).
+
+The hand wave gesture functionality utilizes the phone's proximity sensor.  Therefore, if a phone
+does not have a proximity sensor, or the user has revoked proximity sensor permission, the
+functionality will not work.
+
+To enable the hand wave gesture functionality, simply register a listener to the following StmService method:
+
+```java
+public class MainActivity extends Activity implements HandWaveGestureListener {
+
+    private ServiceConnection stmServiceConnection = new ServiceConnection() {
+
+        @Override
+        public void onServiceConnected(ComponentName className,
+                                       IBinder service) {
+            StmService.StmBinder binder = (StmService.StmBinder) service;
+            stmService = binder.getService();
+            isStmServiceBound = true;
+
+            regsiterHandWaveGestureListener();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName arg0) {
+            isStmServiceBound = false;
+        }
+    };
+
+    @Override
+    public void onHandWaveGesture() {
+        launchRecordingOverlay(null);
+    }
+
+    private void regsiterHandWaveGestureListener() {
+        stmService.registerHandGestureListener(this);
+    }
+}
+```
+
+Once enabled, the Shout to Me SDK continues to listen for events from the proximity sensor.
+Un-registering the listener will turn off the proximity event listening, thereby conserving device
+resources.
+
+```java
+stmService.unregisterHandGestureListener(this);
+```
+
+Note that you can specify more than one hand wave gesture listener if you want to take advantage
+of the functionality, however, be sure to un-register them all to effectively turn off the
+proximity sensor event listening.
 
 ### <a name="callback"></a>Callback
 The Android system [does not allow asynchronous calls to be made on the main (UI) thread](http://developer.android.com/guide/components/processes-and-threads.html). The Callback class is used to provide methods you would like to have executed following the asynchronous calls to the Shout to Me service.  Callback is an abstract class with two methods that can be overridden.  
