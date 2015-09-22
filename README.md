@@ -317,8 +317,8 @@ public class MainActivity extends Activity {
 
 After the code has been modified, click `Run -> Run 'app'` to build and start the app.  You should see the initial Activity with the Start Recording button enabled.  When you press that button, it will launch the Shout to Me recording overlay as seen in the following images and immediately begin recording. Pressing the Done button on the overlay will transmit the recorded audio to the Shout to Me service for processing.
 
-![Sample app 1](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-1.png)
-![Sample app 2](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-2.png)
+![Sample app](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-3.png)
+![Shout to me overlay](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-4.png)
 
 ## SDK Documentation
 
