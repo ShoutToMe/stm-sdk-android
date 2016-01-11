@@ -38,6 +38,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private boolean isAlreadyLaunchedRecorder = false;
+    private AudioManager audioManager;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -83,6 +84,18 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         }
     }
 
+    private AudioManager.OnAudioFocusChangeListener audioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {
+        @Override
+        public void onAudioFocusChange(int focusChange) {
+            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT || focusChange == AudioManager.AUDIOFOCUS_LOSS) {
+                cancelRecording(null);
+                if (audioManager != null) {
+                    audioManager.abandonAudioFocus(audioFocusChangeListener);
+                }
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -91,6 +104,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
         Handler recorderHandler = new RecordingHandler(this);
         stmAudioRecorder = new StmAudioRecorder(recorderHandler);
+
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 
         // Prepare objects for playing sounds
         soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
@@ -142,6 +157,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             isAlreadyLaunchedRecorder = true;
         }
 
+        // Try to get exclusive audio focus
+        int audioFocusRequestResult = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
+        if (audioFocusRequestResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.w(TAG, "Unable to get audio focus");
+        }
+
         playStartListeningSound();
 
         scheduler.schedule(new Runnable() {
@@ -179,6 +200,11 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                 } catch (ExecutionException ex) {
                     Log.e(TAG, "An error occurred during the recording or sending of a new shout", ex);
                 } finally {
+                    // Release the audio focus
+                    if (audioManager != null) {
+                        audioManager.abandonAudioFocus(audioFocusChangeListener);
+                    }
+
                     // Close the overlay
                     Intent intent = new Intent();
                     intent.putExtra("result", "success");
