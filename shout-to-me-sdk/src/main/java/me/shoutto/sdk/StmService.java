@@ -22,7 +22,6 @@ public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
     private static final String TAG = "StmService";
-    public static String STM_BASE_API_URL = "https://app.shoutto.me/api/v1";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private String deviceId;
@@ -37,6 +36,7 @@ public class StmService extends Service {
     private List<HandWaveGestureListener> handWaveGestureListenerList = new ArrayList<>();
     private SharedPreferences settings;
     private HandWaveGestureListener overlay;
+    private String serverUrl = "https://app.shoutto.me/api/v1";
 
     public StmService() {}
 
@@ -52,7 +52,7 @@ public class StmService extends Service {
 
         accessToken = intent.getStringExtra("stmClientToken");
         if (intent.getStringExtra("baseUrl") != null) {
-            STM_BASE_API_URL = intent.getStringExtra("baseUrl");
+            serverUrl = intent.getStringExtra("baseUrl");
         }
 
         if (accessToken != null) {
@@ -108,6 +108,13 @@ public class StmService extends Service {
         }
     }
 
+    public void reloadUser(final StmCallback<StmUser> callback) {
+        synchronized (this) {
+            user.setIsInitialized(false);
+            getUser(callback);
+        }
+    }
+
     void handleHandWaveGesture() {
         if (overlay != null) {
             overlay.onHandWaveGesture();
@@ -155,6 +162,17 @@ public class StmService extends Service {
             }
         }
         return userAuthToken;
+    }
+
+    public void refreshUserAuthToken() throws Exception {
+        synchronized (this) {
+            SharedPreferences.Editor editor = settings.edit();
+            editor.remove("userId");
+            editor.remove("authToken");
+            editor.commit();
+            userAuthToken = null;
+            getUserAuthToken();
+        }
     }
 
     public StmHttpSender getStmHttpSender() {
@@ -235,5 +253,13 @@ public class StmService extends Service {
         }
 
         return deviceId;
+    }
+
+    public String getServerUrl() {
+        return serverUrl;
+    }
+
+    public void setServerUrl(String serverUrl) {
+        this.serverUrl = serverUrl;
     }
 }

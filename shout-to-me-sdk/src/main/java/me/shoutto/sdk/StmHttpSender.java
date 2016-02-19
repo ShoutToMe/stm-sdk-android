@@ -42,7 +42,7 @@ class StmHttpSender {
             params.put("channel_id", stmService.getChannelId());
             String requestString = buildRequestString(params);
 
-            URL url = new URL(StmService.STM_BASE_API_URL + "/shouts");
+            URL url = new URL(stmService.getServerUrl() + "/shouts");
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
@@ -101,7 +101,7 @@ class StmHttpSender {
         try {
             String requestString = buildRequestString(null);
 
-            URL url = new URL(StmService.STM_BASE_API_URL + ANONYMOUS_USER_PATH);
+            URL url = new URL(stmService.getServerUrl() + ANONYMOUS_USER_PATH);
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);

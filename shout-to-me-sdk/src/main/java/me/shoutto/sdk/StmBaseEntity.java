@@ -33,10 +33,10 @@ public class StmBaseEntity {
     }
 
     String getSingleResourceEndpoint() {
-        return baseEndpoint + "/:id";
+        return stmService.getServerUrl() + baseEndpoint + "/:id";
     }
 
-    String getId() {
+    public String getId() {
         return id;
     }
 
@@ -104,7 +104,7 @@ public class StmBaseEntity {
         try {
             final String authToken = stmService.getUserAuthToken();
             JsonObjectRequest deleteObjectRequest = new JsonObjectRequest(Request.Method.DELETE,
-                    baseEndpoint + "/" + id,
+                    stmService.getServerUrl() + baseEndpoint + "/" + id,
                     new JSONObject(),
                     responseListener,
                     errorListener) {

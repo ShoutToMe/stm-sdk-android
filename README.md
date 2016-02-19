@@ -392,6 +392,15 @@ future retrievals and across app sessions.
 stmService.getUserAuthToken();
 ```
 
+#### Refreshing the user's authentication token
+The SDK will abstract out much of the authentication tasks for you.  In the rare instance that requests are
+returned as unauthorized or when switching between test and production URLs, you can call the following method 
+to refresh the user's authentication token.  This is a synchronous method and should be done on a background thread.
+
+```java
+stmService.refreshUserAuthToken()
+```
+
 #### Hand wave gesture initiated Shout recording
 The Shout to Me SDK includes a usability feature design to help make the app driver safe.  When
 enabled, a driver need only wave their hand in front of the phone to launch the

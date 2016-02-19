@@ -19,11 +19,12 @@ public class StmUser extends StmBaseEntity {
 
     private String authToken;
     private String handle;
+    private String id;
 
     private boolean isInitialized = false;
 
     public StmUser(StmService stmService) {
-        super(stmService, "StmUser", stmService.STM_BASE_API_URL + "/users");
+        super(stmService, "StmUser", "/users");
     }
 
     boolean isInitialized() {
@@ -55,11 +56,11 @@ public class StmUser extends StmBaseEntity {
 
         // Validate handle
         if (handle == null) {
-            callback.onError(new StmError("Handle cannot be null", false, StmError.SEVERITY_MINOR));
+            callback.onError(new StmError("Handle is required", false, StmError.SEVERITY_MINOR));
             return;
         }
         if (handle.length() == 0) {
-            callback.onError(new StmError("Handle cannot be an empty string", false, StmError.SEVERITY_MINOR));
+            callback.onError(new StmError("Handle is required", false, StmError.SEVERITY_MINOR));
             return;
         }
 
@@ -200,7 +201,11 @@ public class StmUser extends StmBaseEntity {
     private void rollbackPendingChanges() {
         for (Map.Entry property: pendingChanges.entrySet()) {
             if (property.getKey().equals("handle")) {
-                handle = property.getValue().toString();
+                if (property.getValue() == null) {
+                    handle = null;
+                } else {
+                    handle = property.getValue().toString();
+                }
             }
         }
         pendingChanges.clear();

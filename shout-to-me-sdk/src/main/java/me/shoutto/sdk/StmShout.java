@@ -17,12 +17,12 @@ public class StmShout extends StmBaseEntity {
     private byte[] audio;
 
     StmShout(StmService stmService, byte[] rawData) {
-        super(stmService, TAG, stmService.STM_BASE_API_URL + "/shouts");
+        super(stmService, TAG, "/shouts");
         this.audio = addHeaderToRawData(rawData);
     }
 
     StmShout(StmService stmService, JSONObject json) {
-        super(stmService, TAG, stmService.STM_BASE_API_URL + "/shouts");
+        super(stmService, TAG, "/shouts");
         try {
             this.id = json.getString("id");
         } catch (JSONException ex) {
