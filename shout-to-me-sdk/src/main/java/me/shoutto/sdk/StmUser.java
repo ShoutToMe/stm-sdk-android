@@ -54,31 +54,13 @@ public class StmUser extends StmBaseEntity {
 
     public void save(final StmCallback<StmUser> callback) {
 
-        // Validate handle
-        if (handle == null) {
-            callback.onError(new StmError("Handle is required", false, StmError.SEVERITY_MINOR));
-            return;
-        }
-        if (handle.length() == 0) {
-            callback.onError(new StmError("Handle is required", false, StmError.SEVERITY_MINOR));
-            return;
-        }
-
-        Pattern pattern = Pattern.compile("^[a-zA-Z0-9]{1,15}$");
-        Matcher matcher = pattern.matcher(handle);
-        if (!matcher.matches()) {
-            callback.onError(new StmError("Handle must only contain letters, digits, and "
-                    + "underscore, and must not be longer than 15 characters", false, StmError.SEVERITY_MINOR));
-            return;
-        }
-
         // Prepare request
         JSONObject userUpdateJson = new JSONObject();
         try {
             userUpdateJson.put("handle", handle);
         } catch (JSONException ex) {
             Log.w(TAG, "Could not prepare JSON for user update request. Aborting", ex);
-            callback.onError(new StmError("Could not prepare JSON for user update request. Aborting",
+            callback.onError(new StmError("An error occurred trying to user",
                     false, StmError.SEVERITY_MINOR));
             return;
         }
@@ -95,12 +77,12 @@ public class StmUser extends StmBaseEntity {
                         stmUser = populateUserFieldsFromJson(user);
                     } catch(JSONException ex) {
                         Log.w(TAG, "Unable to populate user fields from JSON", ex);
-                        stmError = new StmError("Unable to populate user fields from JSON", false,
+                        stmError = new StmError("An error occurred trying to user", false,
                                 StmError.SEVERITY_MINOR);
                     }
                 } catch(JSONException ex) {
                     Log.e(TAG, "Unable to parse user update response JSON", ex);
-                    stmError = new StmError("Unable to parse user update response JSON", false,
+                    stmError = new StmError("An error occurred trying to user", false,
                             StmError.SEVERITY_MINOR);
                 } finally {
                     if (callback != null) {
@@ -128,7 +110,7 @@ public class StmUser extends StmBaseEntity {
                     stmError.setMessage(responseData.getString("message"));
                 } catch (JSONException ex) {
                     Log.e(TAG, "Error parsing JSON from user update response");
-                    stmError.setMessage("Cannot determine error from response");
+                    stmError.setMessage("An error occurred trying to save user");
                 }
                 if (callback != null) {
                     callback.onError(stmError);
