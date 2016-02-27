@@ -172,7 +172,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                     Future<StmAudioRecorderResult> futureRecorderResult = executor.submit(new RecordShoutCallable());
                     StmAudioRecorderResult recordingResult = futureRecorderResult.get();
 
-                    if (recordingResult.isCancelled()) {
+                    if (recordingResult.isCancelled() || !recordingResult.didUserSpeak()) {
                         playCancelListeningSound();
                     } else {
                         playFinishListeningSound();

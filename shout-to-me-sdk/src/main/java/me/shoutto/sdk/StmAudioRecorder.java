@@ -99,6 +99,9 @@ public class StmAudioRecorder {
                 if (!cancelRecordingFuture.isCancelled()) {
                     cancelRecordingFuture.cancel(false);
                 }
+                if (stmAudioRecorderResult.didUserSpeak() == false) {
+                    stmAudioRecorderResult.setDidUserSpeak(true);
+                }
             } else if (isUserStillTalking == 0) {
                 Log.d(TAG, "Silence detected");
                 pushPendingAudioToFinalOutputStream();
