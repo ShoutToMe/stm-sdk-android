@@ -9,6 +9,7 @@ public class StmAudioRecorderResult {
 
     private ByteArrayOutputStream audioBuffer;
     private boolean isCancelled;
+    private boolean didUserSpeak = false;
 
     public ByteArrayOutputStream getAudioBuffer() {
         return audioBuffer;
@@ -24,5 +25,13 @@ public class StmAudioRecorderResult {
 
     public void setIsCancelled(boolean isCancelled) {
         this.isCancelled = isCancelled;
+    }
+
+    public boolean didUserSpeak() {
+        return didUserSpeak;
+    }
+
+    public void setDidUserSpeak(boolean didUserSpeak) {
+        this.didUserSpeak = didUserSpeak;
     }
 }
