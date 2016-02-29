@@ -40,6 +40,12 @@ class StmHttpSender {
             Map<String, String> params = new HashMap<>();
             params.put("audio", new String(Base64.encode(stmShout.getAudio(), Base64.NO_WRAP)) ); //No_wrap to get rid of \n
             params.put("channel_id", stmService.getChannelId());
+            if (stmShout.getTags() != null) {
+                params.put("tags", stmShout.getTags());
+            }
+            if (stmShout.getTopic() != null) {
+                params.put("topic", stmShout.getTopic());
+            }
             String requestString = buildRequestString(params);
 
             URL url = new URL(stmService.getServerUrl() + "/shouts");

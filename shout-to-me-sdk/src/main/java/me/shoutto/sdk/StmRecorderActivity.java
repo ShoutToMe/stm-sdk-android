@@ -30,6 +30,8 @@ import java.util.concurrent.TimeUnit;
 public class StmRecorderActivity extends Activity implements HandWaveGestureListener, SoundPool.OnLoadCompleteListener {
 
     private static final String TAG = "StmRecorderActivity";
+    private static final String TAGS = "tags";
+    private static final String TOPIC = "topic";
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;
@@ -39,6 +41,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private boolean isAlreadyLaunchedRecorder = false;
     private AudioManager audioManager;
+    private String shoutTags;
+    private String shoutTopic;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -99,6 +103,17 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        if (savedInstanceState == null) {
+            Bundle extras = getIntent().getExtras();
+            if(extras != null) {
+                shoutTags = extras.getString(TAGS);
+                shoutTopic = extras.getString(TOPIC);
+            }
+        } else {
+            shoutTags = (String) savedInstanceState.getSerializable(TAGS);
+            shoutTopic = (String) savedInstanceState.getSerializable(TOPIC);
+        }
 
         setContentView(R.layout.activity_stm_overlay);
 
@@ -277,6 +292,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         @Override
         public StmShout call() throws Exception {
             StmShout stmShout = new StmShout(stmService, stream.toByteArray());
+            if (shoutTags != null) {
+                stmShout.setTags(shoutTags);
+            }
+            if (shoutTopic != null) {
+                stmShout.setTopic(shoutTopic);
+            }
             return stmService.getStmHttpSender().postNewShout(stmShout);
         }
     }

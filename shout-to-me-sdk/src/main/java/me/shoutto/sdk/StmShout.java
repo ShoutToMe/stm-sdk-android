@@ -15,6 +15,8 @@ public class StmShout extends StmBaseEntity {
 
     private static final String TAG = "StmShout";
     private byte[] audio;
+    private String tags;
+    private String topic;
 
     StmShout(StmService stmService, byte[] rawData) {
         super(stmService, TAG, "/shouts");
@@ -173,5 +175,21 @@ public class StmShout extends StmBaseEntity {
             }
         };
         sendAuthorizedDeleteJsonObjectRequest(responseListener, errorListener);
+    }
+
+    public String getTags() {
+        return tags;
+    }
+
+    public void setTags(String tags) {
+        this.tags = tags;
+    }
+
+    public String getTopic() {
+        return topic;
+    }
+
+    public void setTopic(String topic) {
+        this.topic = topic;
     }
 }
