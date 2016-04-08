@@ -32,6 +32,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private static final String TAG = "StmRecorderActivity";
     private static final String TAGS = "tags";
     private static final String TOPIC = "topic";
+    private static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;
@@ -43,6 +44,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private AudioManager audioManager;
     private String shoutTags;
     private String shoutTopic;
+    private int maxRecordingTimeInSeconds = 0;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -52,6 +54,13 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             StmService.StmBinder binder = (StmService.StmBinder) service;
             stmService = binder.getService();
             isStmServiceBound = true;
+
+            if (maxRecordingTimeInSeconds > 0) {
+                stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
+            }
+            Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
+            stmAudioRecorder = new StmAudioRecorder(recorderHandler, stmService.getMaxRecordingTimeInSeconds());
+
             stmService.setOverlay(StmRecorderActivity.this);
 
             runOnUiThread(new Runnable() {
@@ -109,16 +118,15 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             if(extras != null) {
                 shoutTags = extras.getString(TAGS);
                 shoutTopic = extras.getString(TOPIC);
+                maxRecordingTimeInSeconds = extras.getInt(MAX_RECORDING_TIME_IN_SECONDS);
             }
         } else {
             shoutTags = (String) savedInstanceState.getSerializable(TAGS);
             shoutTopic = (String) savedInstanceState.getSerializable(TOPIC);
+            maxRecordingTimeInSeconds = (int) savedInstanceState.getSerializable(MAX_RECORDING_TIME_IN_SECONDS);
         }
 
         setContentView(R.layout.activity_stm_overlay);
-
-        Handler recorderHandler = new RecordingHandler(this);
-        stmAudioRecorder = new StmAudioRecorder(recorderHandler);
 
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
 

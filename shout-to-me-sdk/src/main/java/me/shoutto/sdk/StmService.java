@@ -22,6 +22,7 @@ public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
     private static final String TAG = "StmService";
+    private static final int DEFAULT_MAX_RECORDING_TIME = 15;
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private String deviceId;
@@ -37,6 +38,7 @@ public class StmService extends Service {
     private SharedPreferences settings;
     private HandWaveGestureListener overlay;
     private String serverUrl = "https://app.shoutto.me/api/v1";
+    private int maxRecordingTimeInSeconds = DEFAULT_MAX_RECORDING_TIME;
 
     public StmService() {}
 
@@ -135,8 +137,20 @@ public class StmService extends Service {
     public void setChannelId(String channelId) {
         this.channelId = channelId;
         SharedPreferences.Editor editor = settings.edit();
-        editor.putString("channelId", this.channelId);
+        if (channelId == null) {
+            editor.remove("channelId");
+        } else {
+            editor.putString("channelId", this.channelId);
+        }
         editor.commit();
+    }
+
+    public int getMaxRecordingTimeInSeconds() {
+        return maxRecordingTimeInSeconds;
+    }
+
+    public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {
+        this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
     }
 
     public String getUserAuthToken() throws Exception {

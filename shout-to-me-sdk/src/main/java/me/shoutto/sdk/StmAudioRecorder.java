@@ -29,11 +29,14 @@ public class StmAudioRecorder {
     private final int minBufferSize;
     private boolean doRecord = false;
     private Handler handler;
+    ScheduledFuture cancelRecordingFuture;
     private ScheduledFuture stopRecordingFuture;
+    private ScheduledFuture maxRecordingTimeFuture;
     private StmAudioRecorderResult stmAudioRecorderResult;
     private VoiceActivityDetector voiceActivityDetector;
     ByteArrayOutputStream realTimeStream;
     ByteArrayOutputStream finalStream;
+    private int maxRecordingTimeInSeconds;
 
     final Runnable StopRecordingRunnable = new Runnable() {
         @Override
@@ -49,8 +52,9 @@ public class StmAudioRecorder {
         }
     };
 
-    public StmAudioRecorder(Handler handler) {
+    public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) {
         this.handler = handler;
+        this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
         stmAudioRecorderResult = new StmAudioRecorderResult();
         voiceActivityDetector = new VoiceActivityDetector();
 
@@ -76,7 +80,8 @@ public class StmAudioRecorder {
         doRecord = true;
         audioRecord.startRecording();
 
-        ScheduledFuture cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, 15, TimeUnit.SECONDS);
+        cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, 15, TimeUnit.SECONDS);
+        maxRecordingTimeFuture = scheduler.schedule(StopRecordingRunnable, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
 
         byte[] buffer = new byte[minBufferSize * 4];
         byte[] bytes;
@@ -140,12 +145,14 @@ public class StmAudioRecorder {
     }
 
     public void cancelRecording() {
+        cancelAllFutures();
         stmAudioRecorderResult.setIsCancelled(true);
         doRecord = false;
     }
 
     private void stopRecording() {
         Log.d(TAG, "stopRecording");
+        cancelAllFutures();
         stmAudioRecorderResult.setIsCancelled(false);
         doRecord = false;
     }
@@ -166,6 +173,18 @@ public class StmAudioRecorder {
             } finally {
                 realTimeStream.reset();
             }
+        }
+    }
+
+    private void cancelAllFutures() {
+        if (stopRecordingFuture != null && !stopRecordingFuture.isCancelled()) {
+            stopRecordingFuture.cancel(false);
+        }
+        if (cancelRecordingFuture != null && !cancelRecordingFuture.isCancelled()) {
+            cancelRecordingFuture.cancel(false);
+        }
+        if (maxRecordingTimeFuture != null && !maxRecordingTimeFuture.isCancelled()) {
+            maxRecordingTimeFuture.cancel(false);
         }
     }
 }
