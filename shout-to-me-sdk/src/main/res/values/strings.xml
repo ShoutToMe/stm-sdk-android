@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Shout to Me SDK</string>
+    <string name="recording_countdown_timer">%1$s sec</string>
 </resources>

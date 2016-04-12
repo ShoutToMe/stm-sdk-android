@@ -21,8 +21,8 @@ import java.util.concurrent.Executors;
 public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
+    public static final String CHANNELS_LOADED = "me.shoutto.voigo.Channels.loaded";
     private static final String TAG = "StmService";
-    private static final int DEFAULT_MAX_RECORDING_TIME = 15;
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private String deviceId;
@@ -38,9 +38,12 @@ public class StmService extends Service {
     private SharedPreferences settings;
     private HandWaveGestureListener overlay;
     private String serverUrl = "https://app.shoutto.me/api/v1";
-    private int maxRecordingTimeInSeconds = DEFAULT_MAX_RECORDING_TIME;
+    private Channels channels;
+    private int maxRecordingTimeInSeconds;
 
-    public StmService() {}
+    public StmService() {
+        maxRecordingTimeInSeconds = 0;
+    }
 
     public class StmBinder extends Binder {
         public StmService getService() {
@@ -135,18 +138,37 @@ public class StmService extends Service {
     }
 
     public void setChannelId(String channelId) {
-        this.channelId = channelId;
-        SharedPreferences.Editor editor = settings.edit();
-        if (channelId == null) {
-            editor.remove("channelId");
-        } else {
-            editor.putString("channelId", this.channelId);
+        if (this.channelId != channelId) {
+            this.channelId = channelId;
+            SharedPreferences.Editor editor = settings.edit();
+            if (channelId == null) {
+                editor.remove("channelId");
+            } else {
+                editor.putString("channelId", this.channelId);
+            }
+            editor.commit();
         }
-        editor.commit();
+    }
+
+    public Channels getChannels(int screenWidth) {
+        if (channels == null) {
+            channels = new Channels(this, screenWidth);
+        }
+        return channels;
     }
 
     public int getMaxRecordingTimeInSeconds() {
-        return maxRecordingTimeInSeconds;
+        Channel channel = channels.getSelectedChannel();
+        if (channel == null) {
+            Log.w(TAG, "No selected channel");
+            return maxRecordingTimeInSeconds;
+        } else {
+            if (maxRecordingTimeInSeconds > channel.getDefaultMaxRecordingLengthSeconds()) {
+                return maxRecordingTimeInSeconds;
+            } else {
+                return channel.getDefaultMaxRecordingLengthSeconds();
+            }
+        }
     }
 
     public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {

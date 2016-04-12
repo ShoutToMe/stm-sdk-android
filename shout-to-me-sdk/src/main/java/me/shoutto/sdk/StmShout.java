@@ -17,6 +17,7 @@ public class StmShout extends StmBaseEntity {
     private byte[] audio;
     private String tags;
     private String topic;
+    private Integer recordingLengthInSeconds;
 
     StmShout(StmService stmService, byte[] rawData) {
         super(stmService, TAG, "/shouts");
@@ -191,5 +192,13 @@ public class StmShout extends StmBaseEntity {
 
     public void setTopic(String topic) {
         this.topic = topic;
+    }
+
+    public Integer getRecordingLengthInSeconds() {
+        return recordingLengthInSeconds;
+    }
+
+    public void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
+        this.recordingLengthInSeconds = recordingLengthInSeconds;
     }
 }

@@ -1,5 +1,6 @@
 package me.shoutto.sdk;
 
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +14,8 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
@@ -27,7 +30,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by tracyrojas on 9/20/15.
  */
-public class StmRecorderActivity extends Activity implements HandWaveGestureListener, SoundPool.OnLoadCompleteListener {
+public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
+        SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 
     private static final String TAG = "StmRecorderActivity";
     private static final String TAGS = "tags";
@@ -45,6 +49,11 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private String shoutTags;
     private String shoutTopic;
     private int maxRecordingTimeInSeconds = 0;
+    private TextView countdownTextView;
+    private String countdownText;
+    private ProgressBar countdownTimer;
+    private int progressMax;
+    private ObjectAnimator animation;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -57,18 +66,19 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
             if (maxRecordingTimeInSeconds > 0) {
                 stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
+            } else {
+                maxRecordingTimeInSeconds = stmService.getMaxRecordingTimeInSeconds();
             }
             Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
-            stmAudioRecorder = new StmAudioRecorder(recorderHandler, stmService.getMaxRecordingTimeInSeconds());
+            stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
+            stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
+
+            progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
+            animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
 
             stmService.setOverlay(StmRecorderActivity.this);
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    startRecording();
-                }
-            });
+            startRecording();
         }
 
         @Override
@@ -133,6 +143,10 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         // Prepare objects for playing sounds
         soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(this);
+
+        countdownTextView = (TextView) findViewById(R.id.countdown_timer);
+        countdownText = getResources().getString(R.string.recording_countdown_timer);
+        countdownTimer = (ProgressBar) findViewById(R.id.recording_timer);
     }
 
     @Override
@@ -142,6 +156,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         soundPool.release();
         scheduler.shutdown();
         executor.shutdown();
+        if (stmAudioRecorder != null) {
+            stmAudioRecorder.setRecordingCountdownListener(null);
+        }
     }
 
     @Override
@@ -170,6 +187,16 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         stopRecording(null);
     }
 
+    @Override
+    public void onCountdownUpdate(final int secondsRemaining, final int secondsElapsed) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                countdownTextView.setText(String.format(countdownText, String.valueOf(secondsRemaining)));
+            }
+        });
+    }
+
     public void startRecording() {
 
         // We want this to run after all the visuals are loaded, however, we don't want it to
@@ -191,9 +218,18 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         scheduler.schedule(new Runnable() {
             public void run() {
                 try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            countdownTimer.setMax(progressMax);
+                            animation.setDuration(maxRecordingTimeInSeconds * 1000);
+                            animation.start();
+                        }
+                    });
 
                     Future<StmAudioRecorderResult> futureRecorderResult = executor.submit(new RecordShoutCallable());
                     StmAudioRecorderResult recordingResult = futureRecorderResult.get();
+                    final Integer shoutRecordingLengthInSeconds = recordingResult.getRecordingLengthInSeconds();
 
                     if (recordingResult.isCancelled() || !recordingResult.didUserSpeak()) {
                         playCancelListeningSound();
@@ -202,6 +238,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
                         Future<StmShout> futureShout = executor.submit(new SendShoutCallable(recordingResult.getAudioBuffer()));
                         final StmShout newShout = futureShout.get();
+                        newShout.setRecordingLengthInSeconds(shoutRecordingLengthInSeconds);
 
                         playShoutSentSound();
 
@@ -239,10 +276,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     }
 
     public void stopRecording(View view) {
+        animation.end();
         stmAudioRecorder.finalizeRecording();
     }
 
     public void cancelRecording(View view) {
+        animation.end();
         stmAudioRecorder.cancelRecording();
     }
 
