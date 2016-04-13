@@ -1,10 +1,6 @@
 package me.shoutto.sdk;
 
-import android.content.Intent;
-import android.graphics.Bitmap;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -20,52 +16,32 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * Created by tracyrojas on 4/11/16.
  */
-public class Channels implements DownloadImageTask.ImageDownloadListener {
+class Channels {
 
     private static final String TAG = "Channels";
     private final static String CHANNELS_ENDPOINT = "/channels";
     private List<Channel> channels;
     private StmService stmService;
-    private String selectedChannelId;
-    private int screenWidth;
-    private boolean isInitialized = false;
-    private Map<UUID, ChannelImageDownloadContext> downloadContextMap;
 
-    public Channels(StmService stmService, int screenWidth) {
+    public Channels(StmService stmService, final StmCallback<List<Channel>> callback) {
         this.stmService = stmService;
-        this.screenWidth = screenWidth;
-        this.downloadContextMap = new HashMap<>();
+        loadFromServer(callback);
     }
 
-    public void loadFromServer() {
-        if (!isInitialized) {
-            isInitialized = true;
-            try {
-                new GetChannelsAsyncTask().execute();
-            } catch (Exception ex) {
-                Log.e(TAG, "Could not load channels due to problem with user auth token", ex);
-            }
-        } else {
-            sendChannelsReadyBroadcast();
+    private void loadFromServer(final StmCallback<List<Channel>> callback) {
+        try {
+            new GetChannelsAsyncTask(callback).execute();
+        } catch (Exception ex) {
+            Log.e(TAG, "Could not load channels due to problem with user auth token", ex);
         }
     }
 
-    public List<Channel> getChannelList() {
-        if (channels == null) {
-            loadFromServer();
-        }
-        return channels;
-    }
-
-    public void setChannels(List<Channel> channels) {
+    private void setChannels(List<Channel> channels) {
         if (this.channels != null) {
             this.channels.clear();
             this.channels = null;
@@ -73,19 +49,11 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
         this.channels = channels;
     }
 
-    public String getSelectedChannelId() {
-        return selectedChannelId;
-    }
-
-    public void setSelectedChannelId(String selectedChannelId) {
-        this.selectedChannelId = selectedChannelId;
-    }
-
-    public Channel getSelectedChannel() {
+    public Channel getChannel(String channelId) {
         Channel selectedChannel = null;
         if (channels != null) {
             for (Channel channel : channels) {
-                if (channel.getId().equals(selectedChannelId)) {
+                if (channel.getId().equals(channelId)) {
                     selectedChannel = channel;
                 }
             }
@@ -93,69 +61,15 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
         return selectedChannel;
     }
 
-    @Override
-    public void onDownloadComplete(UUID contextId, Bitmap image) {
-        ChannelImageDownloadContext downloadContext = downloadContextMap.get(contextId);
-        for (Channel channel : channels) {
-            if (channel.getId().equals(downloadContext.getChannelId())) {
-                if (downloadContext.isListImage()) {
-                    channel.setListImage(image);
-                } else {
-                    channel.setImage(image);
-                }
-            }
-        }
-        downloadContext.setDownloadCompleted();
-
-        sendBroadcastIfDownloadComplete();
-    }
-
-    private synchronized void sendBroadcastIfDownloadComplete() {
-        boolean isReadyToBroadcast = true;
-        for (ChannelImageDownloadContext context : downloadContextMap.values()) {
-            if (!context.isDownloadCompleted()) {
-                isReadyToBroadcast = false;
-            }
-        }
-        if (isReadyToBroadcast) {
-            sendChannelsReadyBroadcast();
-            downloadContextMap.clear();
-        }
-    }
-
-    private void sendChannelsReadyBroadcast() {
-        Intent intent = new Intent(StmService.CHANNELS_LOADED);
-        LocalBroadcastManager.getInstance(stmService).sendBroadcast(intent);
-    }
-
-    public void reloadChannelImage() {
-        if (getChannelList() != null && selectedChannelId != null) {
-            for (final Channel channel : getChannelList()) {
-                if (selectedChannelId.equals(channel.getId())) {
-
-                    ChannelImageDownloadContext downloadContext =
-                            new ChannelImageDownloadContext(channel.getId(), false);
-                    final UUID downloadContextUUID = UUID.randomUUID();
-                    downloadContextMap.put(downloadContextUUID, downloadContext);
-
-                    Handler imageHandler = new Handler();
-                    imageHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            new DownloadImageTask(Channels.this, downloadContextUUID, false, screenWidth)
-                                    .execute(channel.getImageUrl());
-                        }
-                    });
-                } else {
-                    channel.setImage(null);
-                }
-            }
-        }
-    }
-
     private class GetChannelsAsyncTask extends AsyncTask<Void, Void, List<Channel>> {
 
         private boolean isUnauthorized = false;
+        private StmCallback<List<Channel>> callback;
+        private StmError stmError;
+
+        public GetChannelsAsyncTask(StmCallback<List<Channel>> callback) {
+            this.callback = callback;
+        }
 
         public List<Channel> doInBackground(Void... voids) {
 
@@ -166,7 +80,9 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
                     Channels.this.stmService.refreshUserAuthToken();
                     channels = getChannels();
                 } catch (Exception ex) {
-                    Log.d(TAG, "Could not refresh user auth token", ex);
+                    Log.d(TAG, "Could not refresh user auth token. ", ex);
+                    stmError = new StmError("Could not refresh user auth token. " + ex.getMessage(),
+                            true, StmError.SEVERITY_MAJOR);
                 }
             }
             return channels;
@@ -175,37 +91,10 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
         @Override
         public void onPostExecute(final List<Channel> channels) {
             Channels.this.setChannels(channels);
-            for (final Channel channel : Channels.this.getChannelList()) {
-
-                ChannelImageDownloadContext listImageDownloadContext =
-                        new ChannelImageDownloadContext(channel.getId(), true);
-                final UUID listImageContextUUID = UUID.randomUUID();
-                downloadContextMap.put(listImageContextUUID, listImageDownloadContext);
-
-                Handler listImageHandler = new Handler();
-                listImageHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        new DownloadImageTask(Channels.this, listImageContextUUID, true, screenWidth)
-                                .execute(channel.getListImageUrl());
-                    }
-                });
-
-                if (selectedChannelId != null && selectedChannelId.equals(channel.getId())) {
-                    ChannelImageDownloadContext imageDownloadContext =
-                            new ChannelImageDownloadContext(channel.getId(), false);
-                    final UUID imageContextUUID = UUID.randomUUID();
-                    downloadContextMap.put(imageContextUUID, imageDownloadContext);
-
-                    Handler imageHandler = new Handler();
-                    imageHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            new DownloadImageTask(Channels.this, imageContextUUID, false, screenWidth)
-                                    .execute(channel.getImageUrl());
-                        }
-                    });
-                }
+            if (stmError != null) {
+                callback.onError(stmError);
+            } else {
+                callback.onResponse(channels);
             }
         }
 
@@ -213,7 +102,7 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
             List<Channel> channels = new ArrayList<>();
 
             HttpURLConnection connection;
-            int responseCode = 0;
+            int responseCode;
             try {
                 String userAuthToken = Channels.this.stmService.getUserAuthToken();
                 URL url = new URL(stmService.getServerUrl() + CHANNELS_ENDPOINT);
@@ -264,13 +153,21 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
                     }
                 } catch (JSONException ex) {
                     Log.e(TAG, "Could not parse get user with client token response JSON", ex);
+                    stmError = new StmError("Could not parse get user with client token response JSON. " + ex.getMessage(),
+                            true, StmError.SEVERITY_MAJOR);
                 }
             } catch (MalformedURLException ex) {
                 Log.e(TAG, "Could not create URL for Shout to Me service", ex);
+                stmError = new StmError("Could not create URL for Shout to Me service. " + ex.getMessage(),
+                        true, StmError.SEVERITY_MAJOR);
             } catch (IOException ex) {
                 Log.e(TAG, "Could not connect to Shout to Me service", ex);
+                stmError = new StmError("Could not connect to Shout to Me service. " + ex.getMessage(),
+                        true, StmError.SEVERITY_MAJOR);
             } catch (Exception ex) {
                 Log.e(TAG, "Error occurred in trying to send Shout to Shout to Me service", ex);
+                stmError = new StmError("Error occurred in trying to send Shout to Shout to Me service. " + ex.getMessage(),
+                        true, StmError.SEVERITY_MAJOR);
             }
 
             return channels;
@@ -288,35 +185,6 @@ public class Channels implements DownloadImageTask.ImageDownloadListener {
             is.close();
 
             return sb.toString();
-        }
-    }
-
-    private class ChannelImageDownloadContext {
-
-        private String channelId;
-        private boolean isListImage;
-        private boolean downloadCompleted;
-
-        ChannelImageDownloadContext(String channelId, boolean isListImage) {
-            this.channelId = channelId;
-            this.isListImage = isListImage;
-            this.downloadCompleted = false;
-        }
-
-        public String getChannelId() {
-            return channelId;
-        }
-
-        public boolean isListImage() {
-            return isListImage;
-        }
-
-        public void setDownloadCompleted() {
-            downloadCompleted = true;
-        }
-
-        public boolean isDownloadCompleted() {
-            return downloadCompleted;
         }
     }
 }

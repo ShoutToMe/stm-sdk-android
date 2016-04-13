@@ -39,6 +39,7 @@ public class StmAudioRecorder {
     ByteArrayOutputStream realTimeStream;
     ByteArrayOutputStream finalStream;
     private int maxRecordingTimeInSeconds;
+    private boolean isSilenceDetectionEnabled = true;
     private int secondsRemaining;
     private int secondsElapsed = 0;
     private RecordingCountdownListener recordingCountdownListener;
@@ -60,6 +61,7 @@ public class StmAudioRecorder {
     public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) {
         this.handler = handler;
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
+
         stmAudioRecorderResult = new StmAudioRecorderResult();
         voiceActivityDetector = new VoiceActivityDetector();
 
@@ -86,7 +88,7 @@ public class StmAudioRecorder {
         audioRecord.startRecording();
 
         secondsRemaining = maxRecordingTimeInSeconds;
-        cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, 15, TimeUnit.SECONDS);
+        cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
         maxRecordingTimeFuture = scheduler.schedule(new Runnable() {
             @Override
             public void run() {
@@ -134,7 +136,9 @@ public class StmAudioRecorder {
             } else if (isUserStillTalking == 0) {
                 Log.d(TAG, "Silence detected");
                 pushPendingAudioToFinalOutputStream();
-                stopRecordingFuture = scheduler.schedule(StopRecordingRunnable, 2, TimeUnit.SECONDS);
+                if (isSilenceDetectionEnabled) {
+                    stopRecordingFuture = scheduler.schedule(StopRecordingRunnable, 2, TimeUnit.SECONDS);
+                }
             }
 
             // Value to manipulate UI "speaking" animation
@@ -223,5 +227,9 @@ public class StmAudioRecorder {
 
     public void setRecordingCountdownListener(RecordingCountdownListener recordingCountdownListener) {
         this.recordingCountdownListener = recordingCountdownListener;
+    }
+
+    public void setSilenceDetectionEnabled(boolean isSilenceDetectionEnabled) {
+        this.isSilenceDetectionEnabled = isSilenceDetectionEnabled;
     }
 }

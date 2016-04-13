@@ -36,7 +36,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private static final String TAG = "StmRecorderActivity";
     private static final String TAGS = "tags";
     private static final String TOPIC = "topic";
-    private static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
+    public static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
+    public static final String SILENCE_DETECTION_ENABLED = "silenceDetectionEnabled";
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;
@@ -49,6 +50,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private String shoutTags;
     private String shoutTopic;
     private int maxRecordingTimeInSeconds = 0;
+    private Boolean isSilenceDetectionEnabled;
     private TextView countdownTextView;
     private String countdownText;
     private ProgressBar countdownTimer;
@@ -72,6 +74,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
             stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
             stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
+
+            if (isSilenceDetectionEnabled == null) {
+                stmAudioRecorder.setSilenceDetectionEnabled(true);
+            } else {
+                stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
+            }
 
             progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
             animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
@@ -129,11 +137,16 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                 shoutTags = extras.getString(TAGS);
                 shoutTopic = extras.getString(TOPIC);
                 maxRecordingTimeInSeconds = extras.getInt(MAX_RECORDING_TIME_IN_SECONDS);
+                isSilenceDetectionEnabled = extras.getBoolean(SILENCE_DETECTION_ENABLED, true);
             }
         } else {
             shoutTags = (String) savedInstanceState.getSerializable(TAGS);
             shoutTopic = (String) savedInstanceState.getSerializable(TOPIC);
             maxRecordingTimeInSeconds = (int) savedInstanceState.getSerializable(MAX_RECORDING_TIME_IN_SECONDS);
+            isSilenceDetectionEnabled = (Boolean) savedInstanceState.getSerializable(SILENCE_DETECTION_ENABLED);
+            if (isSilenceDetectionEnabled == null) {
+                isSilenceDetectionEnabled = true;
+            }
         }
 
         setContentView(R.layout.activity_stm_overlay);

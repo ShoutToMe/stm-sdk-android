@@ -21,7 +21,6 @@ import java.util.concurrent.Executors;
 public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
-    public static final String CHANNELS_LOADED = "me.shoutto.voigo.Channels.loaded";
     private static final String TAG = "StmService";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
@@ -150,15 +149,14 @@ public class StmService extends Service {
         }
     }
 
-    public Channels getChannels(int screenWidth) {
+    public void getChannels(final StmCallback<List<Channel>> callback) {
         if (channels == null) {
-            channels = new Channels(this, screenWidth);
+            channels = new Channels(this, callback);
         }
-        return channels;
     }
 
     public int getMaxRecordingTimeInSeconds() {
-        Channel channel = channels.getSelectedChannel();
+        Channel channel = channels.getChannel(channelId);
         if (channel == null) {
             Log.w(TAG, "No selected channel");
             return maxRecordingTimeInSeconds;
