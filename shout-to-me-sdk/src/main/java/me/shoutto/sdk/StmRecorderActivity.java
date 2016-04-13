@@ -249,8 +249,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                     } else {
                         playFinishListeningSound();
 
-                        Future<StmShout> futureShout = executor.submit(new SendShoutCallable(recordingResult.getAudioBuffer()));
-                        final StmShout newShout = futureShout.get();
+                        Future<Shout> futureShout = executor.submit(new SendShoutCallable(recordingResult.getAudioBuffer()));
+                        final Shout newShout = futureShout.get();
                         newShout.setRecordingLengthInSeconds(shoutRecordingLengthInSeconds);
 
                         playShoutSentSound();
@@ -258,7 +258,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                StmCallback<StmShout> stmCallback = stmService.getShoutCreationCallback();
+                                StmCallback<Shout> stmCallback = stmService.getShoutCreationCallback();
                                 stmCallback.onResponse(newShout);
                             }
                         });
@@ -342,7 +342,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         }
     };
 
-    private class SendShoutCallable implements Callable<StmShout> {
+    private class SendShoutCallable implements Callable<Shout> {
         private ByteArrayOutputStream stream;
 
         public SendShoutCallable(ByteArrayOutputStream stream) {
@@ -350,15 +350,15 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         }
 
         @Override
-        public StmShout call() throws Exception {
-            StmShout stmShout = new StmShout(stmService, stream.toByteArray());
+        public Shout call() throws Exception {
+            Shout shout = new Shout(stmService, stream.toByteArray());
             if (shoutTags != null) {
-                stmShout.setTags(shoutTags);
+                shout.setTags(shoutTags);
             }
             if (shoutTopic != null) {
-                stmShout.setTopic(shoutTopic);
+                shout.setTopic(shoutTopic);
             }
-            return stmService.getStmHttpSender().postNewShout(stmShout);
+            return stmService.getStmHttpSender().postNewShout(shout);
         }
     }
 }

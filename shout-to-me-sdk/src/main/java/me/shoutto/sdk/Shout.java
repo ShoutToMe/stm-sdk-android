@@ -11,20 +11,20 @@ import org.json.JSONObject;
 /**
  * Created by tracyrojas on 9/20/15.
  */
-public class StmShout extends StmBaseEntity {
+public class Shout extends StmBaseEntity {
 
-    private static final String TAG = "StmShout";
+    private static final String TAG = "Shout";
     private byte[] audio;
     private String tags;
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    StmShout(StmService stmService, byte[] rawData) {
+    Shout(StmService stmService, byte[] rawData) {
         super(stmService, TAG, "/shouts");
         this.audio = addHeaderToRawData(rawData);
     }
 
-    StmShout(StmService stmService, JSONObject json) {
+    Shout(StmService stmService, JSONObject json) {
         super(stmService, TAG, "/shouts");
         try {
             this.id = json.getString("id");
