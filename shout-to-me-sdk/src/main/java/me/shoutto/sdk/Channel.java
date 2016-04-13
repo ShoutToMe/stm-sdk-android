@@ -1,7 +1,5 @@
 package me.shoutto.sdk;
 
-import android.graphics.Bitmap;
-
 /**
  * Created by tracyrojas on 4/11/16.
  */
@@ -12,9 +10,7 @@ public class Channel {
     private String name;
     private String description;
     private String imageUrl;
-    private Bitmap image;
     private String listImageUrl;
-    private Bitmap listImage;
     private int defaultMaxRecordingLengthSeconds;
 
     public Channel() {
@@ -51,22 +47,6 @@ public class Channel {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
-    }
-
-    public Bitmap getImage() {
-        return image;
-    }
-
-    public void setImage(Bitmap image) {
-        this.image = image;
-    }
-
-    public Bitmap getListImage() {
-        return listImage;
-    }
-
-    public void setListImage(Bitmap listImage) {
-        this.listImage = listImage;
     }
 
     public String getListImageUrl() {
