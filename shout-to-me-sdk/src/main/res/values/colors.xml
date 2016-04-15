@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="stm_black_transparent_listening_overlay">#E5000000</color>
-    <color name="stm_recording_inner_circle_blue">#ff0000ff</color>
-    <color name="stm_recording_outer_circle_gray">#66999999</color>
+    <color name="stm_black_transparent_listening_overlay">#E9000000</color>
+    <color name="stm_recording_inner_circle_blue">#FF1565C0</color>
+    <color name="stm_recording_outer_circle_gray">#66BBBBBB</color>
+    <color name="white">#ffffff</color>
 </resources>

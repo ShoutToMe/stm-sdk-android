@@ -10,6 +10,7 @@ public class StmAudioRecorderResult {
     private ByteArrayOutputStream audioBuffer;
     private boolean isCancelled;
     private boolean didUserSpeak = false;
+    private int recordingLengthInSeconds;
 
     public ByteArrayOutputStream getAudioBuffer() {
         return audioBuffer;
@@ -33,5 +34,13 @@ public class StmAudioRecorderResult {
 
     public void setDidUserSpeak(boolean didUserSpeak) {
         this.didUserSpeak = didUserSpeak;
+    }
+
+    public Integer getRecordingLengthInSeconds() {
+        return recordingLengthInSeconds;
+    }
+
+    public void setRecordingLengthInSeconds(Integer recordingLengthInSeconds) {
+        this.recordingLengthInSeconds = recordingLengthInSeconds;
     }
 }

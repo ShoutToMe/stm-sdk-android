@@ -65,15 +65,15 @@ import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmRecorderActivity;
 import me.shoutto.sdk.StmService;
-import me.shoutto.sdk.StmShout;
-import me.shoutto.sdk.StmUser;
+import me.shoutto.sdk.Shout;
+import me.shoutto.sdk.User;
 
 public class MainActivity extends Activity {
 
     private static final String TAG = "MainActivity";
     private StmService stmService;
     private Boolean isStmServiceBound = false;
-    private StmShout newlyCreatedShout;
+    private Shout newlyCreatedShout;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -92,9 +92,9 @@ public class MainActivity extends Activity {
             final EditText handleEditText = (EditText) findViewById(R.id.editTextUserHandle);
 
             // Calling getUser() with a Callback will ensure you get an instantiated user object from the server
-            stmService.getUser(new Callback<StmUser>() {
+            stmService.getUser(new Callback<User>() {
                 @Override
-                public void onSuccess(final StmResponse<StmUser> stmResponse) {
+                public void onSuccess(final StmResponse<User> stmResponse) {
                     Log.d(TAG, "Shout to Me user has been loaded");
                     handleEditText.setText(stmResponse.get().getHandle());
                 }
@@ -167,9 +167,9 @@ public class MainActivity extends Activity {
     public void launchRecordingOverlay(View view) {
 
         Log.d(TAG, "launching overlay");
-        stmService.setShoutCreationCallback(new Callback<StmShout>() {
+        stmService.setShoutCreationCallback(new Callback<Shout>() {
             @Override
-            public void onSuccess(StmResponse<StmShout> stmResponse) {
+            public void onSuccess(StmResponse<Shout> stmResponse) {
                 Log.d(TAG, "Shout created successfully. ID = " + stmResponse.get().getId());
                 newlyCreatedShout = stmResponse.get();
                 showDeleteButton();
@@ -204,11 +204,11 @@ public class MainActivity extends Activity {
 
         // Calling getUser() without a Callback does not guarantee that the object will be
         // instantiated from the server, but is useful for update-only functions.
-        StmUser stmUser = stmService.getUser();
-        stmUser.setHandle(newHandle);
-        stmUser.save(new Callback<StmUser>() {
+        User user = stmService.getUser();
+        user.setHandle(newHandle);
+        user.save(new Callback<User>() {
             @Override
-            public void onSuccess(final StmResponse<StmUser> stmResponse) {
+            public void onSuccess(final StmResponse<User> stmResponse) {
                 Log.d(TAG, "User handle update was successful. Handle is " + stmResponse.get().getHandle());
                 Log.d(TAG, "stmReponse.get() && stmService.getUser() point to the same object. "
                         + (stmResponse.get() == stmService.getUser()));
@@ -490,23 +490,23 @@ public class StmError {
 }
 ```
 
-### StmUser
-The StmUser object represents the Shout to Me user entity that is bound to your application.  Although you may have your own user domain objects, Shout to Me still needs a context in which to create shouts, accumulate statistics, etc.  A Shout to Me user created by your mobile app will be unique to your system.  For example, if a mobile user has installed two apps that utilize the Shout to Me SDK on the same phone, there will be two distinct Shout to Me users, one for each app.  Much of the generic code around creating and authenticating the user is hidden from you by the SDK to make your life easier.  However, there are a few items that do need to be exposed, such as setting a user handle to match the handle in your system.
+### User
+The User object represents the Shout to Me user entity that is bound to your application.  Although you may have your own user domain objects, Shout to Me still needs a context in which to create shouts, accumulate statistics, etc.  A Shout to Me user created by your mobile app will be unique to your system.  For example, if a mobile user has installed two apps that utilize the Shout to Me SDK on the same phone, there will be two distinct Shout to Me users, one for each app.  Much of the generic code around creating and authenticating the user is hidden from you by the SDK to make your life easier.  However, there are a few items that do need to be exposed, such as setting a user handle to match the handle in your system.
 
 Retrieving the user object from StmService can be done with or without a [Callback](#callback). Retrieving the user object without a [Callback](#callback) does not guarantee that the user object will have been initialized by the service, however, it is convenient for certain scenarios such as wanting to change the user's handle.
 
 ```java
 // Without a callback
-StmUser stmUser = stmService.getUser()
+User user = stmService.getUser()
 
 // With a callback
-stmService.getUser(new Callback<StmUser>() {
+stmService.getUser(new Callback<User>() {
     @Override
-    public void onSuccess(final StmResponse<StmUser> stmResponse) {
+    public void onSuccess(final StmResponse<User> stmResponse) {
         Log.d(TAG, "Shout to Me user has been loaded");
 		
-	StmUser stmUser = stmResponse.get();
-	Log.d(TAG, "User's handle is: " + stmUser.getHandle());
+	User user = stmResponse.get();
+	Log.d(TAG, "User's handle is: " + user.getHandle());
     }
 
     @Override
@@ -516,16 +516,16 @@ stmService.getUser(new Callback<StmUser>() {
 });
 ```
 
-Retrieving and updating the user’s handle.  Calling `save(Callback<StmUser>)` is required to persist the new handle to the Shout to Me service.
+Retrieving and updating the user’s handle.  Calling `save(Callback<User>)` is required to persist the new handle to the Shout to Me service.
 
 ```java
-String handle = stmUser.getHandle();
+String handle = user.getHandle();
 
-StmUser stmUser = stmService.getUser();
-stmUser.setHandle("BobSmith");
-stmUser.save(new Callback<StmUser>() {
+User user = stmService.getUser();
+user.setHandle("BobSmith");
+user.save(new Callback<User>() {
     @Override
-    public void onSuccess(final StmResponse<StmUser> stmResponse) {
+    public void onSuccess(final StmResponse<User> stmResponse) {
         Log.d(TAG, "User handle update was successful. Handle is " + stmResponse.get().getHandle());
     }
 
@@ -536,15 +536,15 @@ stmUser.save(new Callback<StmUser>() {
 });
 ```
 
-### StmShout
-The StmShout object represents the recording a user created and its metadata in the Shout to Me system.  Although generally a read-only object to the mobile user, an administrative user can make updates to it, such as making it public or private, and queuing it to be played on-air.
+### Shout
+The Shout object represents the recording a user created and its metadata in the Shout to Me system.  Although generally a read-only object to the mobile user, an administrative user can make updates to it, such as making it public or private, and queuing it to be played on-air.
 
 Currently the only time a client app will interact with a Shout is in the [StmRecorderActivity](#stm-recorder-activity) callback.  
 
 Deleting a shout
 
 ```java
-stmShout.delete(new Callback<String>() {
+shout.delete(new Callback<String>() {
     @Override
     public void onSuccess(StmResponse<String> stmResponse) {
         if (stmResponse.get().equals("success")) {
@@ -568,14 +568,14 @@ The StmRecorderActivity is a native Android [Activity](http://developer.android.
     * A “Done” button; when pressed, this will stop the recording and send the recorded audio to the server.  The StmRecorderActivity will then be closed.
     * A “Cancel” icon; when pressed, the recording will be stopped and the StmRecorderActivity will be closed.
 
-Optional callback if you would like to receive an StmShout object following the creation of the shout.
+Optional callback if you would like to receive an Shout object following the creation of the shout.
 
 ```java
-stmService.setShoutCreationCallback(new Callback<StmShout>() {
+stmService.setShoutCreationCallback(new Callback<Shout>() {
     @Override
-    public void onSuccess(StmResponse<StmShout> stmResponse) {
+    public void onSuccess(StmResponse<Shout> stmResponse) {
         Log.d(TAG, "Shout created successfully. ID = " + stmResponse.get().getId());
-        stmShout = stmResponse.get();
+        shout = stmResponse.get();
     }
 
     @Override

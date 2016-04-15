@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -32,11 +33,16 @@ public class StmAudioRecorder {
     ScheduledFuture cancelRecordingFuture;
     private ScheduledFuture stopRecordingFuture;
     private ScheduledFuture maxRecordingTimeFuture;
+    private ScheduledFuture timerCountdownFuture;
     private StmAudioRecorderResult stmAudioRecorderResult;
     private VoiceActivityDetector voiceActivityDetector;
     ByteArrayOutputStream realTimeStream;
     ByteArrayOutputStream finalStream;
     private int maxRecordingTimeInSeconds;
+    private boolean isSilenceDetectionEnabled = true;
+    private int secondsRemaining;
+    private int secondsElapsed = 0;
+    private RecordingCountdownListener recordingCountdownListener;
 
     final Runnable StopRecordingRunnable = new Runnable() {
         @Override
@@ -55,6 +61,7 @@ public class StmAudioRecorder {
     public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) {
         this.handler = handler;
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
+
         stmAudioRecorderResult = new StmAudioRecorderResult();
         voiceActivityDetector = new VoiceActivityDetector();
 
@@ -75,13 +82,32 @@ public class StmAudioRecorder {
     public StmAudioRecorderResult writeAudioToStream() {
         realTimeStream.reset();
         finalStream.reset();
-        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
+        final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(5);
 
         doRecord = true;
         audioRecord.startRecording();
 
-        cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, 15, TimeUnit.SECONDS);
-        maxRecordingTimeFuture = scheduler.schedule(StopRecordingRunnable, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
+        secondsRemaining = maxRecordingTimeInSeconds;
+        cancelRecordingFuture = scheduler.schedule(CancelRecordingRunnable, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
+        maxRecordingTimeFuture = scheduler.schedule(new Runnable() {
+            @Override
+            public void run() {
+                if (recordingCountdownListener != null) {
+                    recordingCountdownListener.onCountdownUpdate(0, secondsElapsed);
+                }
+                stopRecording();
+            }
+        }, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
+        timerCountdownFuture = scheduler.scheduleAtFixedRate(new Runnable() {
+            @Override
+            public void run() {
+                if (recordingCountdownListener != null) {
+                    recordingCountdownListener.onCountdownUpdate(secondsRemaining, secondsElapsed);
+                }
+                secondsRemaining--;
+                secondsElapsed++;
+            }
+        }, 0, 1, TimeUnit.SECONDS);
 
         byte[] buffer = new byte[minBufferSize * 4];
         byte[] bytes;
@@ -110,7 +136,9 @@ public class StmAudioRecorder {
             } else if (isUserStillTalking == 0) {
                 Log.d(TAG, "Silence detected");
                 pushPendingAudioToFinalOutputStream();
-                stopRecordingFuture = scheduler.schedule(StopRecordingRunnable, 2, TimeUnit.SECONDS);
+                if (isSilenceDetectionEnabled) {
+                    stopRecordingFuture = scheduler.schedule(StopRecordingRunnable, 2, TimeUnit.SECONDS);
+                }
             }
 
             // Value to manipulate UI "speaking" animation
@@ -147,6 +175,7 @@ public class StmAudioRecorder {
     public void cancelRecording() {
         cancelAllFutures();
         stmAudioRecorderResult.setIsCancelled(true);
+        stmAudioRecorderResult.setRecordingLengthInSeconds(0);
         doRecord = false;
     }
 
@@ -154,6 +183,7 @@ public class StmAudioRecorder {
         Log.d(TAG, "stopRecording");
         cancelAllFutures();
         stmAudioRecorderResult.setIsCancelled(false);
+        stmAudioRecorderResult.setRecordingLengthInSeconds(secondsElapsed);
         doRecord = false;
     }
 
@@ -186,5 +216,20 @@ public class StmAudioRecorder {
         if (maxRecordingTimeFuture != null && !maxRecordingTimeFuture.isCancelled()) {
             maxRecordingTimeFuture.cancel(false);
         }
+        if (timerCountdownFuture!= null && !timerCountdownFuture.isCancelled()) {
+            timerCountdownFuture.cancel(true);
+        }
+    }
+
+    public interface RecordingCountdownListener {
+        void onCountdownUpdate(int secondsRemaining, int secondsElapsed);
+    }
+
+    public void setRecordingCountdownListener(RecordingCountdownListener recordingCountdownListener) {
+        this.recordingCountdownListener = recordingCountdownListener;
+    }
+
+    public void setSilenceDetectionEnabled(boolean isSilenceDetectionEnabled) {
+        this.isSilenceDetectionEnabled = isSilenceDetectionEnabled;
     }
 }

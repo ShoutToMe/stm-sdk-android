@@ -9,44 +9,68 @@
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
     android:paddingBottom="@dimen/activity_vertical_margin"
-    tools:context="me.shoutto.sdk.android.StmRecorderActivity">
+    tools:context="me.shoutto.sdk.StmRecorderActivity">
 
     <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="fitXY"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
         android:id="@+id/cancelButton"
         android:onClick="cancelRecording"
         android:src="@drawable/close_button"
         android:background="@android:color/transparent"
         />
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_centerVertical="true"
+
+    <me.shoutto.sdk.RecordingGraphicView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:id="@+id/outerCircle"
+        stm:circlecolor="@color/stm_recording_outer_circle_gray"
+        stm:circlesize="450"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/inner_circle"
+        />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/recording_timer_background"
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:layout_centerInParent="true"
+        android:max="500"
+        android:progress="500"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/circular"
+        />
+
+    <ProgressBar
+        style="?android:attr/progressBarStyleHorizontal"
+        android:id="@+id/recording_timer"
+        android:layout_height="200dp"
+        android:layout_width="200dp"
+        android:layout_centerInParent="true"
+        android:progress="0"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/circular_blue"
+        />
+
+    <TextView
+        android:id="@+id/countdown_timer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
-        android:id="@+id/recordingGraphicViewInner" >
-        <me.shoutto.sdk.RecordingGraphicView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            stm:circlecolor="@color/stm_recording_inner_circle_blue"
-            stm:circlesize="300"/>
-    </LinearLayout>
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:layout_centerVertical="true"
-        android:layout_centerHorizontal="true"
-        android:id="@+id/recordingGraphicViewOuter" >
-        <me.shoutto.sdk.RecordingGraphicView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:id="@+id/outerCircle"
-            stm:circlecolor="@color/stm_recording_outer_circle_gray"
-            stm:circlesize="400"/>
-    </LinearLayout>
+        android:layout_below="@id/recording_timer"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_marginTop="-15dp"/>
 
     <Button
         android:layout_width="130dp"
@@ -54,9 +78,12 @@
         android:text="Done"
         android:id="@+id/stopRecordingButton"
         android:onClick="stopRecording"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
+        android:layout_centerInParent="true"
         android:layout_marginTop="450dp"
+        android:background="@android:color/transparent"
+        android:textColor="@color/stm_recording_inner_circle_blue"
+        android:textSize="24sp"
+        android:textStyle="bold"
         />
 
 </RelativeLayout>

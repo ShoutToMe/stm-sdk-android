@@ -1,5 +1,6 @@
 package me.shoutto.sdk;
 
+import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,6 +14,8 @@ import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
@@ -27,12 +30,14 @@ import java.util.concurrent.TimeUnit;
 /**
  * Created by tracyrojas on 9/20/15.
  */
-public class StmRecorderActivity extends Activity implements HandWaveGestureListener, SoundPool.OnLoadCompleteListener {
+public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
+        SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 
     private static final String TAG = "StmRecorderActivity";
     private static final String TAGS = "tags";
     private static final String TOPIC = "topic";
-    private static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
+    public static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
+    public static final String SILENCE_DETECTION_ENABLED = "silenceDetectionEnabled";
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;
@@ -45,6 +50,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     private String shoutTags;
     private String shoutTopic;
     private int maxRecordingTimeInSeconds = 0;
+    private Boolean isSilenceDetectionEnabled;
+    private TextView countdownTextView;
+    private String countdownText;
+    private ProgressBar countdownTimer;
+    private int progressMax;
+    private ObjectAnimator animation;
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
 
@@ -57,18 +68,25 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
             if (maxRecordingTimeInSeconds > 0) {
                 stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
+            } else {
+                maxRecordingTimeInSeconds = stmService.getMaxRecordingTimeInSeconds();
             }
             Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
-            stmAudioRecorder = new StmAudioRecorder(recorderHandler, stmService.getMaxRecordingTimeInSeconds());
+            stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
+            stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
+
+            if (isSilenceDetectionEnabled == null) {
+                stmAudioRecorder.setSilenceDetectionEnabled(true);
+            } else {
+                stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
+            }
+
+            progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
+            animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
 
             stmService.setOverlay(StmRecorderActivity.this);
 
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    startRecording();
-                }
-            });
+            startRecording();
         }
 
         @Override
@@ -119,11 +137,16 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                 shoutTags = extras.getString(TAGS);
                 shoutTopic = extras.getString(TOPIC);
                 maxRecordingTimeInSeconds = extras.getInt(MAX_RECORDING_TIME_IN_SECONDS);
+                isSilenceDetectionEnabled = extras.getBoolean(SILENCE_DETECTION_ENABLED, true);
             }
         } else {
             shoutTags = (String) savedInstanceState.getSerializable(TAGS);
             shoutTopic = (String) savedInstanceState.getSerializable(TOPIC);
             maxRecordingTimeInSeconds = (int) savedInstanceState.getSerializable(MAX_RECORDING_TIME_IN_SECONDS);
+            isSilenceDetectionEnabled = (Boolean) savedInstanceState.getSerializable(SILENCE_DETECTION_ENABLED);
+            if (isSilenceDetectionEnabled == null) {
+                isSilenceDetectionEnabled = true;
+            }
         }
 
         setContentView(R.layout.activity_stm_overlay);
@@ -133,6 +156,10 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         // Prepare objects for playing sounds
         soundPool = new SoundPool(10, AudioManager.STREAM_MUSIC, 0);
         soundPool.setOnLoadCompleteListener(this);
+
+        countdownTextView = (TextView) findViewById(R.id.countdown_timer);
+        countdownText = getResources().getString(R.string.recording_countdown_timer);
+        countdownTimer = (ProgressBar) findViewById(R.id.recording_timer);
     }
 
     @Override
@@ -142,6 +169,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         soundPool.release();
         scheduler.shutdown();
         executor.shutdown();
+        if (stmAudioRecorder != null) {
+            stmAudioRecorder.setRecordingCountdownListener(null);
+        }
     }
 
     @Override
@@ -151,6 +181,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         // Bind to StmService
         Intent intent = new Intent(this, StmService.class);
         bindService(intent, stmServiceConnection, Context.BIND_AUTO_CREATE);
+        startService(intent);
     }
 
     @Override
@@ -168,6 +199,16 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     @Override
     public void onHandWaveGesture() {
         stopRecording(null);
+    }
+
+    @Override
+    public void onCountdownUpdate(final int secondsRemaining, final int secondsElapsed) {
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                countdownTextView.setText(String.format(countdownText, String.valueOf(secondsRemaining)));
+            }
+        });
     }
 
     public void startRecording() {
@@ -191,24 +232,34 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         scheduler.schedule(new Runnable() {
             public void run() {
                 try {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            countdownTimer.setMax(progressMax);
+                            animation.setDuration(maxRecordingTimeInSeconds * 1000);
+                            animation.start();
+                        }
+                    });
 
                     Future<StmAudioRecorderResult> futureRecorderResult = executor.submit(new RecordShoutCallable());
                     StmAudioRecorderResult recordingResult = futureRecorderResult.get();
+                    final Integer shoutRecordingLengthInSeconds = recordingResult.getRecordingLengthInSeconds();
 
                     if (recordingResult.isCancelled() || !recordingResult.didUserSpeak()) {
                         playCancelListeningSound();
                     } else {
                         playFinishListeningSound();
 
-                        Future<StmShout> futureShout = executor.submit(new SendShoutCallable(recordingResult.getAudioBuffer()));
-                        final StmShout newShout = futureShout.get();
+                        Future<Shout> futureShout = executor.submit(new SendShoutCallable(recordingResult.getAudioBuffer()));
+                        final Shout newShout = futureShout.get();
+                        newShout.setRecordingLengthInSeconds(shoutRecordingLengthInSeconds);
 
                         playShoutSentSound();
 
                         runOnUiThread(new Runnable() {
                             @Override
                             public void run() {
-                                StmCallback<StmShout> stmCallback = stmService.getShoutCreationCallback();
+                                StmCallback<Shout> stmCallback = stmService.getShoutCreationCallback();
                                 stmCallback.onResponse(newShout);
                             }
                         });
@@ -239,10 +290,12 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     }
 
     public void stopRecording(View view) {
+        animation.end();
         stmAudioRecorder.finalizeRecording();
     }
 
     public void cancelRecording(View view) {
+        animation.end();
         stmAudioRecorder.cancelRecording();
     }
 
@@ -290,7 +343,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         }
     };
 
-    private class SendShoutCallable implements Callable<StmShout> {
+    private class SendShoutCallable implements Callable<Shout> {
         private ByteArrayOutputStream stream;
 
         public SendShoutCallable(ByteArrayOutputStream stream) {
@@ -298,15 +351,15 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         }
 
         @Override
-        public StmShout call() throws Exception {
-            StmShout stmShout = new StmShout(stmService, stream.toByteArray());
+        public Shout call() throws Exception {
+            Shout shout = new Shout(stmService, stream.toByteArray());
             if (shoutTags != null) {
-                stmShout.setTags(shoutTags);
+                shout.setTags(shoutTags);
             }
             if (shoutTopic != null) {
-                stmShout.setTopic(shoutTopic);
+                shout.setTopic(shoutTopic);
             }
-            return stmService.getStmHttpSender().postNewShout(stmShout);
+            return stmService.getStmHttpSender().postNewShout(shout);
         }
     }
 }

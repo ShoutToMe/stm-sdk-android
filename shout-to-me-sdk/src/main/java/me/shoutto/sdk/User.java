@@ -9,13 +9,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Created by tracyrojas on 9/20/15.
  */
-public class StmUser extends StmBaseEntity {
+public class User extends StmBaseEntity {
 
     private String authToken;
     private String handle;
@@ -23,8 +21,8 @@ public class StmUser extends StmBaseEntity {
 
     private boolean isInitialized = false;
 
-    public StmUser(StmService stmService) {
-        super(stmService, "StmUser", "/users");
+    public User(StmService stmService) {
+        super(stmService, "User", "/users");
     }
 
     boolean isInitialized() {
@@ -52,7 +50,7 @@ public class StmUser extends StmBaseEntity {
         this.handle = handle;
     }
 
-    public void save(final StmCallback<StmUser> callback) {
+    public void save(final StmCallback<User> callback) {
 
         // Prepare request
         JSONObject userUpdateJson = new JSONObject();
@@ -68,13 +66,13 @@ public class StmUser extends StmBaseEntity {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                StmUser stmUser = null;
+                User user = null;
                 StmError stmError = null;
                 try {
                     JSONObject data = response.getJSONObject("data");
-                    JSONObject user = data.getJSONObject("user");
+                    JSONObject userJson = data.getJSONObject("user");
                     try {
-                        stmUser = populateUserFieldsFromJson(user);
+                        user = populateUserFieldsFromJson(userJson);
                     } catch(JSONException ex) {
                         Log.w(TAG, "Unable to populate user fields from JSON", ex);
                         stmError = new StmError("An error occurred trying to user", false,
@@ -90,7 +88,7 @@ public class StmUser extends StmBaseEntity {
                             rollbackPendingChanges();
                             callback.onError(stmError);
                         } else {
-                            callback.onResponse(stmUser);
+                            callback.onResponse(user);
                         }
                     }
                 }
@@ -121,19 +119,19 @@ public class StmUser extends StmBaseEntity {
         sendAuthorizedPutRequest(this, userUpdateJson, responseListener, errorListener);
     }
 
-    void get(final StmCallback<StmUser> callback) {
+    void get(final StmCallback<User> callback) {
 
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                StmUser stmUser = null;
+                User user = null;
                 StmError stmError = null;
                 try {
                     // We don't update the ID or authToken here as that is handled elsewhere
                     JSONObject data = response.getJSONObject("data");
-                    JSONObject user = data.getJSONObject("user");
+                    JSONObject userJson = data.getJSONObject("user");
                     try {
-                        stmUser = populateUserFieldsFromJson(user);
+                        user = populateUserFieldsFromJson(userJson);
                     } catch(JSONException ex) {
                         Log.w(TAG, "Unable to populate user fields from JSON", ex);
                         stmError = new StmError("Unable to populate user fields from JSON", false,
@@ -148,7 +146,7 @@ public class StmUser extends StmBaseEntity {
                         if (stmError != null) {
                             callback.onError(stmError);
                         } else {
-                            callback.onResponse(stmUser);
+                            callback.onResponse(user);
                         }
                     }
                 }
@@ -169,7 +167,7 @@ public class StmUser extends StmBaseEntity {
         sendAuthorizedGetRequest(this, responseListener, errorListener);
     }
 
-    private StmUser populateUserFieldsFromJson(JSONObject json) throws JSONException {
+    private User populateUserFieldsFromJson(JSONObject json) throws JSONException {
 
         // Handle is an optional field so we bury the exception
         try {

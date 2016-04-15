@@ -31,20 +31,20 @@ class StmHttpSender {
         this.stmService = stmService;
     }
 
-    public StmShout postNewShout(StmShout stmShout) throws Exception {
+    public Shout postNewShout(Shout shout) throws Exception {
 
-        StmShout stmShoutFromResponse = null;
+        Shout shoutFromResponse = null;
         HttpURLConnection connection;
         int responseCode = 0;
         try {
             Map<String, String> params = new HashMap<>();
-            params.put("audio", new String(Base64.encode(stmShout.getAudio(), Base64.NO_WRAP)) ); //No_wrap to get rid of \n
+            params.put("audio", new String(Base64.encode(shout.getAudio(), Base64.NO_WRAP)) ); //No_wrap to get rid of \n
             params.put("channel_id", stmService.getChannelId());
-            if (stmShout.getTags() != null) {
-                params.put("tags", stmShout.getTags());
+            if (shout.getTags() != null) {
+                params.put("tags", shout.getTags());
             }
-            if (stmShout.getTopic() != null) {
-                params.put("topic", stmShout.getTopic());
+            if (shout.getTopic() != null) {
+                params.put("topic", shout.getTopic());
             }
             String requestString = buildRequestString(params);
 
@@ -80,7 +80,7 @@ class StmHttpSender {
             try {
                 JSONObject shoutResponseJson = new JSONObject(response);
                 if (shoutResponseJson.getString("status").equals("success")) {
-                    stmShoutFromResponse = new StmShout(stmService, shoutResponseJson.getJSONObject("data").getJSONObject("shout"));
+                    shoutFromResponse = new Shout(stmService, shoutResponseJson.getJSONObject("data").getJSONObject("shout"));
                 }
                 Log.d(TAG, "here i am in the httpsender reponse");
             } catch (JSONException ex) {
@@ -97,10 +97,10 @@ class StmHttpSender {
             throw(ex);
         }
 
-        return stmShoutFromResponse;
+        return shoutFromResponse;
     }
 
-    public void getUserWithClientToken(StmUser stmUser) throws Exception {
+    public void getUserWithClientToken(User user) throws Exception {
 
         HttpURLConnection connection;
         int responseCode = 0;
@@ -142,10 +142,10 @@ class StmHttpSender {
                 JSONObject responseJson = new JSONObject(response);
                 Log.d(TAG, responseJson.toString());
                 if (responseJson.getString("status").equals("success")) {
-                    stmUser.setAuthToken(responseJson
+                    user.setAuthToken(responseJson
                             .getJSONObject("data")
                             .getString("auth_token"));
-                    stmUser.setId(responseJson.getJSONObject("data")
+                    user.setId(responseJson.getJSONObject("data")
                             .getJSONObject("user")
                             .getString("id"));
                     stmService.setChannelId(responseJson

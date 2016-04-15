@@ -22,15 +22,14 @@ public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
     private static final String TAG = "StmService";
-    private static final int DEFAULT_MAX_RECORDING_TIME = 15;
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private String deviceId;
     private String userAuthToken;
-    private StmUser user;
+    private User user;
     private String channelId;
     private StmHttpSender stmHttpSender;
-    private StmCallback<StmShout> shoutCreationCallback;
+    private StmCallback<Shout> shoutCreationCallback;
     private ExecutorService executorService;
     private LocationServicesClient locationServicesClient;
     private ProximitySensorClient proximitySensorClient;
@@ -38,9 +37,12 @@ public class StmService extends Service {
     private SharedPreferences settings;
     private HandWaveGestureListener overlay;
     private String serverUrl = "https://app.shoutto.me/api/v1";
-    private int maxRecordingTimeInSeconds = DEFAULT_MAX_RECORDING_TIME;
+    private Channels channels;
+    private int maxRecordingTimeInSeconds;
 
-    public StmService() {}
+    public StmService() {
+        maxRecordingTimeInSeconds = 0;
+    }
 
     public class StmBinder extends Binder {
         public StmService getService() {
@@ -62,7 +64,7 @@ public class StmService extends Service {
             StmRequestQueue.setInstance(this);
 
             // Create or get user
-            this.user = new StmUser(this);
+            this.user = new User(this);
 
             this.stmHttpSender = new StmHttpSender(this);
             locationServicesClient = new LocationServicesClient(this);
@@ -95,11 +97,11 @@ public class StmService extends Service {
         return accessToken;
     }
 
-    public StmUser getUser() {
+    public User getUser() {
         return user;
     }
 
-    public void getUser(StmCallback<StmUser> callback) {
+    public void getUser(StmCallback<User> callback) {
         synchronized (this) {
             if (!user.isInitialized()) {
                 user.get(callback);
@@ -110,7 +112,7 @@ public class StmService extends Service {
         }
     }
 
-    public void reloadUser(final StmCallback<StmUser> callback) {
+    public void reloadUser(final StmCallback<User> callback) {
         synchronized (this) {
             user.setIsInitialized(false);
             getUser(callback);
@@ -135,18 +137,36 @@ public class StmService extends Service {
     }
 
     public void setChannelId(String channelId) {
-        this.channelId = channelId;
-        SharedPreferences.Editor editor = settings.edit();
-        if (channelId == null) {
-            editor.remove("channelId");
-        } else {
-            editor.putString("channelId", this.channelId);
+        if (this.channelId != channelId) {
+            this.channelId = channelId;
+            SharedPreferences.Editor editor = settings.edit();
+            if (channelId == null) {
+                editor.remove("channelId");
+            } else {
+                editor.putString("channelId", this.channelId);
+            }
+            editor.commit();
         }
-        editor.commit();
+    }
+
+    public void getChannels(final StmCallback<List<Channel>> callback) {
+        if (channels == null) {
+            channels = new Channels(this, callback);
+        }
     }
 
     public int getMaxRecordingTimeInSeconds() {
-        return maxRecordingTimeInSeconds;
+        Channel channel = channels.getChannel(channelId);
+        if (channel == null) {
+            Log.w(TAG, "No selected channel");
+            return maxRecordingTimeInSeconds;
+        } else {
+            if (maxRecordingTimeInSeconds > channel.getDefaultMaxRecordingLengthSeconds()) {
+                return maxRecordingTimeInSeconds;
+            } else {
+                return channel.getDefaultMaxRecordingLengthSeconds();
+            }
+        }
     }
 
     public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {
@@ -201,11 +221,11 @@ public class StmService extends Service {
         return locationServicesClient;
     }
 
-    public void setShoutCreationCallback(StmCallback<StmShout> shoutCreationCallback) {
+    public void setShoutCreationCallback(StmCallback<Shout> shoutCreationCallback) {
         this.shoutCreationCallback = shoutCreationCallback;
     }
 
-    StmCallback<StmShout> getShoutCreationCallback() {
+    StmCallback<Shout> getShoutCreationCallback() {
         return shoutCreationCallback;
     }
 
