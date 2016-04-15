@@ -24,8 +24,6 @@
         android:background="@android:color/transparent"
         />
 
-
-
     <me.shoutto.sdk.RecordingGraphicView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -33,6 +31,13 @@
         android:id="@+id/outerCircle"
         stm:circlecolor="@color/stm_recording_outer_circle_gray"
         stm:circlesize="450"/>
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/inner_circle"
+        />
 
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
@@ -42,25 +47,30 @@
         android:layout_centerInParent="true"
         android:max="500"
         android:progress="500"
-        android:progressDrawable="@drawable/circular_blue"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/circular"
         />
 
     <ProgressBar
         style="?android:attr/progressBarStyleHorizontal"
         android:id="@+id/recording_timer"
-        android:layout_width="200dp"
         android:layout_height="200dp"
+        android:layout_width="200dp"
         android:layout_centerInParent="true"
         android:progress="0"
-        android:progressDrawable="@drawable/circular"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/circular_blue"
         />
 
-    <me.shoutto.sdk.RecordingGraphicView
+    <TextView
+        android:id="@+id/countdown_timer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        stm:circlecolor="@color/stm_black_transparent_listening_overlay"
-        stm:circlesize="400"/>
+        android:layout_centerHorizontal="true"
+        android:layout_below="@id/recording_timer"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_marginTop="-15dp"/>
 
     <Button
         android:layout_width="130dp"
@@ -75,14 +85,5 @@
         android:textSize="24sp"
         android:textStyle="bold"
         />
-
-    <TextView
-        android:id="@+id/countdown_timer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@id/recording_timer"
-        android:textColor="@color/white"
-        android:textStyle="bold" />
 
 </RelativeLayout>
