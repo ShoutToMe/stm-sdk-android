@@ -21,7 +21,7 @@ public class Channel {
         return id;
     }
 
-    public void setId(String id) {
+    void setId(String id) {
         this.id = id;
     }
 
@@ -29,7 +29,7 @@ public class Channel {
         return name;
     }
 
-    public void setName(String name) {
+    void setName(String name) {
         this.name = name;
     }
 
@@ -37,7 +37,7 @@ public class Channel {
         return description;
     }
 
-    public void setDescription(String description) {
+    void setDescription(String description) {
         this.description = description;
     }
 
@@ -45,7 +45,7 @@ public class Channel {
         return imageUrl;
     }
 
-    public void setImageUrl(String imageUrl) {
+    void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
 
@@ -53,7 +53,7 @@ public class Channel {
         return listImageUrl;
     }
 
-    public void setListImageUrl(String listImageUrl) {
+    void setListImageUrl(String listImageUrl) {
         this.listImageUrl = listImageUrl;
     }
 
@@ -65,7 +65,7 @@ public class Channel {
         }
     }
 
-    public void setDefaultMaxRecordingLengthSeconds(int defaultMaxRecordingLengthSeconds) {
+    void setDefaultMaxRecordingLengthSeconds(int defaultMaxRecordingLengthSeconds) {
         this.defaultMaxRecordingLengthSeconds = defaultMaxRecordingLengthSeconds;
     }
 }

@@ -398,7 +398,7 @@ returned as unauthorized or when switching between test and production URLs, you
 to refresh the user's authentication token.  This is a synchronous method and should be done on a background thread.
 
 ```java
-stmService.refreshUserAuthToken()
+stmService.refreshUserAuthToken();
 ```
 
 #### Hand wave gesture initiated Shout recording
@@ -555,6 +555,48 @@ shout.delete(new Callback<String>() {
     @Override
     public void onFailure(StmError stmError) {
         Log.e(TAG, "Error occurred deleting shout. Error message: " + stmError.getMessage());
+    }
+});
+```
+
+### Channel
+The Channel object represents one or more channels that you may have configured in your Shout to Me account.  The Channel object contains metadata and default configuration values that can be used to display information to your users.
+
+```java
+public class Channel {
+
+    public String getId()
+
+    public String getName()
+
+    public String getDescription()
+
+    // The URL of an image that can be used to show the user what channel they are on
+    public String getImageUrl()
+
+    // A smaller version of the channel image to display in lists
+    public String getListImageUrl()
+
+    // The maximum recording length in seconds allowed for the channel
+    public int getDefaultMaxRecordingLengthSeconds()
+}
+```
+
+Retrieving channels
+
+```java
+stmService.getChannels(new Callback<List<Channel>>() {
+    @Override
+    public void onSuccess(StmResponse<List<Channel>> stmResponse) {
+        List<Channel> channels = stmResponse.get();
+        for (Channel channel : channels) {
+            Log.d(TAG, "Image URL for " + channel.getName() + " is " + channel.getImageUrl());
+        }
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "Could not retrieve channel list");
     }
 });
 ```
