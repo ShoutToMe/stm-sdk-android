@@ -8,9 +8,11 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.media.SoundPool;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -19,6 +21,7 @@ import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -66,27 +69,34 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             stmService = binder.getService();
             isStmServiceBound = true;
 
-            if (maxRecordingTimeInSeconds > 0) {
-                stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
+            Channels channels = stmService.getChannels();
+            if (channels == null) {
+                // Some flavors of Android seem to create multiple service instances which means
+                // Channels are null and need to be retrieved
+                stmService.getChannels(new Callback<List<Channel>>() {
+                    @Override
+                    public void onSuccess(StmResponse<List<Channel>> stmResponse) {
+                        finalizeRecordingDetailsAndStartRecording();
+                    }
+
+                    @Override
+                    public void onFailure(StmError stmError) {
+                        Log.e(TAG, "An error occurred initializing channels. " + stmError.getMessage());
+                    }
+                });
+            } else if (!channels.isInitialized()) {
+                // Channel initialization has begun, but is not finished.
+                // Register an AsyncTask to start recording when initilization is done
+                Handler onChannelsInitializedHandler = new Handler(Looper.getMainLooper()) {
+                    @Override
+                    public void handleMessage(Message inputMessage) {
+                        finalizeRecordingDetailsAndStartRecording();
+                    }
+                };
+                stmService.setOnChannelsInitializedHandler(onChannelsInitializedHandler);
             } else {
-                maxRecordingTimeInSeconds = stmService.getMaxRecordingTimeInSeconds();
+                finalizeRecordingDetailsAndStartRecording();
             }
-            Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
-            stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
-            stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
-
-            if (isSilenceDetectionEnabled == null) {
-                stmAudioRecorder.setSilenceDetectionEnabled(true);
-            } else {
-                stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
-            }
-
-            progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
-            animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
-
-            stmService.setOverlay(StmRecorderActivity.this);
-
-            startRecording();
         }
 
         @Override
@@ -95,6 +105,30 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             stmService.setOverlay(null);
         }
     };
+
+    private void finalizeRecordingDetailsAndStartRecording() {
+        if (maxRecordingTimeInSeconds > 0) {
+            stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
+        } else {
+            maxRecordingTimeInSeconds = stmService.getMaxRecordingTimeInSeconds();
+        }
+        Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
+        stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
+        stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
+
+        if (isSilenceDetectionEnabled == null) {
+            stmAudioRecorder.setSilenceDetectionEnabled(true);
+        } else {
+            stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
+        }
+
+        progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
+        animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
+
+        stmService.setOverlay(StmRecorderActivity.this);
+
+        startRecording();
+    }
 
     private static class RecordingHandler extends Handler {
         private final WeakReference<StmRecorderActivity> currentActivity;

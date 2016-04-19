@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
@@ -39,6 +40,7 @@ public class StmService extends Service {
     private String serverUrl = "https://app.shoutto.me/api/v1";
     private Channels channels;
     private int maxRecordingTimeInSeconds;
+    private Handler onChannelsInitializedHandler;
 
     public StmService() {
         maxRecordingTimeInSeconds = 0;
@@ -151,6 +153,21 @@ public class StmService extends Service {
 
     public void getChannels(final StmCallback<List<Channel>> callback) {
         channels = new Channels(this, callback);
+    }
+
+    Channels getChannels() {
+        return channels;
+    }
+
+    void setOnChannelsInitializedHandler(Handler onChannelsInitializedHandler) {
+        this.onChannelsInitializedHandler = onChannelsInitializedHandler;
+    }
+
+    void handleOnChannelsInitializedHandler() {
+        if (onChannelsInitializedHandler != null) {
+            onChannelsInitializedHandler.sendEmptyMessage(0);
+            onChannelsInitializedHandler = null;
+        }
     }
 
     public int getMaxRecordingTimeInSeconds() {
