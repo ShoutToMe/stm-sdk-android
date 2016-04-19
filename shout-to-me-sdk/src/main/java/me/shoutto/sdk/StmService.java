@@ -150,9 +150,7 @@ public class StmService extends Service {
     }
 
     public void getChannels(final StmCallback<List<Channel>> callback) {
-        if (channels == null) {
-            channels = new Channels(this, callback);
-        }
+        channels = new Channels(this, callback);
     }
 
     public int getMaxRecordingTimeInSeconds() {
