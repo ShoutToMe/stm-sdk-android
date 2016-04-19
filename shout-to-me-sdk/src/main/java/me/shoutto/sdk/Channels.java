@@ -61,6 +61,10 @@ class Channels {
         return selectedChannel;
     }
 
+    public List<Channel> getChannelList() {
+        return channels;
+    }
+
     private class GetChannelsAsyncTask extends AsyncTask<Void, Void, List<Channel>> {
 
         private boolean isUnauthorized = false;

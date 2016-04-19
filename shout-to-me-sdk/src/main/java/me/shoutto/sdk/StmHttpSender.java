@@ -18,6 +18,8 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.net.ssl.HttpsURLConnection;
+
 /**
  * Created by tracyrojas on 9/20/15.
  */
@@ -108,7 +110,13 @@ class StmHttpSender {
             String requestString = buildRequestString(null);
 
             URL url = new URL(stmService.getServerUrl() + ANONYMOUS_USER_PATH);
-            connection = (HttpURLConnection) url.openConnection();
+            Log.d(TAG, url.getProtocol());
+            if (url.getProtocol().equals("https")) {
+                connection = (HttpsURLConnection) url.openConnection();
+            } else {
+                connection = (HttpURLConnection) url.openConnection();
+            }
+
             connection.setRequestMethod("POST");
             connection.setDoOutput(true);
             connection.addRequestProperty("Authorization", "Basic " + stmService.getAccessToken());
