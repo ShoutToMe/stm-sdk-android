@@ -27,6 +27,7 @@ class Channels {
     private final static String CHANNELS_ENDPOINT = "/channels";
     private List<Channel> channels;
     private StmService stmService;
+    private boolean initialized = false;
 
     public Channels(StmService stmService, final StmCallback<List<Channel>> callback) {
         this.stmService = stmService;
@@ -65,6 +66,10 @@ class Channels {
         return channels;
     }
 
+    boolean isInitialized() {
+        return initialized;
+    }
+
     private class GetChannelsAsyncTask extends AsyncTask<Void, Void, List<Channel>> {
 
         private boolean isUnauthorized = false;
@@ -100,6 +105,8 @@ class Channels {
             } else {
                 callback.onResponse(channels);
             }
+            initialized = true;
+            stmService.handleOnChannelsInitializedHandler();
         }
 
         private List<Channel> getChannels() {
