@@ -14,13 +14,14 @@ import org.json.JSONObject;
 public class Shout extends StmBaseEntity {
 
     private static final String TAG = "Shout";
+    private static final String BASE_ENDPOINT = "/shouts";
     private byte[] audio;
     private String tags;
     private String topic;
     private Integer recordingLengthInSeconds;
 
     Shout(StmService stmService, byte[] rawData) {
-        super(stmService, TAG, "/shouts");
+        super(stmService, TAG, BASE_ENDPOINT);
         this.audio = addHeaderToRawData(rawData);
     }
 

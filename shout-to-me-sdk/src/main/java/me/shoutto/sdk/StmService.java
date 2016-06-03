@@ -39,6 +39,7 @@ public class StmService extends Service {
     private HandWaveGestureListener overlay;
     private String serverUrl = "https://app.shoutto.me/api/v1";
     private Channels channels;
+    private Messages messages;
     private int maxRecordingTimeInSeconds;
     private Handler onChannelsInitializedHandler;
 
@@ -186,6 +187,19 @@ public class StmService extends Service {
 
     public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
+    }
+
+    /**
+     *
+     * @return
+     * @throws Exception
+     */
+    public void getMessages(final StmCallback<List<Message>> callback) {
+        if (messages == null) {
+            messages = new Messages(this);
+        }
+        messages.getList().clear();
+        messages.getMessages(callback);
     }
 
     public String getUserAuthToken() throws Exception {
