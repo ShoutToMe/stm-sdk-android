@@ -17,7 +17,7 @@ public class Messages extends StmBaseEntityList<Message> {
     }
 
     public void getMessages(StmCallback<List<Message>> callback) {
-        String url = getStmService().getServerUrl() + getBaseEndpoint() + "?user_id=" + stmService.getUser().getId();
+        String url = getStmService().getServerUrl() + getBaseEndpoint() + "?recipient_id=" + stmService.getUser().getId();
         getListAsync(callback, new MessageJsonAdapter(stmService), url);
     }
 

@@ -90,6 +90,8 @@ public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, List<T>> 
             try {
                 if (responseCode == 401) {
                     isUnauthorized = true;
+                } else if (responseCode != 200) {
+                    throw new Exception(response);
                 } else {
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.getString("status").equals("success")) {

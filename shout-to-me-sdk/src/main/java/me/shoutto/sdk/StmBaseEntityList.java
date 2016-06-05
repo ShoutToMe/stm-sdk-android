@@ -24,6 +24,9 @@ public abstract class StmBaseEntityList<T> {
     }
 
     public void setListAndCallCallback(List<T> list, StmError stmError) {
+        if (this.list != null) {
+            this.list.clear();
+        }
         this.list = list;
         if (callback != null) {
             if (stmError != null) {

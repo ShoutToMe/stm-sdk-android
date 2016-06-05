@@ -10,6 +10,8 @@ import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import net.danlew.android.joda.JodaTimeAndroid;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -81,6 +83,8 @@ public class StmService extends Service {
         proximitySensorClient = new ProximitySensorClient(this);
 
         settings = getSharedPreferences(STM_SETTINGS_KEY, 0);
+
+        JodaTimeAndroid.init(this);
 
         return stmBinder;
     }
@@ -198,7 +202,6 @@ public class StmService extends Service {
         if (messages == null) {
             messages = new Messages(this);
         }
-        messages.getList().clear();
         messages.getMessages(callback);
     }
 
