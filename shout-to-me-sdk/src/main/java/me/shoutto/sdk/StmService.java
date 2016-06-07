@@ -10,7 +10,10 @@ import android.os.IBinder;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import net.danlew.android.joda.JodaTimeAndroid;
+
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -39,6 +42,7 @@ public class StmService extends Service {
     private HandWaveGestureListener overlay;
     private String serverUrl = "https://app.shoutto.me/api/v1";
     private Channels channels;
+    private Messages messages;
     private int maxRecordingTimeInSeconds;
     private Handler onChannelsInitializedHandler;
 
@@ -80,6 +84,8 @@ public class StmService extends Service {
         proximitySensorClient = new ProximitySensorClient(this);
 
         settings = getSharedPreferences(STM_SETTINGS_KEY, 0);
+
+        JodaTimeAndroid.init(this);
 
         return stmBinder;
     }
@@ -186,6 +192,25 @@ public class StmService extends Service {
 
     public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
+    }
+
+    /**
+     *
+     * @return
+     * @throws Exception
+     */
+    public void getMessages(final StmCallback<List<Message>> callback, boolean countOnly, boolean unreadOnly) {
+        if (messages == null) {
+            messages = new Messages(this);
+        }
+        messages.getMessages(callback, unreadOnly);
+    }
+
+    public void getMessageCount(final StmCallback<Integer> callback, boolean unreadOnly) {
+        if (messages == null) {
+            messages = new Messages(this);
+        }
+        messages.getMessageCount(callback, unreadOnly);
     }
 
     public String getUserAuthToken() throws Exception {
