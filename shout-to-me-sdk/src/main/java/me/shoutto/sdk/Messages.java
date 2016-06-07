@@ -1,8 +1,8 @@
 package me.shoutto.sdk;
 
-import android.os.AsyncTask;
-
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by tracyrojas on 6/3/16.
@@ -16,9 +16,26 @@ public class Messages extends StmBaseEntityList<Message> {
         super(stmService, Message.BASE_ENDPOINT);
     }
 
-    public void getMessages(StmCallback<List<Message>> callback) {
-        String url = getStmService().getServerUrl() + getBaseEndpoint() + "?recipient_id=" + stmService.getUser().getId();
-        getListAsync(callback, new MessageJsonAdapter(stmService), url);
+    public void getMessages(StmCallback<List<Message>> callback, boolean unreadOnly) {
+        String url = getStmService().getServerUrl() + getBaseEndpoint();
+
+        Map<String, String> queryStringParams = new HashMap<>();
+        if (unreadOnly) {
+            queryStringParams.put("unread", "true");
+        }
+
+        getListAsync(callback, new MessageJsonAdapter(stmService), url, queryStringParams);
+    }
+
+    public void getMessageCount(StmCallback<Integer> callback, boolean unreadOnly) {
+        String url = getStmService().getServerUrl() + getBaseEndpoint();
+
+        Map<String, String> queryStringParams = new HashMap<>();
+        if (unreadOnly) {
+            queryStringParams.put("unread", "true");
+        }
+
+        getCountAsync(callback, url, queryStringParams);
     }
 
     @Override

@@ -5,9 +5,14 @@ import android.util.Log;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -17,7 +22,7 @@ public class User extends StmBaseEntity {
 
     private String authToken;
     private String handle;
-    private String id;
+    private Date lastReadMessagesDate;
 
     private boolean isInitialized = false;
 
@@ -50,12 +55,30 @@ public class User extends StmBaseEntity {
         this.handle = handle;
     }
 
+    public Date getLastReadMessagesDate() {
+        return lastReadMessagesDate;
+    }
+
+    public void setLastReadMessagesDate(Date lastReadMessagesDate) {
+        DateTimeFormatter format = ISODateTimeFormat.dateTime();
+        String lastReadMessagesDateString =
+                format.print(new DateTime(lastReadMessagesDate).withZone(DateTimeZone.UTC));
+        pendingChanges.put("last_read_messages_date", lastReadMessagesDateString);
+        this.lastReadMessagesDate = lastReadMessagesDate;
+    }
+
     public void save(final StmCallback<User> callback) {
+
+        if (pendingChanges.size() == 0) {
+            return;
+        }
 
         // Prepare request
         JSONObject userUpdateJson = new JSONObject();
         try {
-            userUpdateJson.put("handle", handle);
+            for (Map.Entry<String, String> entry : pendingChanges.entrySet()) {
+                userUpdateJson.put(entry.getKey(), entry.getValue());
+            }
         } catch (JSONException ex) {
             Log.w(TAG, "Could not prepare JSON for user update request. Aborting", ex);
             callback.onError(new StmError("An error occurred trying to user",
@@ -142,6 +165,7 @@ public class User extends StmBaseEntity {
                     stmError = new StmError("Unable to parse user update response JSON", false,
                             StmError.SEVERITY_MINOR);
                 } finally {
+                    pendingChanges.clear();
                     if (callback != null) {
                         if (stmError != null) {
                             callback.onError(stmError);
@@ -175,6 +199,9 @@ public class User extends StmBaseEntity {
         } catch (JSONException ex) {
             Log.i(TAG, "User does not have a handle set");
         }
+
+        lastReadMessagesDate = new DateTime(json.getString("last_read_messages_date")).toDate();
+
         return this;
     }
 

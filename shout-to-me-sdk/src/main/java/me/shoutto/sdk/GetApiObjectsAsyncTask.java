@@ -12,7 +12,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -22,44 +21,50 @@ import java.util.List;
 /**
  * Created by tracyrojas on 6/3/16.
  */
-public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, List<T>> {
+public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, Void> {
 
     private static final String TAG = "GetApiObjectsAsyncTask";
     private boolean isUnauthorized = false;
     private StmBaseEntityList<T> stmBaseEntityList;
     private StmError stmError;
     private JsonAdapter<T> jsonAdapter;
+    private boolean countOnly;
 
-    public GetApiObjectsAsyncTask(StmBaseEntityList<T> stmBaseEntityList, JsonAdapter<T> jsonAdapter) {
+    public GetApiObjectsAsyncTask(StmBaseEntityList<T> stmBaseEntityList, JsonAdapter<T> jsonAdapter, boolean countOnly) {
         this.stmBaseEntityList = stmBaseEntityList;
         this.jsonAdapter = jsonAdapter;
+        this.countOnly = countOnly;
     }
 
-    public List<T> doInBackground(String... strings) {
+    @Override
+    public Void doInBackground(String... strings) {
         String urlString = strings[0];
-        List<T> objects = getApiObjects(urlString);
+        processRequest(urlString);
         if (isUnauthorized) {
             Log.d(TAG, stmBaseEntityList.getBaseEndpoint()
                     + " request was unauthorized. Attempting to refresh user token and try again.");
             try {
                 stmBaseEntityList.getStmService().refreshUserAuthToken();
-                objects = getApiObjects(urlString);
+                processRequest(urlString);
             } catch (Exception ex) {
                 Log.d(TAG, "Could not refresh user auth token. ", ex);
                 stmError = new StmError("Could not refresh user auth token. " + ex.getMessage(),
                         true, StmError.SEVERITY_MAJOR);
             }
         }
-        return objects;
+        return null;
     }
 
     @Override
-    public void onPostExecute(final List<T> objects) {
-        stmBaseEntityList.setListAndCallCallback(objects, stmError);
+    public void onPostExecute(Void voids) {
+        if (countOnly) {
+            stmBaseEntityList.executeCountCallback(stmError);
+        } else {
+            stmBaseEntityList.executeListCallback(stmError);
+        }
     }
 
-    private List<T> getApiObjects(String urlString) {
-        List<T> objects = new ArrayList<>();
+    private void processRequest(String urlString) {
 
         HttpURLConnection connection;
         int responseCode;
@@ -95,10 +100,17 @@ public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, List<T>> 
                 } else {
                     JSONObject responseJson = new JSONObject(response);
                     if (responseJson.getString("status").equals("success")) {
-                        JSONArray jsonArray = responseJson.getJSONObject("data").getJSONArray(Message.LIST_JSON_KEY);
-                        for (int i = 0; i < jsonArray.length(); i++) {
-                            JSONObject jsonObject = jsonArray.getJSONObject(i);
-                            objects.add(jsonAdapter.adapt(jsonObject));
+                        if (countOnly) {
+                            int count = responseJson.getJSONObject("data").getInt("count");
+                            stmBaseEntityList.setCount(count);
+                        } else {
+                            List<T> objects = new ArrayList<>();
+                            JSONArray jsonArray = responseJson.getJSONObject("data").getJSONArray(Message.LIST_JSON_KEY);
+                            for (int i = 0; i < jsonArray.length(); i++) {
+                                JSONObject jsonObject = jsonArray.getJSONObject(i);
+                                objects.add(jsonAdapter.adapt(jsonObject));
+                            }
+                            stmBaseEntityList.setList(objects);
                         }
                     }
                 }
@@ -123,8 +135,6 @@ public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, List<T>> 
                     + " call to Shout to Me service. " + ex.getMessage(),
                     true, StmError.SEVERITY_MAJOR);
         }
-
-        return objects;
     }
 
     private String convertStreamToString(InputStream is) throws Exception {

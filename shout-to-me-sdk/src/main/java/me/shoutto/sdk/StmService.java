@@ -13,6 +13,7 @@ import android.util.Log;
 import net.danlew.android.joda.JodaTimeAndroid;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -198,11 +199,18 @@ public class StmService extends Service {
      * @return
      * @throws Exception
      */
-    public void getMessages(final StmCallback<List<Message>> callback) {
+    public void getMessages(final StmCallback<List<Message>> callback, boolean countOnly, boolean unreadOnly) {
         if (messages == null) {
             messages = new Messages(this);
         }
-        messages.getMessages(callback);
+        messages.getMessages(callback, unreadOnly);
+    }
+
+    public void getMessageCount(final StmCallback<Integer> callback, boolean unreadOnly) {
+        if (messages == null) {
+            messages = new Messages(this);
+        }
+        messages.getMessageCount(callback, unreadOnly);
     }
 
     public String getUserAuthToken() throws Exception {
