@@ -9,7 +9,7 @@ import java.util.Date;
 /**
  * Created by tracyrojas on 6/3/16.
  */
-public class Message extends StmBaseEntity {
+public class Message extends StmBaseEntity implements Comparable<Message> {
 
     private static final String TAG = "Message";
     public static final String BASE_ENDPOINT = "/messages";
@@ -58,5 +58,10 @@ public class Message extends StmBaseEntity {
 
     public void setSentDate(Date sentDate) {
         this.sentDate = sentDate;
+    }
+
+    @Override
+    public int compareTo(Message message) {
+        return message.getSentDate().compareTo(this.getSentDate());
     }
 }
