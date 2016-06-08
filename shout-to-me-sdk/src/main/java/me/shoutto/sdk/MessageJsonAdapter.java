@@ -2,9 +2,13 @@ package me.shoutto.sdk;
 
 import android.util.Log;
 
-import org.joda.time.DateTime;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Created by tracyrojas on 6/3/16.
@@ -25,9 +29,15 @@ public class MessageJsonAdapter implements JsonAdapter<Message> {
         message.setId(jsonObject.getString("id"));
         message.setMessage(jsonObject.getString("message"));
 
-        String createdDate = jsonObject.getString("created_date");
-        DateTime dateTime = new DateTime(createdDate);
-        message.setSentDate(dateTime.toDate());
+        String createdDateString = jsonObject.getString("created_date");
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            Date createdDate = sdf.parse(createdDateString);
+            message.setSentDate(createdDate);
+        } catch (ParseException ex) {
+            Log.w(TAG, "Could not parse created date: " + createdDateString);
+        }
 
         JSONObject channel = jsonObject.getJSONObject("channel");
         message.setChannelName(channel.getString("name"));

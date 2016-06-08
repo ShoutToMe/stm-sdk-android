@@ -5,15 +5,15 @@ import android.util.Log;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 
-import org.joda.time.DateTime;
-import org.joda.time.DateTimeZone;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 /**
  * Created by tracyrojas on 9/20/15.
@@ -60,10 +60,12 @@ public class User extends StmBaseEntity {
     }
 
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
-        DateTimeFormatter format = ISODateTimeFormat.dateTime();
-        String lastReadMessagesDateString =
-                format.print(new DateTime(lastReadMessagesDate).withZone(DateTimeZone.UTC));
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        df.setTimeZone(tz);
+        String lastReadMessagesDateString = df.format(lastReadMessagesDate);
         pendingChanges.put("last_read_messages_date", lastReadMessagesDateString);
+
         this.lastReadMessagesDate = lastReadMessagesDate;
     }
 
@@ -200,7 +202,16 @@ public class User extends StmBaseEntity {
             Log.i(TAG, "User does not have a handle set");
         }
 
-        lastReadMessagesDate = new DateTime(json.getString("last_read_messages_date")).toDate();
+
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+            lastReadMessagesDate = sdf.parse(json.getString("last_read_messages_date"));
+        } catch(ParseException ex) {
+            Log.e(TAG, "Could not parse date", ex);
+            Log.w(TAG, "Could not parse date: " + json.getString("last_read_messages_date"));
+        }
+
 
         return this;
     }
