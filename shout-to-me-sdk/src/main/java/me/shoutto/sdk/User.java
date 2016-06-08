@@ -132,6 +132,7 @@ public class User extends StmBaseEntity {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
                 } catch (JSONException ex) {
+                    Log.e(TAG, "Error parsing JSON from user update response");
                     stmError.setMessage("An error occurred trying to save user");
                 }
                 if (callback != null) {
