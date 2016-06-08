@@ -21,7 +21,7 @@ public class StmBaseEntity {
     protected StmService stmService;
     protected final String TAG;
     private String baseEndpoint;
-    protected Map<String, String> pendingChanges;
+    protected Map<String, PendingApiObjectChange> pendingChanges;
     protected String id;
 
 

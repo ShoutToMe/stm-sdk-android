@@ -51,7 +51,7 @@ public class User extends StmBaseEntity {
     }
 
     public void setHandle(String handle) {
-        pendingChanges.put("handle", this.handle);
+        pendingChanges.put("handle", new PendingApiObjectChange("handle", handle, this.handle));
         this.handle = handle;
     }
 
@@ -64,7 +64,8 @@ public class User extends StmBaseEntity {
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         df.setTimeZone(tz);
         String lastReadMessagesDateString = df.format(lastReadMessagesDate);
-        pendingChanges.put("last_read_messages_date", lastReadMessagesDateString);
+        pendingChanges.put("last_read_messages_date",
+                new PendingApiObjectChange("last_read_messages_date", lastReadMessagesDateString, null));
 
         this.lastReadMessagesDate = lastReadMessagesDate;
     }
@@ -78,8 +79,8 @@ public class User extends StmBaseEntity {
         // Prepare request
         JSONObject userUpdateJson = new JSONObject();
         try {
-            for (Map.Entry<String, String> entry : pendingChanges.entrySet()) {
-                userUpdateJson.put(entry.getKey(), entry.getValue());
+            for (Map.Entry<String, PendingApiObjectChange> entry : pendingChanges.entrySet()) {
+                userUpdateJson.put(entry.getKey(), entry.getValue().getNewValue());
             }
         } catch (JSONException ex) {
             Log.w(TAG, "Could not prepare JSON for user update request. Aborting", ex);
@@ -217,12 +218,12 @@ public class User extends StmBaseEntity {
     }
 
     private void rollbackPendingChanges() {
-        for (Map.Entry property: pendingChanges.entrySet()) {
+        for (Map.Entry<String, PendingApiObjectChange> property: pendingChanges.entrySet()) {
             if (property.getKey().equals("handle")) {
-                if (property.getValue() == null) {
+                if (property.getValue().getOldValue() == null) {
                     handle = null;
                 } else {
-                    handle = property.getValue().toString();
+                    handle = property.getValue().getOldValue();
                 }
             }
         }
