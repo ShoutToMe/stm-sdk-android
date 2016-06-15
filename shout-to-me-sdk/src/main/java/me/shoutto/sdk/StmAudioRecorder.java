@@ -95,7 +95,7 @@ public class StmAudioRecorder {
                 if (recordingCountdownListener != null) {
                     recordingCountdownListener.onCountdownUpdate(0, secondsElapsed);
                 }
-                stopRecording();
+                finalizeRecording();
             }
         }, maxRecordingTimeInSeconds, TimeUnit.SECONDS);
         timerCountdownFuture = scheduler.scheduleAtFixedRate(new Runnable() {
@@ -195,6 +195,7 @@ public class StmAudioRecorder {
     }
 
     private void pushPendingAudioToFinalOutputStream() {
+        Log.d(TAG, "Write pending audio to final stream");
         if (realTimeStream.size() > 0) {
             try {
                 realTimeStream.writeTo(finalStream);
