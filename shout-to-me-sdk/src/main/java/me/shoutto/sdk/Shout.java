@@ -202,4 +202,9 @@ public class Shout extends StmBaseEntity {
     public void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
         this.recordingLengthInSeconds = recordingLengthInSeconds;
     }
+
+    @Override
+    protected void adaptFromJson(JSONObject jsonObject) {
+        // Stubbed
+    }
 }

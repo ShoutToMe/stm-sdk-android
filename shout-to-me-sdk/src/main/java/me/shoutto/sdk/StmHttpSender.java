@@ -84,7 +84,6 @@ class StmHttpSender {
                 if (shoutResponseJson.getString("status").equals("success")) {
                     shoutFromResponse = new Shout(stmService, shoutResponseJson.getJSONObject("data").getJSONObject("shout"));
                 }
-                Log.d(TAG, "here i am in the httpsender reponse");
             } catch (JSONException ex) {
                 Log.e(TAG, "Could not parse create shout response JSON", ex);
             }
@@ -176,6 +175,73 @@ class StmHttpSender {
             Log.e(TAG, "Error occurred in trying to send Shout to Shout to Me service", ex);
             throw(ex);
         }
+    }
+
+    public JSONObject putEntityObject(StmBaseEntity baseEntity) throws Exception {
+
+        HttpURLConnection connection;
+        int responseCode = 0;
+
+        JSONObject requestJson = new JSONObject();
+        try {
+            for (Map.Entry<String, PendingApiObjectChange> entry : baseEntity.getPendingChanges().entrySet()) {
+                if (entry.getValue() != null) {
+                    requestJson.put(entry.getKey(), entry.getValue().getNewValue());
+                }
+            }
+        } catch (JSONException ex) {
+            Log.w(TAG, "Could not package object parameters into JSON ", ex);
+        }
+        String requestString = requestJson.toString();
+
+        try {
+            URL url = new URL(baseEntity.getSingleResourceEndpoint().replace(":id", baseEntity.getId()));
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("PUT");
+            connection.setDoOutput(true);
+            connection.addRequestProperty("Authorization", "Bearer " + stmService.getUserAuthToken());
+            connection.addRequestProperty("Content-Type", "application/json");
+            connection.setFixedLengthStreamingMode(requestString.getBytes().length);
+            connection.connect();
+
+            OutputStream outStream = connection.getOutputStream();
+            outStream.write(requestString.getBytes());
+            outStream.close();
+
+            responseCode = connection.getResponseCode();
+            Log.d(TAG, String.valueOf(responseCode));
+
+            String response = "";
+            if (responseCode == 200) {
+                final InputStream in = new BufferedInputStream(connection.getInputStream());
+                response = convertStreamToString(in);
+                in.close();
+            } else {
+                final InputStream in = new BufferedInputStream(connection.getErrorStream());
+                response = convertStreamToString(in);
+                in.close();
+                throw new Exception("Error occurred in create shout server call. " + response);
+            }
+            connection.disconnect();
+
+            try {
+                JSONObject responseObject = new JSONObject(response);
+                return responseObject;
+            } catch (JSONException ex) {
+                Log.e(TAG, "Could not parse create shout response JSON", ex);
+            }
+        }  catch (MalformedURLException ex) {
+            Log.e(TAG, "Could not create URL for Shout to Me service", ex);
+            throw(ex);
+        } catch (IOException ex) {
+            Log.e(TAG, "Could not connect to Shout to Me service", ex);
+            throw(ex);
+        } catch (Exception ex) {
+            Log.e(TAG, "Error occurred in trying to send Shout to Shout to Me service", ex);
+            throw(ex);
+        }
+
+        return null;
     }
 
     private String buildRequestString(Map<String, String> params) {
