@@ -109,7 +109,6 @@ class StmHttpSender {
             String requestString = buildRequestString(null);
 
             URL url = new URL(stmService.getServerUrl() + ANONYMOUS_USER_PATH);
-            Log.d(TAG, url.getProtocol());
             if (url.getProtocol().equals("https")) {
                 connection = (HttpsURLConnection) url.openConnection();
             } else {

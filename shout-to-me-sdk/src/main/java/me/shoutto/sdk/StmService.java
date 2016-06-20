@@ -56,6 +56,26 @@ public class StmService extends Service {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        Log.d(TAG, "Destroying StmService");
+    }
+
+
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+
+        if (intent != null) {
+            if (intent.getStringExtra("baseUrl") != null) {
+                serverUrl = intent.getStringExtra("baseUrl");
+            }
+        }
+
+        return START_STICKY;
+    }
+
+    @Override
     public IBinder onBind(Intent intent) {
 
         accessToken = intent.getStringExtra("stmClientToken");

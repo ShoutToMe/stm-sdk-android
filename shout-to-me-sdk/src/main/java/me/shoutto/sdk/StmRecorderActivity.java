@@ -213,9 +213,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         super.onStart();
 
         // Bind to StmService
-        Intent intent = new Intent(this, StmService.class);
-        bindService(intent, stmServiceConnection, Context.BIND_AUTO_CREATE);
+        Intent intent = new Intent(getApplicationContext(), StmService.class);
         startService(intent);
+        bindService(intent, stmServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
