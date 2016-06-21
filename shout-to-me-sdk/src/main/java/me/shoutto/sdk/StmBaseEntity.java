@@ -8,6 +8,7 @@ import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -16,7 +17,7 @@ import java.util.Map;
 /**
  * Created by tracyrojas on 9/20/15.
  */
-public class StmBaseEntity {
+abstract class StmBaseEntity {
 
     protected StmService stmService;
     protected final String TAG;
@@ -32,7 +33,7 @@ public class StmBaseEntity {
         pendingChanges = new HashMap<>();
     }
 
-    String getSingleResourceEndpoint() {
+    public String getSingleResourceEndpoint() {
         return stmService.getServerUrl() + baseEndpoint + "/:id";
     }
 
@@ -44,6 +45,36 @@ public class StmBaseEntity {
         this.id = id;
     }
 
+    public Map<String, PendingApiObjectChange> getPendingChanges() {
+        return pendingChanges;
+    }
+
+    abstract protected void adaptFromJson(JSONObject jsonObject) throws JSONException;
+
+    /**
+     * Synchronous version of save base entity. Should only be run in background threads.
+     * @return StmError
+     */
+    synchronized public StmError save() {
+        StmError stmError = null;
+        try {
+            JSONObject responseObject = stmService.getStmHttpSender().putEntityObject(this);
+
+            if (responseObject != null && !responseObject.getString("status").equals("success")) {
+                return new StmError("A server error occurring trying to save object " + getClass().toString()
+                        , false, StmError.SEVERITY_MAJOR);
+            }
+
+            adaptFromJson(responseObject.getJSONObject("data").getJSONObject(TAG.toLowerCase()));
+        } catch(Exception ex) {
+            Log.e(TAG, "Could not PUT base entity", ex);
+            stmError = new StmError("Error occurred saving " + this.getClass().toString(),
+                    false, StmError.SEVERITY_MAJOR);
+        }
+
+        return stmError;
+    }
+
     protected void sendAuthorizedGetRequest(final StmBaseEntity entity,
                                             final Response.Listener<JSONObject> responseListener,
                                             final Response.ErrorListener errorListener) {
@@ -53,7 +84,7 @@ public class StmBaseEntity {
                 try {
                     final String authToken = stmService.getUserAuthToken();
                     String url = entity.getSingleResourceEndpoint().replace(":id", entity.getId());
-                    JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url,
+                    JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                             responseListener, errorListener) {
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {

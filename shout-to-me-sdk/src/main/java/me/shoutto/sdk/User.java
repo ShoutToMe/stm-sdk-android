@@ -21,8 +21,9 @@ import java.util.TimeZone;
 public class User extends StmBaseEntity {
 
     private String authToken;
-    private String handle;
     private Date lastReadMessagesDate;
+    private String handle;
+    private String platformEndpointArn;
 
     private boolean isInitialized = false;
 
@@ -70,6 +71,21 @@ public class User extends StmBaseEntity {
         this.lastReadMessagesDate = lastReadMessagesDate;
     }
 
+    public String getPlatformEndpointArn() {
+        return platformEndpointArn;
+    }
+
+    public void setPlatformEndpointArn(String platformEndpointArn) {
+        pendingChanges.put("platform_endpoint_arn",
+                new PendingApiObjectChange("platform_endpoing_arn", platformEndpointArn, this.platformEndpointArn));
+        this.platformEndpointArn = platformEndpointArn;
+    }
+
+    @Override
+    protected void adaptFromJson(JSONObject jsonObject) throws JSONException {
+        populateUserFieldsFromJson(jsonObject);
+    }
+
     public void save(final StmCallback<User> callback) {
 
         if (pendingChanges.size() == 0) {
@@ -80,7 +96,9 @@ public class User extends StmBaseEntity {
         JSONObject userUpdateJson = new JSONObject();
         try {
             for (Map.Entry<String, PendingApiObjectChange> entry : pendingChanges.entrySet()) {
-                userUpdateJson.put(entry.getKey(), entry.getValue().getNewValue());
+                if (entry.getValue() != null) {
+                    userUpdateJson.put(entry.getKey(), entry.getValue().getNewValue());
+                }
             }
         } catch (JSONException ex) {
             Log.w(TAG, "Could not prepare JSON for user update request. Aborting", ex);
@@ -203,16 +221,22 @@ public class User extends StmBaseEntity {
             Log.i(TAG, "User does not have a handle set");
         }
 
-
         try {
+            String lastReadMessagesDateString = json.getString("last_read_messages_date");
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            lastReadMessagesDate = sdf.parse(json.getString("last_read_messages_date"));
+            lastReadMessagesDate = sdf.parse(lastReadMessagesDateString);
         } catch(ParseException ex) {
-            Log.e(TAG, "Could not parse date", ex);
-            Log.w(TAG, "Could not parse date: " + json.getString("last_read_messages_date"));
+            Log.e(TAG, "Could not parse last read messages date", ex);
+        } catch(JSONException ex) {
+            // Ignore. It just may occur if message page was never viewed.
         }
 
+        try {
+            platformEndpointArn = json.getString("platform_endpoint_arn");
+        } catch (JSONException ex) {
+            // Ignore. Scenario occurs during first app launch.
+        }
 
         return this;
     }

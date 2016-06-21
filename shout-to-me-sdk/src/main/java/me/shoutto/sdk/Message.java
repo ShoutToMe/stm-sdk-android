@@ -2,6 +2,8 @@ package me.shoutto.sdk;
 
 import android.util.Log;
 
+import org.json.JSONObject;
+
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -63,5 +65,10 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     @Override
     public int compareTo(Message message) {
         return message.getSentDate().compareTo(this.getSentDate());
+    }
+
+    @Override
+    protected void adaptFromJson(JSONObject jsonObject) {
+        // Stubbed
     }
 }
