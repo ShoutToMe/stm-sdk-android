@@ -601,6 +601,132 @@ stmService.getChannels(new Callback<List<Channel>>() {
 });
 ```
 
+#### Channel Subscriptions
+A subscription to a channel indicates that push notifications will be sent to the app when a broadcaster
+publishes a channel-wide message.  The SDK provides a way for the client app to subscribe, unsubscribe and
+tell if the user is currently subscribed or not.  This can be used in an app setting to allow the user
+control over their subscription status.
+
+Determining subscription status
+
+```java
+channel.isSubscribed(new Callback<Boolean>() {
+    @Override
+    public void onSuccess(StmResponse<Boolean> isSubscribedResponse) {
+        if (isSubscribedResponse.get()) {
+            Log.d(TAG, "User is subscribed to channel");
+        } else {
+            Log.d(TAG, "User is not subscribed to channel");
+        }
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred checking user's subscribed status. " + stmError.getMessage());
+    }
+});
+```
+
+Subscribing to a channel
+
+```java
+channel.subscribe(new Callback<Void>() {
+    @Override
+    public void onSuccess(StmResponse<Void> subscribeResponse) {
+        Log.d(TAG, "User is now subscribed");
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred subscribing to channel. " + stmError.getMessage());
+    }
+});
+```
+
+Unsubscribing to a channel
+
+```java
+channel.unsubscribe(new Callback<Void>() {
+    @Override
+    public void onSuccess(StmResponse<Void> unsubscribeResponse) {
+        Log.d(TAG, "User is now unsubscribed.");
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred unsubscribing to channel. " + stmError.getMessage());
+    }
+});
+```
+
+### Message
+The Message object represents text or audio messages that can be sent from broadcasters to users.  A
+user may receive messages from more than one channel if the client app supports multiple channels.
+
+```java
+public class Message {
+
+    public String getId()
+
+    public Channel getChannel()
+
+    // The actual message text
+    public String getMessage()
+
+    // The name of the sender.  May be null if was sent via a channel-wide notification
+    public String getSenderName()
+
+    public Date getSentDate()
+
+    // A reference to a Shout to Me conversation.  May be null
+    public String getConversationId()
+}
+```
+
+Retrieving messages
+
+A maximum of 1000 messages will be returned.
+
+```java
+stmService.getMessages(new Callback<List<Message>>() {
+    @Override
+    public void onSuccess(StmResponse<List<Message>> messagesResponse) {
+        List<Message> messageList = messagesResponse.get();
+        Log.d(TAG, "Number of messages = " + String.valueOf(messageList.size()));
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "Could not retrieve message list");
+    }
+});
+```
+
+Creating a message
+
+At certain times a client app may need to create a message for persistance in the user's message records.
+A Builder class is provided to help with this.
+
+```java
+stmService.getMessageBuilder()
+    .channelId(channelId)
+    .conversationId(conversationId)
+    .message(messageBody)
+    .recipientId(stmService.getUser().getId())
+    .create(new Callback<Message>() {
+        @Override
+        public void onSuccess(StmResponse<Message> response) {
+            Message message = response.get();
+            Log.d(TAG, "Message created successfully " + message.getId());
+        }
+
+        @Override
+        public void onFailure(StmError stmError) {
+            Log.w(TAG, "Error creating message " + stmError.getMessage());
+        }
+    });
+```
+
 ### <a name="stm-recorder-activity"></a>StmRecorderActivity
 The StmRecorderActivity is a native Android [Activity](http://developer.android.com/reference/android/app/Activity.html) used to quickly and easily enable recording in a client app.  When the StmRecorderActivity is launched, the following will occur:
 

@@ -147,17 +147,8 @@ class Channels {
                             JSONArray channelsJson = responseJson.getJSONObject("data").getJSONArray("channels");
                             for (int i = 0; i < channelsJson.length(); i++) {
                                 JSONObject channelJson = channelsJson.getJSONObject(i);
-                                Channel channel = new Channel();
-                                channel.setId(channelJson.getString("id"));
-                                channel.setName(channelJson.getString("name"));
-                                channel.setDescription(channelJson.getString("description"));
-                                channel.setImageUrl(channelJson.getString("channel_image"));
-                                channel.setListImageUrl(channelJson.getString("channel_list_image"));
-                                try {
-                                    channel.setDefaultMaxRecordingLengthSeconds(channelJson.getInt("default_voigo_max_recording_length_seconds"));
-                                } catch (JSONException ex) {
-                                    Log.i(TAG, "Channel does not have default max recording length");
-                                }
+                                Channel channel = new Channel(stmService);
+                                channel.adaptFromJson(channelJson);
                                 channels.add(channel);
                             }
                         }

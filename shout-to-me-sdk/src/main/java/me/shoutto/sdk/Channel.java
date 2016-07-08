@@ -1,10 +1,20 @@
 package me.shoutto.sdk;
 
-/**
- * Created by tracyrojas on 4/11/16.
- */
-public class Channel {
+import android.util.Log;
 
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+/**
+ * The Channel class represents a Shout to Me Channel.
+ */
+public class Channel extends StmBaseEntity {
+
+    private static final String TAG = "Channel";
+    public static final String BASE_ENDPOINT = "/channels";
     private static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
     private String id;
     private String name;
@@ -13,7 +23,8 @@ public class Channel {
     private String listImageUrl;
     private int defaultMaxRecordingLengthSeconds;
 
-    public Channel() {
+    public Channel(StmService stmService) {
+        super(stmService, TAG, BASE_ENDPOINT);
         defaultMaxRecordingLengthSeconds = 0;
     }
 
@@ -37,25 +48,14 @@ public class Channel {
         return description;
     }
 
-    void setDescription(String description) {
-        this.description = description;
-    }
-
     public String getImageUrl() {
         return imageUrl;
-    }
-
-    void setImageUrl(String imageUrl) {
-        this.imageUrl = imageUrl;
     }
 
     public String getListImageUrl() {
         return listImageUrl;
     }
 
-    void setListImageUrl(String listImageUrl) {
-        this.listImageUrl = listImageUrl;
-    }
 
     public int getDefaultMaxRecordingLengthSeconds() {
         if (defaultMaxRecordingLengthSeconds == 0) {
@@ -65,8 +65,158 @@ public class Channel {
         }
     }
 
-    void setDefaultMaxRecordingLengthSeconds(int defaultMaxRecordingLengthSeconds) {
-        this.defaultMaxRecordingLengthSeconds = defaultMaxRecordingLengthSeconds;
+    public void subscribe(final StmCallback<Void> callback) {
+        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    String status = response.getString("status");
+                    if (status.equals("success")) {
+                        callback.onResponse(null);
+                    } else {
+                        Log.w(TAG, "Channel subscribe response was not 'success'");
+                        StmError stmError = new StmError();
+                        stmError.setSeverity(StmError.SEVERITY_MINOR);
+                        stmError.setBlockingError(false);
+                        stmError.setMessage("Channel subscribe response was not 'success'");
+                        callback.onError(stmError);
+                    }
+                } catch (JSONException ex) {
+                    Log.w(TAG, "Could not parse channel subscribe response.", ex);
+                    StmError stmError = new StmError();
+                    stmError.setSeverity(StmError.SEVERITY_MINOR);
+                    stmError.setBlockingError(false);
+                    stmError.setMessage("Could not parse channel subscribe response.");
+                    callback.onError(stmError);
+                }
+            }
+        };
+
+        Response.ErrorListener errorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                StmError stmError = new StmError();
+                stmError.setSeverity(StmError.SEVERITY_MINOR);
+                stmError.setBlockingError(false);
+                try {
+                    JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
+                    stmError.setMessage(responseData.getString("message"));
+                } catch (JSONException ex) {
+                    Log.e(TAG, "Error parsing JSON from channel subscribe response");
+                    stmError.setMessage("An error occurred trying to subscribe to channel.");
+                }
+                if (callback != null) {
+                    callback.onError(stmError);
+                }
+            }
+        };
+
+        sendAuthorizedPostRequest(BASE_ENDPOINT + "/" + id + "/subscriptions", null, responseListener, errorListener);
+    }
+
+    public void unsubscribe(final StmCallback<Void> callback) {
+        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    String status = response.getString("status");
+                    if (status.equals("success")) {
+                        callback.onResponse(null);
+                    } else {
+                        Log.w(TAG, "Channel unsubscribe response was not 'success'");
+                        StmError stmError = new StmError();
+                        stmError.setSeverity(StmError.SEVERITY_MINOR);
+                        stmError.setBlockingError(false);
+                        stmError.setMessage("Channel unsubscribe response was not 'success'");
+                        callback.onError(stmError);
+                    }
+                } catch (JSONException ex) {
+                    Log.w(TAG, "Could not parse channel unsubscribe response.", ex);
+                    StmError stmError = new StmError();
+                    stmError.setSeverity(StmError.SEVERITY_MINOR);
+                    stmError.setBlockingError(false);
+                    stmError.setMessage("Could not parse channel unsubscribe response.");
+                    callback.onError(stmError);
+                }
+            }
+        };
+
+        Response.ErrorListener errorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                StmError stmError = new StmError();
+                stmError.setSeverity(StmError.SEVERITY_MINOR);
+                stmError.setBlockingError(false);
+                try {
+                    JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
+                    stmError.setMessage(responseData.getString("message"));
+                } catch (JSONException ex) {
+                    Log.e(TAG, "Error parsing JSON from channel subscribe response");
+                    stmError.setMessage("An error occurred trying to subscribe to channel.");
+                }
+                if (callback != null) {
+                    callback.onError(stmError);
+                }
+            }
+        };
+
+        sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id + "/subscriptions", responseListener, errorListener);
+    }
+
+    public void isSubscribed(final StmCallback<Boolean> callback) {
+        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
+            @Override
+            public void onResponse(JSONObject response) {
+                try {
+                    String status = response.getString("status");
+                    if (!"success".equals(status)) {
+                        Log.w(TAG, "Channel isSubscribe status does not equal 'success'");
+                    }
+                } catch (JSONException ex) {
+                    Log.w(TAG, "Could not parse channel isSubscribed response.", ex);
+                }
+                callback.onResponse(true);
+            }
+        };
+
+        Response.ErrorListener errorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                if (error.networkResponse.statusCode == 404) {
+                    callback.onResponse(false);
+                } else {
+                    StmError stmError = new StmError();
+                    stmError.setSeverity(StmError.SEVERITY_MINOR);
+                    stmError.setBlockingError(false);
+                    try {
+                        JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
+                        stmError.setMessage(responseData.getString("message"));
+                    } catch (JSONException ex) {
+                        Log.e(TAG, "Error parsing JSON from channel isSubscribed response");
+                        stmError.setMessage("An error occurred trying to get channel isSubscribed status.");
+                    }
+                    if (callback != null) {
+                        callback.onError(stmError);
+                    }
+                }
+            }
+        };
+
+        sendAuthorizedGetRequest(BASE_ENDPOINT + "/" + id + "/subscriptions", responseListener, errorListener);
+    }
+
+    @Override
+    protected void adaptFromJson(JSONObject jsonObject) throws JSONException {
+        id = jsonObject.getString("id");
+        name = jsonObject.getString("name");
+        description = jsonObject.getString("description");
+        imageUrl = jsonObject.getString("channel_image");
+        listImageUrl = jsonObject.getString("channel_list_image");
+        try {
+            defaultMaxRecordingLengthSeconds = jsonObject.getInt("default_voigo_max_recording_length_seconds");
+        } catch (JSONException ex) {
+            Log.i(TAG, "Channel does not have default max recording length");
+        }
     }
 }
 

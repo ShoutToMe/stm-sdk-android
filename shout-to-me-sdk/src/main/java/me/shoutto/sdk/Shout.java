@@ -176,7 +176,7 @@ public class Shout extends StmBaseEntity {
                 }
             }
         };
-        sendAuthorizedDeleteJsonObjectRequest(responseListener, errorListener);
+        sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id, responseListener, errorListener);
     }
 
     public String getTags() {
