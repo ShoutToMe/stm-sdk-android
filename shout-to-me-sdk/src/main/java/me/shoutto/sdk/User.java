@@ -152,7 +152,7 @@ public class User extends StmBaseEntity {
                     stmError.setMessage(responseData.getString("message"));
                 } catch (JSONException ex) {
                     Log.e(TAG, "Error parsing JSON from user update response");
-                    stmError.setMessage("An error occurred trying to save user");
+                    stmError.setMessage("An error occurred trying to create user");
                 }
                 if (callback != null) {
                     callback.onError(stmError);
@@ -209,7 +209,7 @@ public class User extends StmBaseEntity {
             }
         };
 
-        sendAuthorizedGetRequest(this, responseListener, errorListener);
+        sendAuthorizedGetRequest("/users/me", responseListener, errorListener);
     }
 
     private User populateUserFieldsFromJson(JSONObject json) throws JSONException {

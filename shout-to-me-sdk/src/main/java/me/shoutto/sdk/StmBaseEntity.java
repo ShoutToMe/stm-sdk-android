@@ -52,7 +52,7 @@ abstract class StmBaseEntity {
     abstract protected void adaptFromJson(JSONObject jsonObject) throws JSONException;
 
     /**
-     * Synchronous version of save base entity. Should only be run in background threads.
+     * Synchronous version of create base entity. Should only be run in background threads.
      * @return StmError
      */
     synchronized public StmError save() {
@@ -61,7 +61,7 @@ abstract class StmBaseEntity {
             JSONObject responseObject = stmService.getStmHttpSender().putEntityObject(this);
 
             if (responseObject != null && !responseObject.getString("status").equals("success")) {
-                return new StmError("A server error occurring trying to save object " + getClass().toString()
+                return new StmError("A server error occurring trying to create object " + getClass().toString()
                         , false, StmError.SEVERITY_MAJOR);
             }
 
@@ -75,7 +75,7 @@ abstract class StmBaseEntity {
         return stmError;
     }
 
-    protected void sendAuthorizedGetRequest(final StmBaseEntity entity,
+    protected void sendAuthorizedGetRequest(final String urlSuffix,
                                             final Response.Listener<JSONObject> responseListener,
                                             final Response.ErrorListener errorListener) {
         stmService.getExecutorService().execute(new Runnable() {
@@ -83,8 +83,35 @@ abstract class StmBaseEntity {
             public void run() {
                 try {
                     final String authToken = stmService.getUserAuthToken();
-                    String url = entity.getSingleResourceEndpoint().replace(":id", entity.getId());
+                    String url = stmService.getServerUrl() + urlSuffix;
                     JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
+                            responseListener, errorListener) {
+                        @Override
+                        public Map<String, String> getHeaders() throws AuthFailureError {
+                            Map<String, String> params = new HashMap<>();
+                            params.put("Authorization", "Bearer " + authToken);
+                            return params;
+                        }
+                    };
+                    StmRequestQueue.getInstance().addToRequestQueue(request);
+                } catch (Exception ex) {
+                    Log.e(TAG, "An error occurred building the GET request. Aborting.", ex);
+                }
+            }
+        });
+    }
+
+    protected void sendAuthorizedPostRequest(final String urlSuffix,
+                                             final JSONObject data,
+                                             final Response.Listener<JSONObject> responseListener,
+                                             final Response.ErrorListener errorListener) {
+        stmService.getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    final String authToken = stmService.getUserAuthToken();
+                    String url = stmService.getServerUrl() + urlSuffix;
+                    JsonObjectRequest request = new JsonObjectRequest(Request.Method.POST, url, data,
                             responseListener, errorListener) {
                         @Override
                         public Map<String, String> getHeaders() throws AuthFailureError {
@@ -129,13 +156,14 @@ abstract class StmBaseEntity {
         });
     }
 
-    protected void sendAuthorizedDeleteJsonObjectRequest(Response.Listener<JSONObject> responseListener,
-                                                         Response.ErrorListener errorListener) {
+    protected void sendAuthorizedDeleteRequest(String urlSuffix,
+                                               Response.Listener<JSONObject> responseListener,
+                                               Response.ErrorListener errorListener) {
 
         try {
             final String authToken = stmService.getUserAuthToken();
             JsonObjectRequest deleteObjectRequest = new JsonObjectRequest(Request.Method.DELETE,
-                    stmService.getServerUrl() + baseEndpoint + "/" + id,
+                    stmService.getServerUrl() + urlSuffix,
                     new JSONObject(),
                     responseListener,
                     errorListener) {

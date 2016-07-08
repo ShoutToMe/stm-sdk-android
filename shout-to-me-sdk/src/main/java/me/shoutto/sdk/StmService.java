@@ -215,7 +215,7 @@ public class StmService extends Service {
      * @return
      * @throws Exception
      */
-    public void getMessages(final StmCallback<List<Message>> callback, boolean countOnly, boolean unreadOnly) {
+    public void getMessages(final StmCallback<List<Message>> callback, boolean unreadOnly) {
         if (messages == null) {
             messages = new Messages(this);
         }
@@ -351,5 +351,9 @@ public class StmService extends Service {
 
     public void setServerUrl(String serverUrl) {
         this.serverUrl = serverUrl;
+    }
+
+    public Message.Builder getMessageBuilder() {
+        return new Message.Builder(this);
     }
 }

@@ -39,17 +39,28 @@ public class MessageJsonAdapter implements JsonAdapter<Message> {
             Log.w(TAG, "Could not parse created date: " + createdDateString);
         }
 
-        JSONObject channel = jsonObject.getJSONObject("channel");
-        message.setChannelName(channel.getString("name"));
+        JSONObject channelJson = jsonObject.getJSONObject("channel");
+        for (Channel channel : stmService.getChannels().getChannelList()) {
+            if (channel.getId().equals(channelJson.getString("id"))) {
+                message.setChannel(channel);
+            }
+        }
 
-        JSONObject sender = jsonObject.getJSONObject("sender");
-        String senderName = "";
+        JSONObject sender;
+        String senderName;
         try {
+            sender = jsonObject.getJSONObject("sender");
             senderName = sender.getString("handle");
         } catch (JSONException ex) {
-            senderName = "Anonymous";
+            senderName = null;
         }
         message.setSenderName(senderName);
+
+        try {
+            message.setConversationId(jsonObject.getString("conversation_id"));
+        } catch (JSONException ex) {
+            // Ignore
+        }
 
         return message;
     }
