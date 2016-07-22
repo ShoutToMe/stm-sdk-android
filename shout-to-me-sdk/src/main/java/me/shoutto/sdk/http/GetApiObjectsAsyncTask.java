@@ -1,7 +1,12 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.http;
 
 import android.os.AsyncTask;
 import android.util.Log;
+
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -15,24 +20,29 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import me.shoutto.sdk.Conversation;
+import me.shoutto.sdk.Message;
+import me.shoutto.sdk.StmBaseEntity;
+import me.shoutto.sdk.StmBaseEntityList;
+import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.gson.DateAdapter;
 
 /**
  * Created by tracyrojas on 6/3/16.
  */
-public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, Void> {
+public class GetApiObjectsAsyncTask<T extends StmBaseEntity> extends AsyncTask<String, Void, Void> {
 
     private static final String TAG = "GetApiObjectsAsyncTask";
     private boolean isUnauthorized = false;
     private StmBaseEntityList<T> stmBaseEntityList;
     private StmError stmError;
-    private JsonAdapter<T> jsonAdapter;
     private boolean countOnly;
 
-    public GetApiObjectsAsyncTask(StmBaseEntityList<T> stmBaseEntityList, JsonAdapter<T> jsonAdapter, boolean countOnly) {
+    public GetApiObjectsAsyncTask(StmBaseEntityList<T> stmBaseEntityList, boolean countOnly) {
         this.stmBaseEntityList = stmBaseEntityList;
-        this.jsonAdapter = jsonAdapter;
         this.countOnly = countOnly;
     }
 
@@ -104,13 +114,23 @@ public class GetApiObjectsAsyncTask<T> extends AsyncTask<String, Void, Void> {
                             int count = responseJson.getJSONObject("data").getInt("count");
                             stmBaseEntityList.setCount(count);
                         } else {
-                            List<T> objects = new ArrayList<>();
                             JSONArray jsonArray = responseJson.getJSONObject("data").getJSONArray(Message.LIST_JSON_KEY);
-                            for (int i = 0; i < jsonArray.length(); i++) {
-                                JSONObject jsonObject = jsonArray.getJSONObject(i);
-                                objects.add(jsonAdapter.adapt(jsonObject));
-                            }
-                            stmBaseEntityList.setList(objects);
+
+                            RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
+                                    .of(StmBaseEntity.class, "serializationType")
+                                    .registerSubtype(Conversation.class, Conversation.SERIALIZATION_KEY)
+                                    .registerSubtype(Message.class, Message.SERIALIZATION_KEY);
+
+                            Gson gson = new GsonBuilder()
+                                    .registerTypeAdapterFactory(runtimeTypeAdapterFactory)
+                                    .registerTypeAdapter(Date.class, new DateAdapter())
+                                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                                    .create();
+
+                            List<T> objectList = gson.fromJson(jsonArray.toString(),
+                                    stmBaseEntityList.getSerializationListType());
+
+                            stmBaseEntityList.setList(objectList);
                         }
                     }
                 }

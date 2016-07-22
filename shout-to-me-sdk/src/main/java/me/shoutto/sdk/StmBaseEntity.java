@@ -11,19 +11,22 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by tracyrojas on 9/20/15.
  */
-abstract class StmBaseEntity {
+public abstract class StmBaseEntity {
 
-    protected StmService stmService;
-    protected final String TAG;
-    private String baseEndpoint;
-    protected Map<String, PendingApiObjectChange> pendingChanges;
+    protected transient StmService stmService;
+    protected transient final String TAG;
+    private transient String baseEndpoint;
+    protected transient Map<String, PendingApiObjectChange> pendingChanges;
     protected String id;
+    protected transient String serializationType;
 
 
     protected StmBaseEntity(StmService stmService, String tag, String baseEndpoint) {
@@ -31,6 +34,11 @@ abstract class StmBaseEntity {
         this.TAG = tag;
         this.baseEndpoint = baseEndpoint;
         pendingChanges = new HashMap<>();
+    }
+
+    protected StmBaseEntity(String serializationType) {
+        TAG = this.getClass().getName();
+        this.serializationType = serializationType;
     }
 
     public String getSingleResourceEndpoint() {

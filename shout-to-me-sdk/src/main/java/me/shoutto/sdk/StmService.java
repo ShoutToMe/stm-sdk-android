@@ -23,6 +23,7 @@ import java.util.concurrent.Executors;
 public class StmService extends Service {
 
     public static final String STM_SETTINGS_KEY = "stm_settings";
+    public static final String DEFAULT_SERVER_URL = "https://app.shoutto.me/api/v1";
     private static final String TAG = "StmService";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
@@ -38,7 +39,7 @@ public class StmService extends Service {
     private List<HandWaveGestureListener> handWaveGestureListenerList = new ArrayList<>();
     private SharedPreferences settings;
     private HandWaveGestureListener overlay;
-    private String serverUrl = "https://app.shoutto.me/api/v1";
+    private String serverUrl = DEFAULT_SERVER_URL;
     private Channels channels;
     private Messages messages;
     private int maxRecordingTimeInSeconds;

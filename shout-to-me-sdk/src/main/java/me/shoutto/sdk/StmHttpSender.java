@@ -17,6 +17,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -183,7 +184,8 @@ class StmHttpSender {
 
         JSONObject requestJson = new JSONObject();
         try {
-            for (Map.Entry<String, PendingApiObjectChange> entry : baseEntity.getPendingChanges().entrySet()) {
+            Set<Map.Entry<String, PendingApiObjectChange>> entrySet = baseEntity.getPendingChanges().entrySet();
+            for (Map.Entry<String, PendingApiObjectChange> entry : entrySet) {
                 if (entry.getValue() != null) {
                     requestJson.put(entry.getKey(), entry.getValue().getNewValue());
                 }

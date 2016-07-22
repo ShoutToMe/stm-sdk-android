@@ -1,5 +1,8 @@
 package me.shoutto.sdk;
 
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +19,8 @@ public class Messages extends StmBaseEntityList<Message> {
         super(stmService, Message.BASE_ENDPOINT);
     }
 
+    public Messages() {}
+
     public void getMessages(StmCallback<List<Message>> callback, boolean unreadOnly) {
         String url = getStmService().getServerUrl() + getBaseEndpoint();
 
@@ -24,7 +29,7 @@ public class Messages extends StmBaseEntityList<Message> {
             queryStringParams.put("unread", "true");
         }
 
-        getListAsync(callback, new MessageJsonAdapter(stmService), url, queryStringParams);
+        getListAsync(callback, url, queryStringParams);
     }
 
     public void getMessageCount(StmCallback<Integer> callback, boolean unreadOnly) {
@@ -41,5 +46,10 @@ public class Messages extends StmBaseEntityList<Message> {
     @Override
     protected String getTag() {
         return TAG;
+    }
+
+    @Override
+    public Type getSerializationListType() {
+        return new TypeToken<List<Message>>(){}.getType();
     }
 }

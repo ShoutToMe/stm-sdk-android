@@ -2,14 +2,17 @@ package me.shoutto.sdk;
 
 import android.util.Log;
 
-import java.util.HashMap;
+import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import me.shoutto.sdk.http.GetApiObjectsAsyncTask;
 
 /**
  * Created by tracyrojas on 6/3/16.
  */
-public abstract class StmBaseEntityList<T> {
+public abstract class StmBaseEntityList<T extends StmBaseEntity> {
 
     private List<T> list;
     protected StmService stmService;
@@ -21,6 +24,10 @@ public abstract class StmBaseEntityList<T> {
     public StmBaseEntityList(StmService stmService, String baseEndpoint) {
         this.stmService = stmService;
         this.baseEndpoint = baseEndpoint;
+    }
+
+    public StmBaseEntityList() {
+        list = new ArrayList<>();
     }
 
     public void setList(List<T> list) {
@@ -63,8 +70,7 @@ public abstract class StmBaseEntityList<T> {
         }
     }
 
-    public void getListAsync(StmCallback<List<T>> callback, JsonAdapter<T> jsonAdapter, String url,
-                             Map<String, String> queryStringParams) {
+    public void getListAsync(StmCallback<List<T>> callback, String url, Map<String, String> queryStringParams) {
         this.callback = callback;
 
         if (queryStringParams.size() > 0) {
@@ -76,7 +82,7 @@ public abstract class StmBaseEntityList<T> {
         }
 
         try {
-            new GetApiObjectsAsyncTask<T>(this, jsonAdapter, false).execute(url);
+            new GetApiObjectsAsyncTask<>(this, false).execute(url);
         } catch (Exception ex) {
             Log.e(getTag(), "Could not load messages due to problem with user auth token", ex);
         }
@@ -96,7 +102,7 @@ public abstract class StmBaseEntityList<T> {
         }
 
         try {
-            new GetApiObjectsAsyncTask<T>(this, null, true).execute(url);
+            new GetApiObjectsAsyncTask<>(this, true).execute(url);
         } catch (Exception ex) {
             Log.e(getTag(), "Could not load message count due to problem with user auth token", ex);
         }
@@ -111,4 +117,6 @@ public abstract class StmBaseEntityList<T> {
     }
 
     abstract String getTag();
+
+    abstract public Type getSerializationListType();
 }

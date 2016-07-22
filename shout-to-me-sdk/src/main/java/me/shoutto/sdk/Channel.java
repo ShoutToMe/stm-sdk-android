@@ -4,22 +4,28 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.lang.reflect.Type;
 
 /**
  * The Channel class represents a Shout to Me Channel.
  */
 public class Channel extends StmBaseEntity {
 
-    private static final String TAG = "Channel";
-    public static final String BASE_ENDPOINT = "/channels";
-    private static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
-    private String id;
+    private transient static final String TAG = "Channel";
+    private transient static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
+    public transient static final String BASE_ENDPOINT = "/channels";
+    public transient static final String SERIALIZATION_TYPE = "channel";
     private String name;
     private String description;
+    @SerializedName("channel_image")
     private String imageUrl;
+    @SerializedName("channel_list_image")
     private String listImageUrl;
     private int defaultMaxRecordingLengthSeconds;
 
@@ -28,12 +34,8 @@ public class Channel extends StmBaseEntity {
         defaultMaxRecordingLengthSeconds = 0;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    void setId(String id) {
-        this.id = id;
+    public Channel() {
+        super(SERIALIZATION_TYPE);
     }
 
     public String getName() {
@@ -56,13 +58,16 @@ public class Channel extends StmBaseEntity {
         return listImageUrl;
     }
 
-
     public int getDefaultMaxRecordingLengthSeconds() {
         if (defaultMaxRecordingLengthSeconds == 0) {
             return GLOBAL_DEFAULT_MAX_RECORDING_TIME;
         } else {
             return defaultMaxRecordingLengthSeconds;
         }
+    }
+
+    public static Type getSerializationType() {
+        return new TypeToken<Channel>(){}.getType();
     }
 
     public void subscribe(final StmCallback<Void> callback) {

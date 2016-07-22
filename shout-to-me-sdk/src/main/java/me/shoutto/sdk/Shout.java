@@ -4,9 +4,12 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.lang.reflect.Type;
 
 /**
  * Created by tracyrojas on 9/20/15.
@@ -206,5 +209,9 @@ public class Shout extends StmBaseEntity {
     @Override
     protected void adaptFromJson(JSONObject jsonObject) {
         // Stubbed
+    }
+
+    public static Type getSerializationType() {
+        return new TypeToken<Shout>(){}.getType();
     }
 }
