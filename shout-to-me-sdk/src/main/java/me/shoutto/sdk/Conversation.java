@@ -43,7 +43,7 @@ public class Conversation extends StmBaseEntity {
 
         private double lat;
         private double lon;
-        private int radius;
+        private int radiusInMeters;
 
         public double getLat() {
             return lat;
@@ -53,8 +53,8 @@ public class Conversation extends StmBaseEntity {
             return lon;
         }
 
-        public int getRadius() {
-            return radius;
+        public float getRadiusInMeters() {
+            return radiusInMeters;
         }
     }
 }
