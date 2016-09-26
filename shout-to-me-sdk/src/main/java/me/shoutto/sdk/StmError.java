@@ -1,8 +1,5 @@
 package me.shoutto.sdk;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class StmError {
 
     public static final String SEVERITY_MAJOR = "major";

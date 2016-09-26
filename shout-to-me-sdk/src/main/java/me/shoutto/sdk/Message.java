@@ -18,8 +18,10 @@ import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
-import me.shoutto.sdk.gson.DateAdapter;
+import me.shoutto.sdk.internal.http.GsonDateAdapter;
 
 /**
  * This class represents a Shout to Me Message.
@@ -43,7 +45,7 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     public Message(StmService stmService) {
         super(stmService, TAG, BASE_ENDPOINT);
         try {
-            sentDate = new SimpleDateFormat("yyyy-MM-dd").parse("1970-01-01");
+            sentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse("1970-01-01");
         } catch (ParseException ex) {
             Log.w(TAG, "Could not parse sentDate default.");
         }
@@ -115,6 +117,10 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         return new TypeToken<Message>(){}.getType();
     }
 
+    public static Type getSerializationListType() {
+        return new TypeToken<List<Message>>(){}.getType();
+    }
+
     void create(final StmCallback<Message> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
@@ -125,7 +131,7 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
 
                 Gson gson = new GsonBuilder()
                         .registerTypeAdapterFactory(runtimeTypeAdapterFactory)
-                        .registerTypeAdapter(Date.class, new DateAdapter())
+                        .registerTypeAdapter(Date.class, new GsonDateAdapter())
                         .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                         .create();
 

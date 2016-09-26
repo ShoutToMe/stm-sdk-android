@@ -2,9 +2,6 @@ package me.shoutto.sdk;
 
 import java.io.ByteArrayOutputStream;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class StmAudioRecorderResult {
 
     private ByteArrayOutputStream audioBuffer;

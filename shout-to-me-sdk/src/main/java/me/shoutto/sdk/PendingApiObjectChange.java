@@ -1,8 +1,5 @@
 package me.shoutto.sdk;
 
-/**
- * Created by tracyrojas on 6/8/16.
- */
 class PendingApiObjectChange {
 
     private String propertyName;

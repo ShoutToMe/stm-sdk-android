@@ -11,12 +11,9 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class Shout extends StmBaseEntity {
 
-    private static final String TAG = "Shout";
+    private static final String TAG = Shout.class.getCanonicalName();
     private static final String BASE_ENDPOINT = "/shouts";
     private byte[] audio;
     private String tags;
@@ -41,12 +38,8 @@ public class Shout extends StmBaseEntity {
         return audio;
     }
 
-    private void createPostBody() {
-        JSONObject postBody = new JSONObject();
-    }
-
     /**
-     * Adds a wav header onto the raw data we get from wit
+     * Adds a wav header onto the raw audio data
      * @param rawData - byte[]
      * @return byte[]
      */
@@ -114,22 +107,12 @@ public class Shout extends StmBaseEntity {
         this.id = id;
     }
 
-    public String toJSONString() {
-        JSONObject json = new JSONObject();
-        try {
-            json.put("id", id);
-        } catch (JSONException ex) {
-            Log.e(TAG, "Error converting shout object to JSON.  ID=" + id);
-        }
-        return json.toString();
-    }
-
     public void delete(final StmCallback<String> stmCallback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
 
-                String result = "";
+                String result;
                 try {
                     result = response.getString("status");
                 } catch(JSONException ex) {

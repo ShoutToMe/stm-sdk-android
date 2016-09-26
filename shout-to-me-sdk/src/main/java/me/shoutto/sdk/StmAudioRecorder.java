@@ -12,7 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class StmAudioRecorder {
 
-    private static final String TAG = "StmAudioRecorder";
+    private static final String TAG = StmAudioRecorder.class.getCanonicalName();
     private final AudioRecord audioRecord;
     private final int minBufferSize;
     private boolean doRecord = false;
@@ -130,7 +129,7 @@ public class StmAudioRecorder {
                 if (!cancelRecordingFuture.isCancelled()) {
                     cancelRecordingFuture.cancel(false);
                 }
-                if (stmAudioRecorderResult.didUserSpeak() == false) {
+                if (!stmAudioRecorderResult.didUserSpeak()) {
                     stmAudioRecorderResult.setDidUserSpeak(true);
                 }
             } else if (isUserStillTalking == 0) {

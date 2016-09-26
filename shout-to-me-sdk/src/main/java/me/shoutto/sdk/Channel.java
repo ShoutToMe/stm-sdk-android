@@ -11,22 +11,26 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
+import java.util.List;
 
 /**
  * The Channel class represents a Shout to Me Channel.
  */
 public class Channel extends StmBaseEntity {
 
-    private transient static final String TAG = "Channel";
-    private transient static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
     public transient static final String BASE_ENDPOINT = "/channels";
-    public transient static final String SERIALIZATION_TYPE = "channel";
+    public transient static final String LIST_JSON_KEY = "channels";
+    public transient static final String SERIALIZATION_KEY = "channel";
+    public transient static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
+
+    private transient static final String TAG = "Channel";
     private String name;
     private String description;
     @SerializedName("channel_image")
     private String imageUrl;
     @SerializedName("channel_list_image")
     private String listImageUrl;
+    @SerializedName("default_voigo_max_recording_length_seconds")
     private int defaultMaxRecordingLengthSeconds;
 
     public Channel(StmService stmService) {
@@ -35,7 +39,7 @@ public class Channel extends StmBaseEntity {
     }
 
     public Channel() {
-        super(SERIALIZATION_TYPE);
+        super(SERIALIZATION_KEY);
     }
 
     public String getName() {
@@ -69,6 +73,8 @@ public class Channel extends StmBaseEntity {
     public static Type getSerializationType() {
         return new TypeToken<Channel>(){}.getType();
     }
+
+    public static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
 
     public void subscribe(final StmCallback<Void> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
@@ -187,20 +193,26 @@ public class Channel extends StmBaseEntity {
         Response.ErrorListener errorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                if (error.networkResponse.statusCode == 404) {
-                    callback.onResponse(false);
-                } else {
-                    StmError stmError = new StmError();
-                    stmError.setSeverity(StmError.SEVERITY_MINOR);
-                    stmError.setBlockingError(false);
-                    try {
-                        JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
-                        stmError.setMessage(responseData.getString("message"));
-                    } catch (JSONException ex) {
-                        Log.e(TAG, "Error parsing JSON from channel isSubscribed response");
-                        stmError.setMessage("An error occurred trying to get channel isSubscribed status.");
-                    }
-                    if (callback != null) {
+                if (callback != null) {
+                    if (error == null || error.networkResponse == null) {
+                        StmError stmError = new StmError();
+                        stmError.setSeverity(StmError.SEVERITY_MINOR);
+                        stmError.setBlockingError(false);
+                        stmError.setMessage("Error occurred trying to get channel isSubscribed status.");
+                        callback.onError(stmError);
+                    } else if (error.networkResponse.statusCode == 404) {
+                        callback.onResponse(false);
+                    } else {
+                        StmError stmError = new StmError();
+                        stmError.setSeverity(StmError.SEVERITY_MINOR);
+                        stmError.setBlockingError(false);
+                        try {
+                            JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
+                            stmError.setMessage(responseData.getString("message"));
+                        } catch (JSONException ex) {
+                            Log.e(TAG, "Error parsing JSON from channel isSubscribed response");
+                            stmError.setMessage("An error occurred trying to get channel isSubscribed status.");
+                        }
                         callback.onError(stmError);
                     }
                 }
@@ -212,16 +224,7 @@ public class Channel extends StmBaseEntity {
 
     @Override
     protected void adaptFromJson(JSONObject jsonObject) throws JSONException {
-        id = jsonObject.getString("id");
-        name = jsonObject.getString("name");
-        description = jsonObject.getString("description");
-        imageUrl = jsonObject.getString("channel_image");
-        listImageUrl = jsonObject.getString("channel_list_image");
-        try {
-            defaultMaxRecordingLengthSeconds = jsonObject.getInt("default_voigo_max_recording_length_seconds");
-        } catch (JSONException ex) {
-            Log.i(TAG, "Channel does not have default max recording length");
-        }
+        // Stubbed
     }
 }
 

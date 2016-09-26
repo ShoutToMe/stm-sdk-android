@@ -1,4 +1,4 @@
-package me.shoutto.sdk.http;
+package me.shoutto.sdk.internal.http;
 
 import android.util.Log;
 
@@ -7,7 +7,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
@@ -19,23 +18,19 @@ import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Date;
-import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
-import me.shoutto.sdk.Conversation;
 import me.shoutto.sdk.Message;
 import me.shoutto.sdk.StmBaseEntity;
-import me.shoutto.sdk.StmBaseEntityList;
-import me.shoutto.sdk.gson.DateAdapter;
 
 /**
- * This class is used to make HTTP requests for Shout to Me entity object lists. Note that
+ * This class is used to make HTTP requests for Shout to Me entity objects. Note that
  * use of this class without going through StmService may result in partial object trees.
  */
-public class StmEntityListRequestSync<T extends StmBaseEntityList<?>> {
+public class StmEntityRequestSync<T extends StmBaseEntity> {
 
-    private static final String TAG = "StmEntityListRequestSyn";
+    private static final String TAG = "StmEntityRequestSync";
 
     /**
      * Main method to process the entity HTTP request
@@ -45,11 +40,10 @@ public class StmEntityListRequestSync<T extends StmBaseEntityList<?>> {
      * @param bodyJsonString the String that represents the JSON body parameters
      * @param serializationType the Type used for Gson deserialization. Can be found in the deserialized class
      * @param responseObjectKey the String name that is used as the key for the object in the JSON response
-     * @param clazz the class of the object that will be returned
      * @return a subclass of StmBaseEntity that is passed in as the parameterized type T
      */
     public T process(String method, String authToken, String serverUrl, String bodyJsonString,
-                     Type serializationType, String responseObjectKey, Class<T> clazz) {
+                      Type serializationType, String responseObjectKey) {
 
         if (!"".equals(authToken)) {
             HttpURLConnection connection;
@@ -101,27 +95,22 @@ public class StmEntityListRequestSync<T extends StmBaseEntityList<?>> {
 
                 JSONObject responseJson = new JSONObject(response);
                 if (!responseJson.getString("status").equals("success")) {
-                    Log.e(TAG, "Response status was " + responseJson.getString("status"));
+                    Log.e(TAG, "Response status was " + responseJson.getString("status") + ". "
+                            + responseJson.toString());
                 } else {
-                    JSONArray jsonArray = responseJson.getJSONObject("data").getJSONArray(responseObjectKey);
+                    JSONObject responseObject = responseJson.getJSONObject("data").getJSONObject(responseObjectKey);
 
                     RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
-                            .of(StmBaseEntity.class, "serializationType")
-                            .registerSubtype(Conversation.class, Conversation.SERIALIZATION_KEY)
+                            .of(StmBaseEntity.class, StmBaseEntity.SERIALIZATION_FIELD)
                             .registerSubtype(Message.class, Message.SERIALIZATION_KEY);
 
                     Gson gson = new GsonBuilder()
                             .registerTypeAdapterFactory(runtimeTypeAdapterFactory)
-                            .registerTypeAdapter(Date.class, new DateAdapter())
+                            .registerTypeAdapter(Date.class, new GsonDateAdapter())
                             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                             .create();
 
-                    T objects = clazz.newInstance();
-                    List objectList = gson.fromJson(jsonArray.toString(),
-                            objects.getSerializationListType());
-
-                    objects.setList(objectList);
-                    return objects;
+                    return gson.fromJson(responseObject.toString(), serializationType);
                 }
             } catch (Exception ex) {
                 Log.e(TAG, "Could not process request.", ex);

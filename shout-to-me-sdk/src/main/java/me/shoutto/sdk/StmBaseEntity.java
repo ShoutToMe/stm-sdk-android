@@ -16,18 +16,16 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public abstract class StmBaseEntity {
+
+    public static final String SERIALIZATION_FIELD = "serializationType";
 
     protected transient StmService stmService;
     protected transient final String TAG;
-    private transient String baseEndpoint;
     protected transient Map<String, PendingApiObjectChange> pendingChanges;
     protected String id;
     protected transient String serializationType;
-
+    private transient String baseEndpoint;
 
     protected StmBaseEntity(StmService stmService, String tag, String baseEndpoint) {
         this.stmService = stmService;
@@ -51,6 +49,10 @@ public abstract class StmBaseEntity {
 
     void setId(String id) {
         this.id = id;
+    }
+
+    public void setStmService(StmService stmService) {
+        this.stmService = stmService;
     }
 
     public Map<String, PendingApiObjectChange> getPendingChanges() {

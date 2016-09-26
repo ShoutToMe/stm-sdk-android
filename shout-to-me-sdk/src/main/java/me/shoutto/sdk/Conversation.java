@@ -6,6 +6,7 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 import java.util.Date;
+import java.util.List;
 
 /**
  * Conversation represents a Shout to Me Conversation entity.
@@ -14,9 +15,12 @@ public class Conversation extends StmBaseEntity {
 
     public static final String BASE_ENDPOINT = "/conversations";
     public static final String OBJECT_JSON_KEY = "conversation";
+    public static final String LIST_JSON_KEY = "conversations";
     public static final String SERIALIZATION_KEY = "conversation";
+    private String channelId;
     private Date expirationDate;
     private Location location;
+    private String publishingMessage;
 
     public Conversation() {
         super(SERIALIZATION_KEY);
@@ -27,6 +31,8 @@ public class Conversation extends StmBaseEntity {
         // Stubbed
     }
 
+    public String getChannelId() { return channelId; }
+
     public Date getExpirationDate() {
         return expirationDate;
     }
@@ -35,8 +41,14 @@ public class Conversation extends StmBaseEntity {
         return location;
     }
 
+    public String getPublishingMessage() { return publishingMessage; }
+
     public static Type getSerializationType() {
         return new TypeToken<Conversation>(){}.getType();
+    }
+
+    public static Type getListSerializationType() {
+        return new TypeToken<List<Conversation>>(){}.getType();
     }
 
     public class Location {

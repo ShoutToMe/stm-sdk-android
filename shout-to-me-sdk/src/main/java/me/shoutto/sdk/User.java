@@ -214,6 +214,7 @@ public class User extends StmBaseEntity {
                 stmError.setMessage("Error occurred loading user");
                 stmError.setSeverity(StmError.SEVERITY_MAJOR);
                 stmError.setBlockingError(true);
+                callback.onError(stmError);
             }
         };
 

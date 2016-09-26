@@ -8,11 +8,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.media.SoundPool;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 import android.view.View;
@@ -21,7 +19,6 @@ import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.lang.ref.WeakReference;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -30,29 +27,26 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
         SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 
-    private static final String TAG = "StmRecorderActivity";
-    private static final String TAGS = "tags";
-    private static final String TOPIC = "topic";
-    public static final String MAX_RECORDING_TIME_IN_SECONDS = "maxRecordingTimeInSeconds";
-    public static final String SILENCE_DETECTION_ENABLED = "silenceDetectionEnabled";
+    public static final String TAGS = "me.shoutto.sdk.tags";
+    public static final String TOPIC = "me.shoutto.sdk.topic";
+    public static final String MAX_RECORDING_TIME_IN_SECONDS = "me.shoutto.sdk.maxRecordingTimeInSeconds";
+    public static final String SILENCE_DETECTION_ENABLED = "me.shoutto.sdk.silenceDetectionEnabled";
+
+    private static final String TAG = StmRecorderActivity.class.getCanonicalName();
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;
     private SoundPool soundPool;
-    private int startListeningSoundId, cancelSoundId, finishSoundId, sentSoundId;
     private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
     private final ExecutorService executor = Executors.newFixedThreadPool(1);
     private boolean isAlreadyLaunchedRecorder = false;
     private AudioManager audioManager;
     private String shoutTags;
     private String shoutTopic;
-    private int maxRecordingTimeInSeconds = 0;
+    private int maxRecordingTimeInSeconds;
     private Boolean isSilenceDetectionEnabled;
     private TextView countdownTextView;
     private String countdownText;
@@ -69,34 +63,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             stmService = binder.getService();
             isStmServiceBound = true;
 
-            Channels channels = stmService.getChannels();
-            if (channels == null) {
-                // Some flavors of Android seem to create multiple service instances which means
-                // Channels are null and need to be retrieved
-                stmService.getChannels(new Callback<List<Channel>>() {
-                    @Override
-                    public void onSuccess(StmResponse<List<Channel>> stmResponse) {
-                        finalizeRecordingDetailsAndStartRecording();
-                    }
-
-                    @Override
-                    public void onFailure(StmError stmError) {
-                        Log.e(TAG, "An error occurred initializing channels. " + stmError.getMessage());
-                    }
-                });
-            } else if (!channels.isInitialized()) {
-                // Channel initialization has begun, but is not finished.
-                // Register an AsyncTask to start recording when initilization is done
-                Handler onChannelsInitializedHandler = new Handler(Looper.getMainLooper()) {
-                    @Override
-                    public void handleMessage(Message inputMessage) {
-                        finalizeRecordingDetailsAndStartRecording();
-                    }
-                };
-                stmService.setOnChannelsInitializedHandler(onChannelsInitializedHandler);
-            } else {
-                finalizeRecordingDetailsAndStartRecording();
-            }
+            finalizeRecordingDetailsAndStartRecording();
         }
 
         @Override
@@ -107,11 +74,6 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     };
 
     private void finalizeRecordingDetailsAndStartRecording() {
-        if (maxRecordingTimeInSeconds > 0) {
-            stmService.setMaxRecordingTimeInSeconds(maxRecordingTimeInSeconds);
-        } else {
-            maxRecordingTimeInSeconds = stmService.getMaxRecordingTimeInSeconds();
-        }
         Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
         stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
         stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
@@ -181,6 +143,11 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             if (isSilenceDetectionEnabled == null) {
                 isSilenceDetectionEnabled = true;
             }
+        }
+
+        if (maxRecordingTimeInSeconds <= 0) {
+            Log.e(TAG, "StmRecorderActivity.MAX_RECORDING_TIME_IN_SECONDS is required and must be greater than 0");
+            finish();
         }
 
         setContentView(R.layout.activity_stm_overlay);
@@ -258,7 +225,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         // Try to get exclusive audio focus
         int audioFocusRequestResult = audioManager.requestAudioFocus(audioFocusChangeListener, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_EXCLUSIVE);
         if (audioFocusRequestResult == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
-            Log.w(TAG, "Unable to get audio focus");
+            Log.d(TAG, "Unable to get audio focus");
         }
 
         playStartListeningSound();
@@ -344,19 +311,19 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     }
 
     private void playStartListeningSound() {
-        startListeningSoundId = soundPool.load(this, R.raw.listen, 1);
+        soundPool.load(this, R.raw.listen, 1);
     }
 
     private void playCancelListeningSound() {
-        cancelSoundId = soundPool.load(this, R.raw.abort, 1);
+        soundPool.load(this, R.raw.abort, 1);
     }
 
     private void playFinishListeningSound() {
-        finishSoundId = soundPool.load(this, R.raw.finish, 1);
+        soundPool.load(this, R.raw.finish, 1);
     }
 
     private void playShoutSentSound() {
-        sentSoundId = soundPool.load(this, R.raw.sent, 1);
+        soundPool.load(this, R.raw.sent, 1);
     }
 
     @Override
@@ -375,7 +342,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
             return stmAudioRecorder.writeAudioToStream();
         }
-    };
+    }
 
     private class SendShoutCallable implements Callable<Shout> {
         private ByteArrayOutputStream stream;

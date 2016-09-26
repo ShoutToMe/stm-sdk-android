@@ -1,4 +1,4 @@
-package me.shoutto.sdk.gson;
+package me.shoutto.sdk.internal.http;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -17,16 +17,15 @@ import java.util.Locale;
 import java.util.TimeZone;
 
 /**
- * This class is used by Gson to convert Dates to/from UTC.
- * http://stackoverflow.com/questions/26044881/java-date-to-utc-using-gson
+ * GsonDateAdapter is used by Gson to convert Dates to/from UTC.
  */
-public class DateAdapter implements JsonSerializer<Date>,JsonDeserializer<Date> {
+public class GsonDateAdapter implements JsonSerializer<Date>, JsonDeserializer<Date> {
 
     private final DateFormat dateFormat;
 
-    public DateAdapter() {
-        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);      //This is the format I need
-        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));                               //This is the key line which converts the date to UTC which cannot be accessed with the default serializer
+    public GsonDateAdapter() {
+        dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
+        dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
     }
 
     @Override

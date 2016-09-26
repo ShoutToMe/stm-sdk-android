@@ -8,9 +8,6 @@ import android.graphics.drawable.shapes.OvalShape;
 import android.util.AttributeSet;
 import android.view.View;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class RecordingGraphicView extends View {
 
     private final static int GROWTH_SMOOTHING_FACTOR = 100;

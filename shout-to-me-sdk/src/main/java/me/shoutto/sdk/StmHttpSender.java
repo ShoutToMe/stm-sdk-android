@@ -21,9 +21,6 @@ import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 class StmHttpSender {
 
     private static final String TAG = "StmHttpSender";
