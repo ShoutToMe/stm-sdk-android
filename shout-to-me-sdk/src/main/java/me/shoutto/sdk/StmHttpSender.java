@@ -1,5 +1,8 @@
 package me.shoutto.sdk;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 import android.util.Log;
 
@@ -246,8 +249,11 @@ class StmHttpSender {
         JSONObject requestJson = new JSONObject();
         try {
             requestJson.put("device_id", stmService.getInstallationId());
-            requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
-            requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
+            if (ContextCompat.checkSelfPermission(stmService, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
+                requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
+            }
             if (params != null) {
                 for (Map.Entry param: params.entrySet()) {
                     requestJson.put(param.getKey().toString(), param.getValue().toString());
