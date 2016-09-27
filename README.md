@@ -1,39 +1,62 @@
 # Shout to Me Android SDK
-*Version 1*
+*Version 1.0.6*
 ## Quickstart Guide
 This guide will show you how to get up and running with the Shout to Me Android SDK in minutes.
 ### Prerequisites
 - A Shout to Me client access token
-- [Android Studio](http://developer.android.com/tools/studio/index.html) and all its dependencies. This quickstart guide was developed using Android Studio version 1.3
+- [Android Studio](http://developer.android.com/tools/studio/index.html) and all its dependencies. This quickstart guide was developed using Android Studio version 2.1.2
 
 ### Create an Android application
-Run through the Android Studio’s Create New Project wizard.  The minimum Android SDK required is **API 11: Android 3.0 (Honeycomb)**.  For the rest of the options, you can leave them set to their defaults.
+Run through the Android Studio’s Create New Project wizard.  The minimum Android SDK required is **API 15: Android 4.0.3 (IceCreamSandwich)**.  Choose "Empty Activity" on the "Add an Activity to Mobile" screen.  For the rest of the options, you can leave them set to their defaults.
 
 ![Create new project step 1](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-1.png)
+
 ![Create new project step 2](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-2.png)
+
 ![Create new project step 3](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-3.png)
+
 ![Create new project step 4](https://s3-us-west-2.amazonaws.com/sdk-public-images/as-new-project-4.png)
 ### Add the Shout to Me Android SDK
-Copy the shout-to-me-sdk-release.aar file into the app/libs directory of the project.
-![Add stm-sdk.aar to libs](https://s3-us-west-2.amazonaws.com/sdk-public-images/stm-aar-libs.png)
 
-Add the following highlighted lines to the build.gradle under your app module directory (or whatever name you used when setting up the project.)  Note the dependencies to [Volley](https://developer.android.com/training/volley/index.html) and [Google Play Services](https://developers.google.com/android/guides/overview).
+1. In Android Studio, navigate to **File > New > New Module**
+2. Select **Import .JAR/.AAR Package** then click **Next**
+3. Enter the location of teh **shout-to-me-sdk-release.aar** file and then click **Finish**
 
-    repositories{
-       flatDir{
-           dirs 'libs'
-       }
-    }
+Add the following to your app/build.gradle file dependencies section:
 
-    dependencies {
-       compile fileTree(dir: 'libs', include: ['*.jar'])
-       compile 'com.android.support:appcompat-v7:22.2.1'
-       compile(name:'stm-sdk', ext:'aar')
-       compile 'com.mcxiaoke.volley:library:1.0.18'
-       compile 'com.google.android.gms:play-services-location:7.8.0'
-    }
+```gradle
+dependencies {
+    ...
     
-Then click:  `Tools -> Android -> Sync Project with Gradle Files`
+    compile project(":shout-to-me-sdk-release")
+    compile 'com.google.android.gms:play-services:9.6.0'
+}
+```
+
+(Note the additional dependency on Google Play Services)
+
+Then click:  **Tools > Android > Sync Project with Gradle Files**
+
+### Add your Shout to Me client token to AndroidManifest.xml
+
+Add the following section into the &lt;application&gt; node of your AndroidManifest.xml.
+
+```xml
+<service
+    android:name="me.shoutto.sdk.StmService"
+    android:exported="false">
+    <meta-data
+        android:name="me.shoutto.sdk.clientToken"
+        android:value="@string/client_token" />
+</service>
+```
+
+Make sure to place the actual token into your strings.xml as follows:
+
+```xml
+<string name="client_token">[Your client token]</string>
+```
+
 ### Use the Shout to Me Android SDK
 You are now able to begin coding with the Shout to Me Android SDK.  Assuming you used the default names when creating the projects, modify the following files so they look like these:
 
@@ -277,7 +300,7 @@ public class MainActivity extends Activity {
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/editTextUserHandle"
-        android:layout_below="@+id/textView"
+        android:layout_below="@id/textView"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="118dp" />
@@ -287,7 +310,7 @@ public class MainActivity extends Activity {
         android:layout_height="wrap_content"
         android:text="Change Handle"
         android:id="@+id/button"
-        android:layout_below="@+id/editTextUserHandle"
+        android:layout_below="@id/editTextUserHandle"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:onClick="setUserHandle" />
@@ -296,7 +319,7 @@ public class MainActivity extends Activity {
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Delete Last Shout"
-        android:id="@+id/deleteShoutButton"
+        android:id="@id/deleteShoutButton"
         android:layout_toRightOf="@+id/button"
         android:layout_marginTop="71dp"
         android:onClick="deleteShout"
@@ -306,7 +329,7 @@ public class MainActivity extends Activity {
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Record a Shout"
-        android:id="@+id/startRecording"
+        android:id="@id/startRecording"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"
         android:layout_marginTop="71dp"
@@ -315,7 +338,7 @@ public class MainActivity extends Activity {
 </RelativeLayout>
 ```
 
-After the code has been modified, click `Run -> Run 'app'` to build and start the app.  You should see the initial Activity with the Start Recording button enabled.  When you press that button, it will launch the Shout to Me recording overlay as seen in the following images and immediately begin recording. Pressing the Done button on the overlay will transmit the recorded audio to the Shout to Me service for processing.
+After the code has been modified, click **Run -> Run 'app'** to build and start the app.  You should see the initial Activity with the Start Recording button enabled.  When you press that button, it will launch the Shout to Me recording overlay as seen in the following images and immediately begin recording. Pressing the Done button on the overlay will transmit the recorded audio to the Shout to Me service for processing.
 
 ![Sample app](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-3.png)
 ![Shout to me overlay](https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-4.png)

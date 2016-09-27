@@ -11,7 +11,7 @@ public class StmPreferenceManager {
     private static final String STM_PREFERENCES = "me.shoutto.sdk.STM_PREFERENCES";
     private static final String PREF_AUTH_TOKEN = "me.shoutto.sdk.PREF_AUTH_TOKEN";
     private static final String PREF_CHANNEL_ID = "me.shoutto.sdk.PREF_CHANNEL_ID";
-    private static final String PREF_DEVICE_ID = "me.shoutto.sdk.PREF_DEVICE_ID";
+    private static final String PREF_INSTALLATION_ID = "me.shoutto.sdk.PREF_INSTALLATION_ID";
     private static final String PREF_MAX_GEOFENCES = "me.shoutto.sdk.PREF_MAX_GEOFENCES";
     private static final String PREF_SERVER_URL = "me.shoutto.sdk.PREF_SERVER_URL";
     private static final String PREF_USER_ID = "me.shoutto.sdk.USER_ID";
@@ -37,12 +37,12 @@ public class StmPreferenceManager {
         setPreferenceString(PREF_CHANNEL_ID, channelId);
     }
 
-    public String getDeviceId() {
-        return sharedPreferences.getString(PREF_DEVICE_ID, null);
+    public String getInstallationId() {
+        return sharedPreferences.getString(PREF_INSTALLATION_ID, null);
     }
 
-    public void setDeviceId(String deviceId) {
-        setPreferenceString(PREF_DEVICE_ID, deviceId);
+    public void setInstallationId(String installationId) {
+        setPreferenceString(PREF_INSTALLATION_ID, installationId);
     }
 
     public int getMaxGeofences() { return sharedPreferences.getInt(PREF_MAX_GEOFENCES, -1); }

@@ -245,7 +245,7 @@ class StmHttpSender {
     private String buildRequestString(Map<String, String> params) {
         JSONObject requestJson = new JSONObject();
         try {
-            requestJson.put("device_id", stmService.getDeviceId());
+            requestJson.put("device_id", stmService.getInstallationId());
             requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
             requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
             if (params != null) {

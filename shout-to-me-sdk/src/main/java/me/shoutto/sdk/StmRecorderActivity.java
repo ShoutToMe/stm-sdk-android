@@ -75,21 +75,29 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
     private void finalizeRecordingDetailsAndStartRecording() {
         Handler recorderHandler = new RecordingHandler(StmRecorderActivity.this);
-        stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
-        stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
+        try {
+            stmAudioRecorder = new StmAudioRecorder(recorderHandler, maxRecordingTimeInSeconds);
+            stmAudioRecorder.setRecordingCountdownListener(StmRecorderActivity.this);
 
-        if (isSilenceDetectionEnabled == null) {
-            stmAudioRecorder.setSilenceDetectionEnabled(true);
-        } else {
-            stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
+            if (isSilenceDetectionEnabled == null) {
+                stmAudioRecorder.setSilenceDetectionEnabled(true);
+            } else {
+                stmAudioRecorder.setSilenceDetectionEnabled(isSilenceDetectionEnabled);
+            }
+
+            progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
+            animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
+
+            stmService.setOverlay(StmRecorderActivity.this);
+
+            startRecording();
+        } catch (IllegalStateException ex) {
+            Log.e(TAG, "Could not initialize objects for recording.");
+            Intent intent = new Intent();
+            intent.putExtra("result", "failure");
+            setResult(RESULT_OK, intent);
+            finish();
         }
-
-        progressMax = maxRecordingTimeInSeconds * 100; // To smooth animation
-        animation = ObjectAnimator.ofInt (countdownTimer, "progress", 0, progressMax);
-
-        stmService.setOverlay(StmRecorderActivity.this);
-
-        startRecording();
     }
 
     private static class RecordingHandler extends Handler {
@@ -147,6 +155,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
         if (maxRecordingTimeInSeconds <= 0) {
             Log.e(TAG, "StmRecorderActivity.MAX_RECORDING_TIME_IN_SECONDS is required and must be greater than 0");
+            Intent intent = new Intent();
+            intent.putExtra("result", "failure");
+            setResult(RESULT_OK, intent);
             finish();
         }
 

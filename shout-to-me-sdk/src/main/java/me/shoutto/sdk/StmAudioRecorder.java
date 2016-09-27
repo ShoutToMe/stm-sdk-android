@@ -57,12 +57,9 @@ public class StmAudioRecorder {
         }
     };
 
-    public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) {
+    public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) throws IllegalStateException {
         this.handler = handler;
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
-
-        stmAudioRecorderResult = new StmAudioRecorderResult();
-        voiceActivityDetector = new VoiceActivityDetector();
 
         minBufferSize = AudioRecord.getMinBufferSize(16000,
                 AudioFormat.CHANNEL_IN_MONO,
@@ -74,8 +71,15 @@ public class StmAudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT,
                 minBufferSize * 2);
 
+        if (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED) {
+            throw new IllegalStateException("AudioRecord object is uninitialized.  Cannot continue.");
+        }
+
         realTimeStream = new ByteArrayOutputStream();
         finalStream = new ByteArrayOutputStream();
+
+        stmAudioRecorderResult = new StmAudioRecorderResult();
+        voiceActivityDetector = new VoiceActivityDetector();
     }
 
     public StmAudioRecorderResult writeAudioToStream() {

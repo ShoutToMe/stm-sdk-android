@@ -85,7 +85,11 @@ public class StmService extends Service {
         try {
             ServiceInfo serviceInfo = getPackageManager().getServiceInfo(new ComponentName(this, this.getClass()), PackageManager.GET_META_DATA);
             Bundle bundle = serviceInfo.metaData;
-            accessToken = bundle.getString(CLIENT_TOKEN_KEY);
+            if (bundle == null) {
+                Log.e(TAG, "Metadata with client token is missing. Please make sure to include the client token metadata in AndroidManifest.xml");
+            } else {
+                accessToken = bundle.getString(CLIENT_TOKEN_KEY);
+            }
         } catch (PackageManager.NameNotFoundException ex) {
             Log.e(TAG, "Package name not found. Cannot start StmService.", ex);
         }
@@ -262,35 +266,17 @@ public class StmService extends Service {
         this.overlay = overlay;
     }
 
-    public String getDeviceId() {
+    public String getInstallationId() {
 
-        String deviceIdFromSharedPrefs = stmPreferenceManager.getDeviceId();
-        if (deviceIdFromSharedPrefs == null) {
-            stmPreferenceManager.setDeviceId(generateDeviceId());
+        String installationId = stmPreferenceManager.getInstallationId();
+        if (installationId == null) {
+            stmPreferenceManager.setInstallationId(UUID.randomUUID().toString());
         }
 
-        return stmPreferenceManager.getDeviceId();
-    }
-
-    private String generateDeviceId() {
-        String generatedDeviceId = null;
-        try {
-            final TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-            final String tmDevice, tmSerial, androidId;
-            tmDevice = "" + tm.getDeviceId();
-            tmSerial = "" + tm.getSimSerialNumber();
-            androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-            UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
-            generatedDeviceId = deviceUuid.toString();
-
-        } catch(SecurityException ex) {
-            Log.e(TAG, "Shout to Me does not have sufficient permissions. ", ex);
-        }
-        return generatedDeviceId;
+        return stmPreferenceManager.getInstallationId();
     }
 
     public void synchronizeNotifications() {
-        // TODO: Add callback functionality
         new Thread(new Runnable() {
             @Override
             public void run() {
