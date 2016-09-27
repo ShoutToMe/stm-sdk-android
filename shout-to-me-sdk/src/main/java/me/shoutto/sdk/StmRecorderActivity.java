@@ -1,17 +1,20 @@
 package me.shoutto.sdk;
 
+import android.Manifest;
 import android.animation.ObjectAnimator;
 import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.pm.PackageManager;
 import android.media.AudioManager;
 import android.media.SoundPool;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ProgressBar;
@@ -30,10 +33,19 @@ import java.util.concurrent.TimeUnit;
 public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
         SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 
+    public static final String MAX_RECORDING_TIME_IN_SECONDS = "me.shoutto.sdk.MAX_RECORDING_TIME_IN_SECONDS";
+    public static final String SILENCE_DETECTION_ENABLED = "me.shoutto.sdk.SILENCE_DETECTION_ENABLED";
     public static final String TAGS = "me.shoutto.sdk.tags";
     public static final String TOPIC = "me.shoutto.sdk.topic";
-    public static final String MAX_RECORDING_TIME_IN_SECONDS = "me.shoutto.sdk.maxRecordingTimeInSeconds";
-    public static final String SILENCE_DETECTION_ENABLED = "me.shoutto.sdk.silenceDetectionEnabled";
+
+    /**
+     * Activity result and reasons for failure
+     */
+    public static final String ACTIVITY_REASON = "me.shoutto.sdk.ACTIVITY_REASON";
+    public static final String ACTIVITY_RESULT = "me.shoutto.sdk.ACTIVITY_RESULT";
+    public static final String MAX_RECORDING_TIME_MISSING = "me.shoutto.sdk.MAX_RECORDING_TIME_MISSING";
+    public static final String OBJECTS_UNINITIALIZED = "me.shoutto.sdk.OBJECTS_UNINITIALIZED";
+    public static final String RECORD_AUDIO_PERMISSION_DENIED = "me.shoutto.sdk.RECORD_AUDIO_PERMISSION_DENIED";
 
     private static final String TAG = StmRecorderActivity.class.getCanonicalName();
     private StmAudioRecorder stmAudioRecorder;
@@ -62,6 +74,18 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
             StmService.StmBinder binder = (StmService.StmBinder) service;
             stmService = binder.getService();
             isStmServiceBound = true;
+
+            if (ContextCompat.checkSelfPermission(StmRecorderActivity.this,
+                    Manifest.permission.RECORD_AUDIO)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.e(TAG, "App does not have permission to record.");
+                Intent intent = new Intent();
+                intent.putExtra(ACTIVITY_RESULT, StmService.FAILURE);
+                intent.putExtra(ACTIVITY_REASON, RECORD_AUDIO_PERMISSION_DENIED);
+                setResult(RESULT_OK, intent);
+                finish();
+                return;
+            }
 
             finalizeRecordingDetailsAndStartRecording();
         }
@@ -94,7 +118,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         } catch (IllegalStateException ex) {
             Log.e(TAG, "Could not initialize objects for recording.");
             Intent intent = new Intent();
-            intent.putExtra("result", "failure");
+            intent.putExtra(ACTIVITY_RESULT, StmService.FAILURE);
+            intent.putExtra(ACTIVITY_REASON, OBJECTS_UNINITIALIZED);
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -156,7 +181,8 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
         if (maxRecordingTimeInSeconds <= 0) {
             Log.e(TAG, "StmRecorderActivity.MAX_RECORDING_TIME_IN_SECONDS is required and must be greater than 0");
             Intent intent = new Intent();
-            intent.putExtra("result", "failure");
+            intent.putExtra(ACTIVITY_RESULT, StmService.FAILURE);
+            intent.putExtra(ACTIVITY_REASON, MAX_RECORDING_TIME_MISSING);
             setResult(RESULT_OK, intent);
             finish();
         }
@@ -293,7 +319,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
 
                     // Close the overlay
                     Intent intent = new Intent();
-                    intent.putExtra("result", "success");
+                    intent.putExtra(ACTIVITY_RESULT, StmService.SUCCESS);
                     setResult(RESULT_OK, intent);
                     finish();
                 }

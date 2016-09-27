@@ -130,7 +130,7 @@ public class Shout extends StmBaseEntity {
 
                 if (stmCallback != null) {
                     if (result.equals("success")) {
-                        stmCallback.onResponse("success");
+                        stmCallback.onResponse(StmService.SUCCESS);
                     } else {
                         StmError stmError = new StmError();
                         stmError.setBlockingError(false);

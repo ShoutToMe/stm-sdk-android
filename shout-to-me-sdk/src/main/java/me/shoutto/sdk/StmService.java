@@ -32,10 +32,17 @@ import me.shoutto.sdk.internal.geofence.database.GeofenceDbHelper;
  */
 public class StmService extends Service {
 
-    private static final String TAG = "StmService";
     @Deprecated
     public static final String STM_SETTINGS_KEY = "stm_settings";
     public static final String DEFAULT_SERVER_URL = "https://app.shoutto.me/api/v1";
+
+    /**
+     * For general usage in communicating status
+     */
+    public static final String FAILURE = "me.shoutto.sdk.FAILURE";
+    public static final String SUCCESS = "me.shoutto.sdk.SUCCESS";
+
+    private static final String TAG = StmService.class.getCanonicalName();
     private static final String CLIENT_TOKEN_KEY = "me.shoutto.sdk.clientToken";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
