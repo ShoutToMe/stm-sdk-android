@@ -38,7 +38,7 @@ class StmHttpSender {
 
         Shout shoutFromResponse = null;
         HttpURLConnection connection;
-        int responseCode = 0;
+        int responseCode;
         try {
             Map<String, String> params = new HashMap<>();
             params.put("audio", new String(Base64.encode(shout.getAudio(), Base64.NO_WRAP)) ); //No_wrap to get rid of \n
@@ -155,12 +155,14 @@ class StmHttpSender {
                     user.setId(responseJson.getJSONObject("data")
                             .getJSONObject("user")
                             .getString("id"));
-                    stmService.setChannelId(responseJson
-                            .getJSONObject("data")
-                            .getJSONObject("user")
-                            .getJSONObject("affiliate")
-                            .getJSONObject("default_channel")
-                            .getString("id"));
+                    if (stmService.getChannelId() == null) {
+                        stmService.setChannelId(responseJson
+                                .getJSONObject("data")
+                                .getJSONObject("user")
+                                .getJSONObject("affiliate")
+                                .getJSONObject("default_channel")
+                                .getString("id"));
+                    }
                 }
             } catch (JSONException ex) {
                 Log.e(TAG, "Could not parse get user with client token response JSON", ex);

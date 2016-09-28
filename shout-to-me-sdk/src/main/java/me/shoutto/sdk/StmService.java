@@ -11,7 +11,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -43,7 +42,8 @@ public class StmService extends Service {
     public static final String SUCCESS = "me.shoutto.sdk.SUCCESS";
 
     private static final String TAG = StmService.class.getCanonicalName();
-    private static final String CLIENT_TOKEN_KEY = "me.shoutto.sdk.clientToken";
+    private static final String CHANNEL_ID = "me.shoutto.sdk.CHANNEL_ID";
+    private static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private User user;
@@ -95,23 +95,28 @@ public class StmService extends Service {
             if (bundle == null) {
                 Log.e(TAG, "Metadata with client token is missing. Please make sure to include the client token metadata in AndroidManifest.xml");
             } else {
-                accessToken = bundle.getString(CLIENT_TOKEN_KEY);
+                accessToken = bundle.getString(CLIENT_TOKEN);
+                if (accessToken != null) {
+                    // Initialize the RequestQueue
+                    StmRequestQueue.setInstance(this);
+
+                    // Create or get user
+                    this.user = new User(this);
+
+                    this.stmHttpSender = new StmHttpSender(this);
+                    locationServicesClient = new LocationServicesClient(this);
+                } else {
+                    Log.w(TAG, "Access token is null. Please make sure to include the access token when binding.");
+                }
+
+                String channelId = bundle.getString(CHANNEL_ID);
+                Log.d(TAG, "Channel ID from manifest: " + channelId);
+                if (channelId != null) {
+                    setChannelId(channelId);
+                }
             }
         } catch (PackageManager.NameNotFoundException ex) {
             Log.e(TAG, "Package name not found. Cannot start StmService.", ex);
-        }
-
-        if (accessToken != null) {
-            // Initialize the RequestQueue
-            StmRequestQueue.setInstance(this);
-
-            // Create or get user
-            this.user = new User(this);
-
-            this.stmHttpSender = new StmHttpSender(this);
-            locationServicesClient = new LocationServicesClient(this);
-        } else {
-            Log.w(TAG, "Access token is null. Please make sure to include the access token when binding.");
         }
 
         executorService = Executors.newFixedThreadPool(10);

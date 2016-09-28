@@ -46,7 +46,7 @@ Add the following section into the &lt;application&gt; node of your AndroidManif
     android:name="me.shoutto.sdk.StmService"
     android:exported="false">
     <meta-data
-        android:name="me.shoutto.sdk.clientToken"
+        android:name="me.shoutto.sdk.CLIENT_TOKEN"
         android:value="@string/client_token" />
 </service>
 ```
