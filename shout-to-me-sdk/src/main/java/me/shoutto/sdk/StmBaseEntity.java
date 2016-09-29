@@ -14,23 +14,30 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
-abstract class StmBaseEntity {
+import me.shoutto.sdk.internal.PendingApiObjectChange;
+import me.shoutto.sdk.internal.http.StmRequestQueue;
 
-    protected StmService stmService;
-    protected final String TAG;
-    private String baseEndpoint;
-    protected Map<String, PendingApiObjectChange> pendingChanges;
+public abstract class StmBaseEntity {
+
+    public static final String SERIALIZATION_FIELD = "serializationType";
+
+    protected transient StmService stmService;
+    protected transient final String TAG;
+    protected transient Map<String, PendingApiObjectChange> pendingChanges;
     protected String id;
-
+    protected transient String serializationType;
+    private transient String baseEndpoint;
 
     protected StmBaseEntity(StmService stmService, String tag, String baseEndpoint) {
         this.stmService = stmService;
         this.TAG = tag;
         this.baseEndpoint = baseEndpoint;
         pendingChanges = new HashMap<>();
+    }
+
+    protected StmBaseEntity(String serializationType) {
+        TAG = this.getClass().getName();
+        this.serializationType = serializationType;
     }
 
     public String getSingleResourceEndpoint() {
@@ -41,8 +48,12 @@ abstract class StmBaseEntity {
         return id;
     }
 
-    void setId(String id) {
+    public void setId(String id) {
         this.id = id;
+    }
+
+    public void setStmService(StmService stmService) {
+        this.stmService = stmService;
     }
 
     public Map<String, PendingApiObjectChange> getPendingChanges() {

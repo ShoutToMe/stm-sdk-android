@@ -1,52 +1,71 @@
 package me.shoutto.sdk;
 
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Binder;
-import android.os.Handler;
+import android.os.Bundle;
 import android.os.IBinder;
-import android.telephony.TelephonyManager;
 import android.util.Log;
 
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
+import me.shoutto.sdk.internal.ProximitySensorClient;
+import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
+import me.shoutto.sdk.internal.NotificationManager;
+import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.http.StmHttpSender;
+import me.shoutto.sdk.internal.http.StmRequestQueue;
+import me.shoutto.sdk.internal.location.LocationServicesClient;
+
 /**
- * Created by tracyrojas on 9/20/15.
+ * The primary service class for Shout to Me functionality.
  */
 public class StmService extends Service {
 
+    @Deprecated
     public static final String STM_SETTINGS_KEY = "stm_settings";
-    private static final String TAG = "StmService";
+    public static final String DEFAULT_SERVER_URL = "https://app.shoutto.me/api/v1";
+
+    /**
+     * For general usage in communicating status
+     */
+    public static final String FAILURE = "me.shoutto.sdk.FAILURE";
+    public static final String SUCCESS = "me.shoutto.sdk.SUCCESS";
+
+    private static final String TAG = StmService.class.getCanonicalName();
+    private static final String CHANNEL_ID = "me.shoutto.sdk.CHANNEL_ID";
+    private static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
-    private String deviceId;
-    private String userAuthToken;
     private User user;
-    private String channelId;
     private StmHttpSender stmHttpSender;
     private StmCallback<Shout> shoutCreationCallback;
     private ExecutorService executorService;
     private LocationServicesClient locationServicesClient;
     private ProximitySensorClient proximitySensorClient;
     private List<HandWaveGestureListener> handWaveGestureListenerList = new ArrayList<>();
-    private SharedPreferences settings;
+    private StmPreferenceManager stmPreferenceManager;
     private HandWaveGestureListener overlay;
-    private String serverUrl = "https://app.shoutto.me/api/v1";
-    private Channels channels;
-    private Messages messages;
-    private int maxRecordingTimeInSeconds;
-    private Handler onChannelsInitializedHandler;
+    private ChannelManager channelManager;
+    private GeofenceDbHelper geofenceDbHelper;
+    private GeofenceManager geofenceManager;
+    private MessageManager messageManager;
 
-    public StmService() {
-        maxRecordingTimeInSeconds = 0;
-    }
+    public StmService() {}
 
     public class StmBinder extends Binder {
         public StmService getService() {
@@ -65,35 +84,44 @@ public class StmService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-
-        if (intent != null) {
-            if (intent.getStringExtra("baseUrl") != null) {
-                serverUrl = intent.getStringExtra("baseUrl");
-            }
-        }
-
         return START_REDELIVER_INTENT;
     }
 
     @Override
     public IBinder onBind(Intent intent) {
 
-        accessToken = intent.getStringExtra("stmClientToken");
-        if (intent.getStringExtra("baseUrl") != null) {
-            serverUrl = intent.getStringExtra("baseUrl");
+        if (stmPreferenceManager == null) {
+            stmPreferenceManager = new StmPreferenceManager(this);
         }
 
-        if (accessToken != null) {
-            // Initialize the RequestQueue
-            StmRequestQueue.setInstance(this);
+        try {
+            ServiceInfo serviceInfo = getPackageManager().getServiceInfo(new ComponentName(this, this.getClass()), PackageManager.GET_META_DATA);
+            Bundle bundle = serviceInfo.metaData;
+            if (bundle == null) {
+                Log.e(TAG, "Metadata with client token is missing. Please make sure to include the client token metadata in AndroidManifest.xml");
+            } else {
+                accessToken = bundle.getString(CLIENT_TOKEN);
+                if (accessToken != null) {
+                    // Initialize the RequestQueue
+                    StmRequestQueue.setInstance(this);
 
-            // Create or get user
-            this.user = new User(this);
+                    // Create or get user
+                    this.user = new User(this);
 
-            this.stmHttpSender = new StmHttpSender(this);
-            locationServicesClient = new LocationServicesClient(this);
-        } else {
-            Log.w(TAG, "Access token is null. Please make sure to include the access token when binding.");
+                    this.stmHttpSender = new StmHttpSender(this);
+                    locationServicesClient = new LocationServicesClient(this);
+                } else {
+                    Log.w(TAG, "Access token is null. Please make sure to include the access token when binding.");
+                }
+
+                String channelId = bundle.getString(CHANNEL_ID);
+                Log.d(TAG, "Channel ID from manifest: " + channelId);
+                if (channelId != null) {
+                    setChannelId(channelId);
+                }
+            }
+        } catch (PackageManager.NameNotFoundException ex) {
+            Log.e(TAG, "Package name not found. Cannot start StmService.", ex);
         }
 
         executorService = Executors.newFixedThreadPool(10);
@@ -101,7 +129,8 @@ public class StmService extends Service {
         locationServicesClient.connectToService();
         proximitySensorClient = new ProximitySensorClient(this);
 
-        settings = getSharedPreferences(STM_SETTINGS_KEY, 0);
+        geofenceDbHelper = new GeofenceDbHelper(this);
+        geofenceManager = new GeofenceManager(this, geofenceDbHelper);
 
         return stmBinder;
     }
@@ -143,7 +172,7 @@ public class StmService extends Service {
         }
     }
 
-    void handleHandWaveGesture() {
+    public void handleHandWaveGesture() {
         if (overlay != null) {
             overlay.onHandWaveGesture();
         } else if (handWaveGestureListenerList.size() > 0) {
@@ -154,113 +183,62 @@ public class StmService extends Service {
     }
 
     public String getChannelId() {
-        if (channelId == null) {
-            channelId = settings.getString("channelId", "");
-        }
-        return channelId;
+        return stmPreferenceManager.getChannelId();
     }
 
     public void setChannelId(String channelId) {
-        if (this.channelId != channelId) {
-            this.channelId = channelId;
-            SharedPreferences.Editor editor = settings.edit();
-            if (channelId == null) {
-                editor.remove("channelId");
-            } else {
-                editor.putString("channelId", this.channelId);
-            }
-            editor.commit();
-        }
+        stmPreferenceManager.setChannelId(channelId);
     }
 
     public void getChannels(final StmCallback<List<Channel>> callback) {
-        channels = new Channels(this, callback);
-    }
-
-    Channels getChannels() {
-        return channels;
-    }
-
-    void setOnChannelsInitializedHandler(Handler onChannelsInitializedHandler) {
-        this.onChannelsInitializedHandler = onChannelsInitializedHandler;
-    }
-
-    void handleOnChannelsInitializedHandler() {
-        if (onChannelsInitializedHandler != null) {
-            onChannelsInitializedHandler.sendEmptyMessage(0);
-            onChannelsInitializedHandler = null;
+        if (channelManager == null) {
+            channelManager = new ChannelManager(this);
         }
+        channelManager.getChannels(callback);
     }
 
-    public int getMaxRecordingTimeInSeconds() {
-        Channel channel = channels.getChannel(channelId);
-        if (channel == null) {
-            Log.w(TAG, "No selected channel");
-            return maxRecordingTimeInSeconds;
-        } else {
-            if (maxRecordingTimeInSeconds > channel.getDefaultMaxRecordingLengthSeconds()) {
-                return maxRecordingTimeInSeconds;
-            } else {
-                return channel.getDefaultMaxRecordingLengthSeconds();
-            }
+    public void getMessages(final StmCallback<List<Message>> callback) {
+        if (messageManager == null) {
+            messageManager = new MessageManager(this);
         }
+        messageManager.getMessages(callback);
     }
 
-    public void setMaxRecordingTimeInSeconds(int maxRecordingTimeInSeconds) {
-        this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
-    }
-
-    /**
-     *
-     * @return
-     * @throws Exception
-     */
-    public void getMessages(final StmCallback<List<Message>> callback, boolean unreadOnly) {
-        if (messages == null) {
-            messages = new Messages(this);
+    public void getUnreadMessageCount(final StmCallback<Integer> callback) {
+        if (messageManager == null) {
+            messageManager = new MessageManager(this);
         }
-        messages.getMessages(callback, unreadOnly);
+        messageManager.getUnreadMessageCount(callback);
     }
 
-    public void getMessageCount(final StmCallback<Integer> callback, boolean unreadOnly) {
-        if (messages == null) {
-            messages = new Messages(this);
-        }
-        messages.getMessageCount(callback, unreadOnly);
-    }
-
-    public String getUserAuthToken() throws Exception {
+    public String getUserAuthToken() {
         synchronized (this) {
-            if (userAuthToken == null) {
-                String userIdFromSharedPrefs = settings.getString("userId", "");
-                String authTokenFromSharedPrefs = settings.getString("authToken", "");
-                if (!"".equals(userIdFromSharedPrefs) && !"".equals(authTokenFromSharedPrefs)) {
-                    Log.i(TAG, "Loaded user ID & authToken from shared prefs");
-                    user.setId(userIdFromSharedPrefs);
-                    user.setAuthToken(authTokenFromSharedPrefs);
-                    userAuthToken = authTokenFromSharedPrefs;
-                } else {
-                    stmHttpSender.getUserWithClientToken(user);
-
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString("userId", user.getId());
-                    editor.putString("authToken", user.getAuthToken());
-                    editor.commit();
-                    userAuthToken = user.getAuthToken();
-                    Log.d(TAG, "channel " + channelId);
-                }
-            }
+            initializeUserSession();
+            return stmPreferenceManager.getAuthToken();
         }
-        return userAuthToken;
+    }
+
+    private void initializeUserSession() {
+        String userId = stmPreferenceManager.getUserId();
+        String authToken = stmPreferenceManager.getAuthToken();
+        if (userId == null || authToken == null) {
+            try {
+                stmHttpSender.getUserWithClientToken(user);
+                stmPreferenceManager.setAuthToken(user.getAuthToken());
+                stmPreferenceManager.setUserId(user.getId());
+            } catch (Exception ex) {
+                Log.e(TAG, "Could not initialize user session.", ex);
+            }
+        } else {
+            user.setId(userId);
+            user.setAuthToken(authToken);
+        }
     }
 
     public void refreshUserAuthToken() throws Exception {
         synchronized (this) {
-            SharedPreferences.Editor editor = settings.edit();
-            editor.remove("userId");
-            editor.remove("authToken");
-            editor.commit();
-            userAuthToken = null;
+            stmPreferenceManager.setAuthToken(null);
+            stmPreferenceManager.setUserId(null);
             getUserAuthToken();
         }
     }
@@ -305,55 +283,111 @@ public class StmService extends Service {
         this.overlay = overlay;
     }
 
-    /**
-     * getDeviceId
-     * Android does not have a way to get a guaranteed unique device ID.  This method is
-     * based on this stackoverflow: http://stackoverflow.com/questions/2785485/is-there-a-unique-android-device-id
-     * @param
-     * @return
-     */
-    public String getDeviceId() {
+    public String getInstallationId() {
 
-        if (deviceId == null) {
-            SharedPreferences settings = getSharedPreferences(STM_SETTINGS_KEY, 0);
-            String deviceIdFromSharedPrefs = settings.getString("deviceId", "");
-            if (!"".equals(deviceIdFromSharedPrefs)) {
-                Log.d(TAG, "Got device ID from shared prefs");
-                Log.d(TAG, deviceIdFromSharedPrefs);
-                deviceId = deviceIdFromSharedPrefs;
-            } else {
-                try {
-                    final TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
-                    final String tmDevice, tmSerial, androidId;
-                    tmDevice = "" + tm.getDeviceId();
-                    tmSerial = "" + tm.getSimSerialNumber();
-                    androidId = "" + android.provider.Settings.Secure.getString(getContentResolver(), android.provider.Settings.Secure.ANDROID_ID);
-                    UUID deviceUuid = new UUID(androidId.hashCode(), ((long)tmDevice.hashCode() << 32) | tmSerial.hashCode());
-                    String generatedDeviceId = deviceUuid.toString();
-
-                    SharedPreferences.Editor editor = settings.edit();
-                    editor.putString("deviceId", generatedDeviceId);
-                    editor.commit();
-
-                    deviceId = generatedDeviceId;
-                } catch(SecurityException ex) {
-                    Log.e(TAG, "Shout to Me does not have sufficient permissions. ", ex);
-                }
-            }
+        String installationId = stmPreferenceManager.getInstallationId();
+        if (installationId == null) {
+            stmPreferenceManager.setInstallationId(UUID.randomUUID().toString());
         }
 
-        return deviceId;
+        return stmPreferenceManager.getInstallationId();
+    }
+
+    public void synchronizeNotifications() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                List<Conversation> activeConversations = new ArrayList<>();
+
+                // Get subscribed channels
+                StmEntityListRequestSync<Subscription> subscriptionRequest = new StmEntityListRequestSync<>();
+                List<Subscription> subscriptionList = subscriptionRequest.process("GET", getUserAuthToken(),
+                        getServerUrl() + Subscription.BASE_ENDPOINT, null, Subscription.getListSerializationType(),
+                        Subscription.LIST_JSON_KEY);
+
+                // Get active conversations for those channels
+                if (subscriptionList != null) {
+                    for (Subscription subscription : subscriptionList) {
+                        String conversationRequestUrl = getServerUrl() + Conversation.BASE_ENDPOINT
+                                + "?channel_id=" + subscription.getChannelId() + "&date_field=expiration_date"
+                                + "&hours=0";
+                        StmEntityListRequestSync<Conversation> conversationRequest = new StmEntityListRequestSync<>();
+                        List<Conversation> conversationList = conversationRequest.process("GET", getUserAuthToken(),
+                                conversationRequestUrl, null, Conversation.getListSerializationType(),
+                                Conversation.LIST_JSON_KEY);
+                        if (conversationList != null && conversationList.size() > 0) {
+                            activeConversations.addAll(conversationList);
+                        }
+                    }
+                }
+
+                // Remove geofences not in the list
+                List<String> conversationsToRemove = new ArrayList<>();
+                SQLiteDatabase readableDatabase = geofenceDbHelper.getReadableDatabase();
+                Cursor cursor = readableDatabase.query(
+                        GeofenceDatabaseSchema.GeofenceEntry.TABLE_NAME,
+                        new String[] {GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID},
+                        null,
+                        null,
+                        null,
+                        null,
+                        null
+                );
+                if (cursor.moveToFirst()) {
+                    do {
+                        String conversationId = cursor.getString(cursor.getColumnIndexOrThrow(GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID));
+                        boolean isConversationActive = false;
+                        for (Conversation conversation : activeConversations) {
+                            if (conversation.getId().equals(conversationId)) {
+                                isConversationActive = true;
+                            }
+                        }
+                        if (!isConversationActive) {
+                            conversationsToRemove.add(conversationId);
+                        }
+                    } while (cursor.moveToNext());
+                }
+                cursor.close();
+                readableDatabase.close();
+
+                if (conversationsToRemove.size() > 0) {
+                    geofenceManager.removeGeofencesByIds(conversationsToRemove);
+                }
+
+                // Process the notifications
+                for (Conversation conversation : activeConversations) {
+                    Bundle bundle = new Bundle();
+                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
+                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
+                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
+                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
+
+                    NotificationManager notificationManager = new NotificationManager(StmService.this, bundle);
+                    notificationManager.processIncomingNotification(getServerUrl(), getUserAuthToken(), user.getId());
+                }
+
+            }
+        }).start();
     }
 
     public String getServerUrl() {
-        return serverUrl;
+        String serverUrl = stmPreferenceManager.getServerUrl();
+        if (serverUrl == null) {
+            return DEFAULT_SERVER_URL;
+        } else {
+            return serverUrl;
+        }
     }
 
     public void setServerUrl(String serverUrl) {
-        this.serverUrl = serverUrl;
+        stmPreferenceManager.setServerUrl(serverUrl);
     }
 
-    public Message.Builder getMessageBuilder() {
-        return new Message.Builder(this);
+    public void setMaxGeofences(Integer maxGeofences) {
+        stmPreferenceManager.setMaxGeofences(maxGeofences);
+    }
+
+    public void removeAllGeofences() {
+        geofenceManager.removeAllGeofences();
     }
 }

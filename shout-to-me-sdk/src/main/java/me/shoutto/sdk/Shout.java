@@ -4,28 +4,28 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
+import java.lang.reflect.Type;
+
 public class Shout extends StmBaseEntity {
 
-    private static final String TAG = "Shout";
+    private static final String TAG = Shout.class.getCanonicalName();
     private static final String BASE_ENDPOINT = "/shouts";
     private byte[] audio;
     private String tags;
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    Shout(StmService stmService, byte[] rawData) {
+    public Shout(StmService stmService, byte[] rawData) {
         super(stmService, TAG, BASE_ENDPOINT);
         this.audio = addHeaderToRawData(rawData);
     }
 
-    Shout(StmService stmService, JSONObject json) {
+    public Shout(StmService stmService, JSONObject json) {
         super(stmService, TAG, "/shouts");
         try {
             this.id = json.getString("id");
@@ -38,12 +38,8 @@ public class Shout extends StmBaseEntity {
         return audio;
     }
 
-    private void createPostBody() {
-        JSONObject postBody = new JSONObject();
-    }
-
     /**
-     * Adds a wav header onto the raw data we get from wit
+     * Adds a wav header onto the raw audio data
      * @param rawData - byte[]
      * @return byte[]
      */
@@ -111,22 +107,12 @@ public class Shout extends StmBaseEntity {
         this.id = id;
     }
 
-    public String toJSONString() {
-        JSONObject json = new JSONObject();
-        try {
-            json.put("id", id);
-        } catch (JSONException ex) {
-            Log.e(TAG, "Error converting shout object to JSON.  ID=" + id);
-        }
-        return json.toString();
-    }
-
     public void delete(final StmCallback<String> stmCallback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
 
-                String result = "";
+                String result;
                 try {
                     result = response.getString("status");
                 } catch(JSONException ex) {
@@ -144,7 +130,7 @@ public class Shout extends StmBaseEntity {
 
                 if (stmCallback != null) {
                     if (result.equals("success")) {
-                        stmCallback.onResponse("success");
+                        stmCallback.onResponse(StmService.SUCCESS);
                     } else {
                         StmError stmError = new StmError();
                         stmError.setBlockingError(false);
@@ -206,5 +192,9 @@ public class Shout extends StmBaseEntity {
     @Override
     protected void adaptFromJson(JSONObject jsonObject) {
         // Stubbed
+    }
+
+    public static Type getSerializationType() {
+        return new TypeToken<Shout>(){}.getType();
     }
 }

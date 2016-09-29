@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.http;
 
 import android.content.Context;
 
@@ -6,21 +6,16 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.toolbox.Volley;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class StmRequestQueue {
 
-    private static final String TAG = "StmRequestQueue";
     private static StmRequestQueue instance;
     private RequestQueue requestQueue;
     private static Context context;
 
     public StmRequestQueue(Context context) {
-        this.context = context;
+        StmRequestQueue.context = context;
         requestQueue = getRequestQueue();
     }
-    private StmRequestQueue() {}
 
     public static synchronized void setInstance(Context context) {
         if (instance == null) {

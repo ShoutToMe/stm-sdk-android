@@ -4,34 +4,48 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
+
+import me.shoutto.sdk.internal.http.GsonDateAdapter;
 
 /**
  * This class represents a Shout to Me Message.
  */
 public class Message extends StmBaseEntity implements Comparable<Message> {
 
-    private static final String TAG = "Message";
-    public static final String BASE_ENDPOINT = "/messages";
-    public static final String LIST_JSON_KEY = "messages";
+    private transient static final String TAG = "Message";
+    public transient static final String BASE_ENDPOINT = "/messages";
+    public transient static final String LIST_JSON_KEY = "messages";
+    public transient static final String OBJECT_JSON_KEY = "message";
+    public transient static final String SERIALIZATION_KEY = "message";
     private Channel channel;
     private String channelId;
     private String conversationId;
     private String message = "";
     private String recipientId;
-    private String senderName = "";
+    private Sender sender;
+    @SerializedName("created_date")
     private Date sentDate;
 
     public Message(StmService stmService) {
         super(stmService, TAG, BASE_ENDPOINT);
         try {
-            sentDate = new SimpleDateFormat("yyyy-MM-dd").parse("1970-01-01");
+            sentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse("1970-01-01");
         } catch (ParseException ex) {
             Log.w(TAG, "Could not parse sentDate default.");
         }
@@ -43,6 +57,10 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         this.conversationId = conversationId;
         this.message = message;
         this.recipientId = recipientId;
+    }
+
+    public Message() {
+        super(SERIALIZATION_KEY);
     }
 
     public Channel getChannel() {
@@ -69,12 +87,12 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         this.message = message;
     }
 
-    public String getSenderName() {
-        return senderName;
+    public Sender getSender() {
+        return sender;
     }
 
-    void setSenderName(String senderName) {
-        this.senderName = senderName;
+    void setSender(Sender sender) {
+        this.sender = sender;
     }
 
     public Date getSentDate() {
@@ -95,17 +113,31 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         // Stubbed
     }
 
+    public static Type getSerializationType() {
+        return new TypeToken<Message>(){}.getType();
+    }
+
+    public static Type getSerializationListType() {
+        return new TypeToken<List<Message>>(){}.getType();
+    }
+
     void create(final StmCallback<Message> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                try {
-                    MessageJsonAdapter adapter = new MessageJsonAdapter(stmService);
-                    Message message = adapter.adapt(response);
-                    callback.onResponse(message);
-                } catch (JSONException ex) {
-                    Log.w(TAG, "Could not parse create message response.", ex);
-                }
+                RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
+                        .of(StmBaseEntity.class, "serializationType")
+                        .registerSubtype(Message.class, "message");
+
+                Gson gson = new GsonBuilder()
+                        .registerTypeAdapterFactory(runtimeTypeAdapterFactory)
+                        .registerTypeAdapter(Date.class, new GsonDateAdapter())
+                        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+                        .create();
+
+                Message message = gson.fromJson(response.toString(), Message.class);
+
+                callback.onResponse(message);
             }
         };
 
@@ -192,6 +224,19 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
             Message message = new Message(nestedStmService, nestedChannelId, nestedConversationId,
                     nestedMessage, nestedRecipientId);
             message.create(callback);
+        }
+    }
+
+    public class Sender {
+
+        private String handle;
+
+        public String getHandle() {
+            return handle;
+        }
+
+        public void setHandle(String handle) {
+            this.handle = handle;
         }
     }
 }

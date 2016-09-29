@@ -4,16 +4,21 @@ import android.util.Log;
 
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Map;
+import java.util.Set;
 import java.util.TimeZone;
+
+import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
  * Created by tracyrojas on 9/20/15.
@@ -43,7 +48,7 @@ public class User extends StmBaseEntity {
         return authToken;
     }
 
-    void setAuthToken(String authToken) {
+    public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
 
@@ -86,6 +91,10 @@ public class User extends StmBaseEntity {
         populateUserFieldsFromJson(jsonObject);
     }
 
+    public static Type getSerializationType() {
+        return new TypeToken<User>(){}.getType();
+    }
+
     public void save(final StmCallback<User> callback) {
 
         if (pendingChanges.size() == 0) {
@@ -95,7 +104,8 @@ public class User extends StmBaseEntity {
         // Prepare request
         JSONObject userUpdateJson = new JSONObject();
         try {
-            for (Map.Entry<String, PendingApiObjectChange> entry : pendingChanges.entrySet()) {
+            Set<Map.Entry<String, PendingApiObjectChange>> entrySet = pendingChanges.entrySet();
+            for (Map.Entry<String, PendingApiObjectChange> entry : entrySet) {
                 if (entry.getValue() != null) {
                     userUpdateJson.put(entry.getKey(), entry.getValue().getNewValue());
                 }
@@ -206,6 +216,7 @@ public class User extends StmBaseEntity {
                 stmError.setMessage("Error occurred loading user");
                 stmError.setSeverity(StmError.SEVERITY_MAJOR);
                 stmError.setBlockingError(true);
+                callback.onError(stmError);
             }
         };
 
@@ -242,7 +253,8 @@ public class User extends StmBaseEntity {
     }
 
     private void rollbackPendingChanges() {
-        for (Map.Entry<String, PendingApiObjectChange> property: pendingChanges.entrySet()) {
+        Set<Map.Entry<String, PendingApiObjectChange>> entrySet = pendingChanges.entrySet();
+        for (Map.Entry<String, PendingApiObjectChange> property: entrySet) {
             if (property.getKey().equals("handle")) {
                 if (property.getValue().getOldValue() == null) {
                     handle = null;

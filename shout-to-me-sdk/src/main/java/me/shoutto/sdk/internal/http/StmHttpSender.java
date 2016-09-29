@@ -1,5 +1,8 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.http;
 
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Base64;
 import android.util.Log;
 
@@ -17,13 +20,17 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
-class StmHttpSender {
+import me.shoutto.sdk.Shout;
+import me.shoutto.sdk.StmBaseEntity;
+import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.User;
+import me.shoutto.sdk.internal.PendingApiObjectChange;
+
+public class StmHttpSender {
 
     private static final String TAG = "StmHttpSender";
     private static final String ANONYMOUS_USER_PATH = "/users/skip";
@@ -37,7 +44,7 @@ class StmHttpSender {
 
         Shout shoutFromResponse = null;
         HttpURLConnection connection;
-        int responseCode = 0;
+        int responseCode;
         try {
             Map<String, String> params = new HashMap<>();
             params.put("audio", new String(Base64.encode(shout.getAudio(), Base64.NO_WRAP)) ); //No_wrap to get rid of \n
@@ -154,12 +161,14 @@ class StmHttpSender {
                     user.setId(responseJson.getJSONObject("data")
                             .getJSONObject("user")
                             .getString("id"));
-                    stmService.setChannelId(responseJson
-                            .getJSONObject("data")
-                            .getJSONObject("user")
-                            .getJSONObject("affiliate")
-                            .getJSONObject("default_channel")
-                            .getString("id"));
+                    if (stmService.getChannelId() == null) {
+                        stmService.setChannelId(responseJson
+                                .getJSONObject("data")
+                                .getJSONObject("user")
+                                .getJSONObject("affiliate")
+                                .getJSONObject("default_channel")
+                                .getString("id"));
+                    }
                 }
             } catch (JSONException ex) {
                 Log.e(TAG, "Could not parse get user with client token response JSON", ex);
@@ -183,7 +192,8 @@ class StmHttpSender {
 
         JSONObject requestJson = new JSONObject();
         try {
-            for (Map.Entry<String, PendingApiObjectChange> entry : baseEntity.getPendingChanges().entrySet()) {
+            Set<Map.Entry<String, PendingApiObjectChange>> entrySet = baseEntity.getPendingChanges().entrySet();
+            for (Map.Entry<String, PendingApiObjectChange> entry : entrySet) {
                 if (entry.getValue() != null) {
                     requestJson.put(entry.getKey(), entry.getValue().getNewValue());
                 }
@@ -246,9 +256,12 @@ class StmHttpSender {
     private String buildRequestString(Map<String, String> params) {
         JSONObject requestJson = new JSONObject();
         try {
-            requestJson.put("device_id", stmService.getDeviceId());
-            requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
-            requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
+            requestJson.put("device_id", stmService.getInstallationId());
+            if (ContextCompat.checkSelfPermission(stmService, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED) {
+                requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
+                requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
+            }
             if (params != null) {
                 for (Map.Entry param: params.entrySet()) {
                     requestJson.put(param.getKey().toString(), param.getValue().toString());

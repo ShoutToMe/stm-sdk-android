@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -8,12 +8,10 @@ import android.hardware.SensorManager;
 
 import java.util.Date;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
+import me.shoutto.sdk.StmService;
+
 public class ProximitySensorClient implements SensorEventListener {
 
-    private static final String TAG = "ProximitySensorClient";
     private static final long PROXIMITY_WAVE_MIN_TIME_MS = 90;
     private static final long PROXIMITY_WAVE_MAX_TIME_MS = 400;
     private SensorManager sensorManager;

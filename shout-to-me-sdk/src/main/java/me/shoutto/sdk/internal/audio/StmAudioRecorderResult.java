@@ -1,10 +1,7 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.audio;
 
 import java.io.ByteArrayOutputStream;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class StmAudioRecorderResult {
 
     private ByteArrayOutputStream audioBuffer;

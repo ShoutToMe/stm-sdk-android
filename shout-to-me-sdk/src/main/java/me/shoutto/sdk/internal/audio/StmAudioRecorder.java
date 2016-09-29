@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.audio;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;
@@ -12,7 +12,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.concurrent.Executors;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -25,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class StmAudioRecorder {
 
-    private static final String TAG = "StmAudioRecorder";
+    private static final String TAG = StmAudioRecorder.class.getCanonicalName();
     private final AudioRecord audioRecord;
     private final int minBufferSize;
     private boolean doRecord = false;
@@ -58,12 +57,9 @@ public class StmAudioRecorder {
         }
     };
 
-    public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) {
+    public StmAudioRecorder(Handler handler, int maxRecordingTimeInSeconds) throws IllegalStateException {
         this.handler = handler;
         this.maxRecordingTimeInSeconds = maxRecordingTimeInSeconds;
-
-        stmAudioRecorderResult = new StmAudioRecorderResult();
-        voiceActivityDetector = new VoiceActivityDetector();
 
         minBufferSize = AudioRecord.getMinBufferSize(16000,
                 AudioFormat.CHANNEL_IN_MONO,
@@ -75,8 +71,15 @@ public class StmAudioRecorder {
                 AudioFormat.ENCODING_PCM_16BIT,
                 minBufferSize * 2);
 
+        if (audioRecord.getState() == AudioRecord.STATE_UNINITIALIZED) {
+            throw new IllegalStateException("AudioRecord object is uninitialized.  Cannot continue.");
+        }
+
         realTimeStream = new ByteArrayOutputStream();
         finalStream = new ByteArrayOutputStream();
+
+        stmAudioRecorderResult = new StmAudioRecorderResult();
+        voiceActivityDetector = new VoiceActivityDetector();
     }
 
     public StmAudioRecorderResult writeAudioToStream() {
@@ -130,7 +133,7 @@ public class StmAudioRecorder {
                 if (!cancelRecordingFuture.isCancelled()) {
                     cancelRecordingFuture.cancel(false);
                 }
-                if (stmAudioRecorderResult.didUserSpeak() == false) {
+                if (!stmAudioRecorderResult.didUserSpeak()) {
                     stmAudioRecorderResult.setDidUserSpeak(true);
                 }
             } else if (isUserStillTalking == 0) {
