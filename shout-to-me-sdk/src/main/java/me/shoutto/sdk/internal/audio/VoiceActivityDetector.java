@@ -1,15 +1,12 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.audio;
 
-/**
- * Created by tracyrojas on 9/20/15.
- */
 public class VoiceActivityDetector {
 
     private static final double MAX_REF = 32768;
     private static final String TAG = "VoiceActivityDetector";
     private VadState vadState;
 
-    VoiceActivityDetector() {
+    public VoiceActivityDetector() {
         vadState = new VadState();
     }
 

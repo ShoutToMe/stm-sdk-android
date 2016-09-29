@@ -20,12 +20,12 @@ public class Shout extends StmBaseEntity {
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    Shout(StmService stmService, byte[] rawData) {
+    public Shout(StmService stmService, byte[] rawData) {
         super(stmService, TAG, BASE_ENDPOINT);
         this.audio = addHeaderToRawData(rawData);
     }
 
-    Shout(StmService stmService, JSONObject json) {
+    public Shout(StmService stmService, JSONObject json) {
         super(stmService, TAG, "/shouts");
         try {
             this.id = json.getString("id");

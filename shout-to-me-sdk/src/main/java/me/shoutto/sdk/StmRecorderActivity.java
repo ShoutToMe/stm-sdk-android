@@ -30,6 +30,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import me.shoutto.sdk.internal.RecordingGraphicView;
+import me.shoutto.sdk.internal.audio.StmAudioRecorder;
+import me.shoutto.sdk.internal.audio.StmAudioRecorderResult;
+
 public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
         SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 

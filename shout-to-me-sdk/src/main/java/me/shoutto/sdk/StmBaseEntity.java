@@ -11,10 +11,11 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+
+import me.shoutto.sdk.internal.PendingApiObjectChange;
+import me.shoutto.sdk.internal.http.StmRequestQueue;
 
 public abstract class StmBaseEntity {
 
@@ -47,7 +48,7 @@ public abstract class StmBaseEntity {
         return id;
     }
 
-    void setId(String id) {
+    public void setId(String id) {
         this.id = id;
     }
 

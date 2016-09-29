@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence;
+package me.shoutto.sdk;
 
 import android.app.IntentService;
 import android.content.Intent;
@@ -16,12 +16,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import me.shoutto.sdk.MessageNotificationIntentWrapper;
-import me.shoutto.sdk.R;
+import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDatabaseSchema;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 
 /**
  * An {@link IntentService} subclass for handling Geofence transitions.

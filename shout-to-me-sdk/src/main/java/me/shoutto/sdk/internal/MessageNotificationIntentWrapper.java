@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal;
 
 import android.content.Intent;
 

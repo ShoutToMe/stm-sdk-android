@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.http;
 
 import android.content.Context;
 

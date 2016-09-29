@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal;
 
 import android.content.Context;
 import android.hardware.Sensor;
@@ -7,6 +7,8 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 
 import java.util.Date;
+
+import me.shoutto.sdk.StmService;
 
 public class ProximitySensorClient implements SensorEventListener {
 

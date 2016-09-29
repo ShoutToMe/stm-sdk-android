@@ -15,13 +15,12 @@ import java.util.List;
 
 import me.shoutto.sdk.Conversation;
 import me.shoutto.sdk.Message;
-import me.shoutto.sdk.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
 import me.shoutto.sdk.internal.http.StmEntityRequestSync;
-import me.shoutto.sdk.internal.geofence.GeofenceManager;
-import me.shoutto.sdk.internal.geofence.LocationUtils;
-import me.shoutto.sdk.internal.geofence.MessageGeofence;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.LocationUtils;
+import me.shoutto.sdk.internal.location.geofence.MessageGeofence;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 
 /**
  * NotificationManager provides business logic for incoming notifications.

@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence;
+package me.shoutto.sdk.internal.location.geofence;
 
 import android.support.test.filters.SmallTest;
 import android.support.test.runner.AndroidJUnit4;

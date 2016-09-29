@@ -19,12 +19,17 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
+import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.geofence.GeofenceManager;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDatabaseSchema;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.http.StmHttpSender;
+import me.shoutto.sdk.internal.http.StmRequestQueue;
+import me.shoutto.sdk.internal.location.LocationServicesClient;
 
 /**
  * The primary service class for Shout to Me functionality.
@@ -167,7 +172,7 @@ public class StmService extends Service {
         }
     }
 
-    void handleHandWaveGesture() {
+    public void handleHandWaveGesture() {
         if (overlay != null) {
             overlay.onHandWaveGesture();
         } else if (handWaveGestureListenerList.size() > 0) {

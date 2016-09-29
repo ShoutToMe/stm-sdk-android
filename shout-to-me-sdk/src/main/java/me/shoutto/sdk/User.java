@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import me.shoutto.sdk.internal.PendingApiObjectChange;
+
 /**
  * Created by tracyrojas on 9/20/15.
  */
@@ -46,7 +48,7 @@ public class User extends StmBaseEntity {
         return authToken;
     }
 
-    void setAuthToken(String authToken) {
+    public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
 

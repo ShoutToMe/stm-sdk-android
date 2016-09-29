@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -7,6 +7,8 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.util.AttributeSet;
 import android.view.View;
+
+import me.shoutto.sdk.R;
 
 public class RecordingGraphicView extends View {
 

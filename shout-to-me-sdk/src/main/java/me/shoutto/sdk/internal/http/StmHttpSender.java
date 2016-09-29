@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.http;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -24,7 +24,13 @@ import java.util.Set;
 
 import javax.net.ssl.HttpsURLConnection;
 
-class StmHttpSender {
+import me.shoutto.sdk.Shout;
+import me.shoutto.sdk.StmBaseEntity;
+import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.User;
+import me.shoutto.sdk.internal.PendingApiObjectChange;
+
+public class StmHttpSender {
 
     private static final String TAG = "StmHttpSender";
     private static final String ANONYMOUS_USER_PATH = "/users/skip";

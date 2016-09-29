@@ -5,6 +5,7 @@ import android.util.Log;
 
 import com.google.android.gms.gcm.GcmListenerService;
 
+import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 

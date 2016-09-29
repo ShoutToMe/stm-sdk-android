@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence;
+package me.shoutto.sdk.internal.location.geofence;
 
 import android.Manifest;
 import android.app.PendingIntent;
@@ -11,7 +11,6 @@ import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.support.v4.content.ContextCompat;
-import android.text.format.DateUtils;
 import android.util.Log;
 
 import com.google.android.gms.common.ConnectionResult;
@@ -31,9 +30,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import me.shoutto.sdk.GeofenceTransitionsIntentService;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDatabaseSchema;
-import me.shoutto.sdk.internal.geofence.database.GeofenceDbHelper;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
+import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 
 /**
  * GeofenceManager handles all geofence Google Play API and Database activities.

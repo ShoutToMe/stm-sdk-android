@@ -1,4 +1,4 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal.audio;
 
 import android.media.AudioFormat;
 import android.media.AudioRecord;

@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence.database;
+package me.shoutto.sdk.internal.location.geofence.database;
 
 import android.provider.BaseColumns;
 

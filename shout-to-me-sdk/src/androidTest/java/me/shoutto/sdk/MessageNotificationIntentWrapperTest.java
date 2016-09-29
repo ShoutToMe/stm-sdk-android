@@ -10,6 +10,8 @@ import android.support.test.runner.AndroidJUnit4;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
+
 @RunWith(AndroidJUnit4.class)
 @SmallTest
 public class MessageNotificationIntentWrapperTest {

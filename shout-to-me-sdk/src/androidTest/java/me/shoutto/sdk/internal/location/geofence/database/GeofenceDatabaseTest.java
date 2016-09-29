@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence.database;
+package me.shoutto.sdk.internal.location.geofence.database;
 
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.MatcherAssert.*;

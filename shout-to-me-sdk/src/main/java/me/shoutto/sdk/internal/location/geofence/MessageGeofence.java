@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal.geofence;
+package me.shoutto.sdk.internal.location.geofence;
 
 import com.google.android.gms.location.Geofence;
 

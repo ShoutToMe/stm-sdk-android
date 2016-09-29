@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import me.shoutto.sdk.internal.http.GsonDateAdapter;
+import me.shoutto.sdk.internal.http.StmRequestQueue;
 
 public class ChannelManager {
 
