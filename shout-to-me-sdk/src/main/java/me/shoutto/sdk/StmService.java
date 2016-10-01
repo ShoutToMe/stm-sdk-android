@@ -371,12 +371,7 @@ public class StmService extends Service {
     }
 
     public String getServerUrl() {
-        String serverUrl = stmPreferenceManager.getServerUrl();
-        if (serverUrl == null) {
-            return DEFAULT_SERVER_URL;
-        } else {
-            return serverUrl;
-        }
+        return stmPreferenceManager.getServerUrl();
     }
 
     public void setServerUrl(String serverUrl) {

@@ -3,6 +3,8 @@ package me.shoutto.sdk.internal;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import me.shoutto.sdk.StmService;
+
 /**
  * An internal class to manage the shared preference data
  */
@@ -50,7 +52,12 @@ public class StmPreferenceManager {
     public void setMaxGeofences(Integer maxGeofences) { setPreferenceInt(PREF_MAX_GEOFENCES, maxGeofences); }
 
     public String getServerUrl() {
-        return sharedPreferences.getString(PREF_SERVER_URL, null);
+        String serverUrl = sharedPreferences.getString(PREF_SERVER_URL, null);
+        if (serverUrl == null) {
+            return StmService.DEFAULT_SERVER_URL;
+        } else {
+            return serverUrl;
+        }
     }
 
     public void setServerUrl(String serverUrl) {
