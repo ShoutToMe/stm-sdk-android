@@ -27,7 +27,7 @@ import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
  */
 public class NotificationManager {
 
-    private static final String TAG = NotificationManager.class.getCanonicalName();
+    private static final String TAG = NotificationManager.class.getSimpleName();
     private Context context;
     private GeofenceManager geofenceManager;
     private boolean isBundleValid;
@@ -40,7 +40,8 @@ public class NotificationManager {
 
     public NotificationManager(Context context, Bundle bundle) {
         this.context = context;
-        geofenceManager = new GeofenceManager(context, new GeofenceDbHelper(context));
+        geofenceManager = new GeofenceManager(context, new GeofenceDbHelper(context),
+                new StmPreferenceManager(context));
         processBundle(bundle);
     }
 

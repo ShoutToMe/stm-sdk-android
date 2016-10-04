@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
 
 public class Shout extends StmBaseEntity {
 
-    private static final String TAG = Shout.class.getCanonicalName();
+    private static final String TAG = Shout.class.getSimpleName();
     private static final String BASE_ENDPOINT = "/shouts";
     private byte[] audio;
     private String tags;

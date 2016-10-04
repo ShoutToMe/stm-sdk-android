@@ -51,7 +51,7 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
     public static final String OBJECTS_UNINITIALIZED = "me.shoutto.sdk.OBJECTS_UNINITIALIZED";
     public static final String RECORD_AUDIO_PERMISSION_DENIED = "me.shoutto.sdk.RECORD_AUDIO_PERMISSION_DENIED";
 
-    private static final String TAG = StmRecorderActivity.class.getCanonicalName();
+    private static final String TAG = StmRecorderActivity.class.getSimpleName();
     private StmAudioRecorder stmAudioRecorder;
     private StmService stmService;
     private Boolean isStmServiceBound = false;

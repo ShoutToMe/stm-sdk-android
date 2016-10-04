@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class StmAudioRecorder {
 
-    private static final String TAG = StmAudioRecorder.class.getCanonicalName();
+    private static final String TAG = StmAudioRecorder.class.getSimpleName();
     private final AudioRecord audioRecord;
     private final int minBufferSize;
     private boolean doRecord = false;

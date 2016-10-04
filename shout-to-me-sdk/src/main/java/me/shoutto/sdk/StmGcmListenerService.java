@@ -11,7 +11,7 @@ import me.shoutto.sdk.internal.StmPreferenceManager;
 
 public class StmGcmListenerService extends GcmListenerService {
 
-    private static final String TAG = StmGcmListenerService.class.getCanonicalName();
+    private static final String TAG = StmGcmListenerService.class.getSimpleName();
 
     /**
      * Called when message is received.  This class must use synchronous calls to STM API because

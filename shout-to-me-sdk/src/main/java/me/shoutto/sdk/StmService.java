@@ -46,7 +46,7 @@ public class StmService extends Service {
     public static final String FAILURE = "me.shoutto.sdk.FAILURE";
     public static final String SUCCESS = "me.shoutto.sdk.SUCCESS";
 
-    private static final String TAG = StmService.class.getCanonicalName();
+    private static final String TAG = StmService.class.getSimpleName();
     private static final String CHANNEL_ID = "me.shoutto.sdk.CHANNEL_ID";
     private static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
     private final IBinder stmBinder = new StmBinder();
@@ -130,7 +130,7 @@ public class StmService extends Service {
         proximitySensorClient = new ProximitySensorClient(this);
 
         geofenceDbHelper = new GeofenceDbHelper(this);
-        geofenceManager = new GeofenceManager(this, geofenceDbHelper);
+        geofenceManager = new GeofenceManager(this, geofenceDbHelper, new StmPreferenceManager(this));
 
         return stmBinder;
     }
@@ -154,14 +154,17 @@ public class StmService extends Service {
         return user;
     }
 
-    public void getUser(StmCallback<User> callback) {
+    public void getUser(final StmCallback<User> callback) {
         synchronized (this) {
-            if (!user.isInitialized()) {
-                user.get(callback);
-                user.setIsInitialized(true);
-            } else {
-                callback.onResponse(user);
-            }
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (!user.isInitialized()) {
+                        initializeUserSession();
+                    }
+                    user.get(callback);
+                }
+            }).start();
         }
     }
 
@@ -194,21 +197,36 @@ public class StmService extends Service {
         if (channelManager == null) {
             channelManager = new ChannelManager(this);
         }
-        channelManager.getChannels(callback);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                channelManager.getChannels(callback);
+            }
+        }).start();
     }
 
     public void getMessages(final StmCallback<List<Message>> callback) {
         if (messageManager == null) {
             messageManager = new MessageManager(this);
         }
-        messageManager.getMessages(callback);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                messageManager.getMessages(callback);
+            }
+        }).start();
     }
 
     public void getUnreadMessageCount(final StmCallback<Integer> callback) {
         if (messageManager == null) {
             messageManager = new MessageManager(this);
         }
-        messageManager.getUnreadMessageCount(callback);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                messageManager.getUnreadMessageCount(callback);
+            }
+        }).start();
     }
 
     public String getUserAuthToken() {
@@ -233,6 +251,8 @@ public class StmService extends Service {
             user.setId(userId);
             user.setAuthToken(authToken);
         }
+        user.setIsInitialized(true);
+        Log.d(TAG, "User has been initialized");
     }
 
     public void refreshUserAuthToken() throws Exception {

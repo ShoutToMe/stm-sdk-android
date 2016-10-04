@@ -33,7 +33,7 @@ public class User extends StmBaseEntity {
     private boolean isInitialized = false;
 
     public User(StmService stmService) {
-        super(stmService, "User", "/users");
+        super(stmService, "user", "/users");
     }
 
     boolean isInitialized() {
@@ -187,12 +187,12 @@ public class User extends StmBaseEntity {
                     try {
                         user = populateUserFieldsFromJson(userJson);
                     } catch(JSONException ex) {
-                        Log.w(TAG, "Unable to populate user fields from JSON", ex);
+                        Log.w(TAG, "Unable to populate user fields from JSON. "  + response.toString(), ex);
                         stmError = new StmError("Unable to populate user fields from JSON", false,
                                 StmError.SEVERITY_MINOR);
                     }
                 } catch(JSONException ex) {
-                    Log.e(TAG, "Unable to parse response JSON", ex);
+                    Log.e(TAG, "Unable to parse response JSON. "  + response.toString(), ex);
                     stmError = new StmError("Unable to parse user update response JSON", false,
                             StmError.SEVERITY_MINOR);
                 } finally {
