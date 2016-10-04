@@ -47,10 +47,11 @@ public class GeofenceManager {
     private StmPreferenceManager stmPreferenceManager;
     private int maxGeofences = MAX_GEOFENCES;
 
-    public GeofenceManager(Context context, GeofenceDbHelper geofenceDbHelper) {
+    public GeofenceManager(Context context, GeofenceDbHelper geofenceDbHelper,
+                           StmPreferenceManager stmPreferenceManager) {
         this.context = context;
         this.geofenceDbHelper = geofenceDbHelper;
-        stmPreferenceManager = new StmPreferenceManager(context);
+        this.stmPreferenceManager = stmPreferenceManager;
         int maxGeofencesPreference = stmPreferenceManager.getMaxGeofences();
         if (maxGeofencesPreference > 0) {
             maxGeofences = maxGeofencesPreference;

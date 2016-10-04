@@ -26,7 +26,7 @@ import me.shoutto.sdk.internal.http.StmRequestQueue;
 
 public class MessageManager {
 
-    private static final String TAG = MessageManager.class.getCanonicalName();
+    private static final String TAG = MessageManager.class.getSimpleName();
     private StmService stmService;
 
     public MessageManager(StmService stmService) {

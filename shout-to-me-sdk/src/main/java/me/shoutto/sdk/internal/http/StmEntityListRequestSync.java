@@ -31,7 +31,7 @@ import me.shoutto.sdk.Subscription;
  */
 public class StmEntityListRequestSync<T extends StmBaseEntity> extends StmHttpRequestBase {
 
-    private static final String TAG = StmEntityListRequestSync.class.getCanonicalName();
+    private static final String TAG = StmEntityListRequestSync.class.getSimpleName();
 
     /**
      * Main method to process the entity HTTP request

@@ -102,7 +102,7 @@ import me.shoutto.sdk.User;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String TAG = MainActivity.class.getCanonicalName();
+    private static final String TAG = MainActivity.class.getSimpleName();
     private StmService stmService;
     private Boolean isStmServiceBound = false;
     private Shout newlyCreatedShout;

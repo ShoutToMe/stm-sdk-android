@@ -32,7 +32,7 @@ import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 public class StmHttpSender {
 
-    private static final String TAG = "StmHttpSender";
+    private static final String TAG = StmHttpSender.class.getSimpleName();
     private static final String ANONYMOUS_USER_PATH = "/users/skip";
     private StmService stmService;
 
@@ -152,8 +152,8 @@ public class StmHttpSender {
             }
 
             try {
+                Log.d(TAG, response);
                 JSONObject responseJson = new JSONObject(response);
-                Log.d(TAG, responseJson.toString());
                 if (responseJson.getString("status").equals("success")) {
                     user.setAuthToken(responseJson
                             .getJSONObject("data")
@@ -161,13 +161,17 @@ public class StmHttpSender {
                     user.setId(responseJson.getJSONObject("data")
                             .getJSONObject("user")
                             .getString("id"));
-                    if (stmService.getChannelId() == null) {
-                        stmService.setChannelId(responseJson
-                                .getJSONObject("data")
-                                .getJSONObject("user")
-                                .getJSONObject("affiliate")
-                                .getJSONObject("default_channel")
-                                .getString("id"));
+                    try {
+                        if (stmService.getChannelId() == null) {
+                            stmService.setChannelId(responseJson
+                                    .getJSONObject("data")
+                                    .getJSONObject("user")
+                                    .getJSONObject("affiliate")
+                                    .getJSONObject("default_channel")
+                                    .getString("id"));
+                        }
+                    } catch (JSONException ex) {
+                        Log.w(TAG, "Could not set default channel ID for user.");
                     }
                 }
             } catch (JSONException ex) {

@@ -36,7 +36,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
 
     public static final String PN_REGISTRATION_COMPLETE = "registrationComplete";
 
-    private static final String TAG = GcmNotificationRegistrationIntentService.class.getCanonicalName();
+    private static final String TAG = GcmNotificationRegistrationIntentService.class.getSimpleName();
     private static final String GCM_DEFAULT_SENDER_ID = "me.shoutto.sdk.GcmDefaultSenderId";
     private static final String PLATFORM_APPLICATION_ARN = "me.shoutto.sdk.PlatformApplicationArn";
     private static final String IDENTITY_POOL_ID = "me.shoutto.sdk.IdentityPoolId";

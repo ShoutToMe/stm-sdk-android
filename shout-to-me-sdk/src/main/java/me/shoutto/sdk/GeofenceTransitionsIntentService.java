@@ -28,7 +28,7 @@ import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
  */
 public class GeofenceTransitionsIntentService extends IntentService {
 
-    private static final String TAG = GeofenceTransitionsIntentService.class.getCanonicalName();
+    private static final String TAG = GeofenceTransitionsIntentService.class.getSimpleName();
     private GeofenceDbHelper geofenceDbHelper;
 
     public GeofenceTransitionsIntentService() {
@@ -67,7 +67,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             List<Bundle> bundles = createBundles(triggeringGeofencesIdsList);
 
-            GeofenceManager geofenceManager = new GeofenceManager(this, new GeofenceDbHelper(this));
+            GeofenceManager geofenceManager = new GeofenceManager(this, new GeofenceDbHelper(this),
+                    new StmPreferenceManager(this));
             geofenceManager.removeGeofencesByIds(triggeringGeofencesIdsList);
 
             // Send notification.
