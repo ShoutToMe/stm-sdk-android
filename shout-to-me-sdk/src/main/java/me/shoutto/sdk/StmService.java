@@ -317,7 +317,7 @@ public class StmService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                List<Conversation> activeConversations = new ArrayList<>();
+                final List<Conversation> activeConversations = new ArrayList<>();
 
                 // Get subscribed channels
                 StmEntityListRequestSync<Subscription> subscriptionRequest = new StmEntityListRequestSync<>();
@@ -374,18 +374,52 @@ public class StmService extends Service {
                     geofenceManager.removeGeofencesByIds(conversationsToRemove);
                 }
 
-                // Process the notifications
-                for (Conversation conversation : activeConversations) {
-                    Bundle bundle = new Bundle();
-                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
-                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
-                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
-                    bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
+                // Process the notifications. Get channel information to provide channel name.
+                getChannels(new Callback<List<Channel>>() {
+                    @Override
+                    public void onSuccess(StmResponse<List<Channel>> stmResponse) {
+                        for (final Conversation conversation : activeConversations) {
+                            String channelName = "";
+                            for (Channel channel : stmResponse.get()) {
+                                if (channel.getId().equals(conversation.getChannelId())) {
+                                    channelName = channel.getName();
+                                }
+                            }
 
-                    NotificationManager notificationManager = new NotificationManager(StmService.this, bundle);
-                    notificationManager.processIncomingNotification(getServerUrl(), getUserAuthToken(), user.getId());
-                }
+                            Bundle bundle = new Bundle();
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TITLE, channelName);
+                            processNotificationBundle(bundle);
+                        }
+                    }
 
+                    @Override
+                    public void onFailure(StmError stmError) {
+                        Log.d(TAG, "Could not get channel info to process notifications. " + stmError.getMessage());
+
+                        for (final Conversation conversation : activeConversations) {
+                            Bundle bundle = new Bundle();
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
+                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
+                            processNotificationBundle(bundle);
+                        }
+                    }
+                });
+            }
+        }).start();
+    }
+
+    private void processNotificationBundle(final Bundle bundle) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                NotificationManager notificationManager = new NotificationManager(StmService.this, bundle);
+                notificationManager.processIncomingNotification(getServerUrl(), getUserAuthToken(), user.getId());
             }
         }).start();
     }
