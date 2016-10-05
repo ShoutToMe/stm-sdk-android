@@ -34,6 +34,7 @@ public class NotificationManager {
     private String channelId;
     private String channelImageUrl;
     private String conversationId;
+    private String messageId;
     private String notificationBody;
     private String notificationTitle;
     private String notificationType;
@@ -50,6 +51,7 @@ public class NotificationManager {
         channelId = bundle.getString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID);
         channelImageUrl = bundle.getString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_IMAGE_URL);
         conversationId = bundle.getString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID);
+        messageId = bundle.getString(MessageNotificationIntentWrapper.EXTRA_MESSAGE_ID);
         notificationTitle = bundle.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TITLE);
         notificationType = bundle.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE);
 
@@ -175,10 +177,12 @@ public class NotificationManager {
 
     private void deliverNotification(String userId, String authToken, String serverUrl) {
 
-        // Create a message.  This notification was published from a conversation and the
-        // created message will represent the "instance" of the notification for this
+        // If the notification was published from a conversation, then create a message
+        // via the service that will represent the "instance" of the notification for this
         // specific user/recipient
-        String messageId = createMessage(authToken, userId, serverUrl);
+        if (notificationType != null && notificationType.equals("conversation message")) {
+            messageId = createMessage(authToken, userId, serverUrl);
+        }
 
         if (messageId != null) {
             // Alert client of message notification received

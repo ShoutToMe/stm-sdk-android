@@ -1,6 +1,7 @@
 package me.shoutto.sdk.internal;
 
 import android.content.Intent;
+import android.util.Log;
 
 /**
  * MessageNotificationIntentWrapper
