@@ -237,7 +237,11 @@ public class NotificationManager {
         messageGeofence.setTitle(notificationTitle);
         messageGeofence.setType(notificationType);
 
-        geofenceManager.addGeofence(messageGeofence, userLocation);
+        try {
+            geofenceManager.addGeofence(messageGeofence, userLocation);
+        } catch (SecurityException ex) {
+            Log.e(TAG, "Could not add new geofence.", ex);
+        }
     }
 
     @SuppressWarnings("unused")

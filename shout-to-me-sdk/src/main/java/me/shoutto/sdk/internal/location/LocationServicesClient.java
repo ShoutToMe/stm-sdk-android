@@ -1,6 +1,7 @@
 package me.shoutto.sdk.internal.location;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
@@ -14,7 +15,8 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 
-import me.shoutto.sdk.StmService;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Wrapper class for LocationServices.
@@ -22,28 +24,39 @@ import me.shoutto.sdk.StmService;
 public class LocationServicesClient implements GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    private static final String TAG = "LocationServicesClient";
-    private StmService stmService;
+    private static final String TAG = LocationServicesClient.class.getSimpleName();
+    private static LocationServicesClient instance;
+
+    private Context context;
     private GoogleApiClient googleApiClient;
     private Location lastLocation;
     private LocationRequest locationRequest;
     private double latitude;
     private double longitude;
+    private List<LocationUpdateListener> locationUpdateListeners;
 
     // Location updates intervals in sec
-    private static final int UPDATE_INTERVAL = 15000; // 15 sec
-    private static final int FASTEST_INTERVAL = 5000; // 5 sec
-    private static final int DISPLACEMENT = 10; // 10 meters
+    private static final int UPDATE_INTERVAL = 20000; // 20 sec
+    private static final int FASTEST_INTERVAL = 60000; // 1 min
+    private static final int DISPLACEMENT = 500; // 500 meters
 
-    public LocationServicesClient(StmService stmService) {
-        this.stmService = stmService;
+    private LocationServicesClient(Context context) {
+        this.context = context;
+        locationUpdateListeners = new ArrayList<>();
         buildGoogleApiClient();
         createLocationRequest();
     }
 
+    public static LocationServicesClient getInstance(Context context) {
+        if (instance == null) {
+            instance = new LocationServicesClient(context.getApplicationContext());
+        }
+        return instance;
+    }
+
     @Override
     public void onConnected(Bundle connectionHint) {
-        if (ContextCompat.checkSelfPermission(stmService, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
             if (lastLocation != null) {
@@ -74,6 +87,10 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
             latitude = lastLocation.getLatitude();
             longitude = lastLocation.getLongitude();
         }
+
+        for (LocationUpdateListener locationUpdateListener : locationUpdateListeners) {
+            locationUpdateListener.onLocationUpdate(location);
+        }
     }
 
     public double getLatitude() {
@@ -93,8 +110,20 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
         googleApiClient.disconnect();
     }
 
+    public void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
+        if (locationUpdateListener != null) {
+            locationUpdateListeners.add(locationUpdateListener);
+        }
+    }
+
+    public void unregisterLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
+        if (locationUpdateListener != null) {
+            locationUpdateListeners.remove(locationUpdateListener);
+        }
+    }
+
     protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(stmService)
+        googleApiClient = new GoogleApiClient.Builder(context)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
@@ -105,12 +134,12 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
         locationRequest = new LocationRequest();
         locationRequest.setInterval(UPDATE_INTERVAL);
         locationRequest.setFastestInterval(FASTEST_INTERVAL);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        locationRequest.setSmallestDisplacement(DISPLACEMENT); // 10 meters
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        locationRequest.setSmallestDisplacement(DISPLACEMENT);
     }
 
     protected void startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(stmService, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
         }

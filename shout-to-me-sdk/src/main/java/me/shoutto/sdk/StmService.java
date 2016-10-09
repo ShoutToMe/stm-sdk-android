@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.location.Location;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -24,7 +25,9 @@ import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.LocationUtils;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 import me.shoutto.sdk.internal.http.StmHttpSender;
@@ -34,7 +37,7 @@ import me.shoutto.sdk.internal.location.LocationServicesClient;
 /**
  * The primary service class for Shout to Me functionality.
  */
-public class StmService extends Service {
+public class StmService extends Service implements LocationUpdateListener {
 
     @Deprecated
     public static final String STM_SETTINGS_KEY = "stm_settings";
@@ -80,8 +83,6 @@ public class StmService extends Service {
         Log.d(TAG, "Destroying StmService");
     }
 
-
-
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         return START_REDELIVER_INTENT;
@@ -101,16 +102,7 @@ public class StmService extends Service {
                 Log.e(TAG, "Metadata with client token is missing. Please make sure to include the client token metadata in AndroidManifest.xml");
             } else {
                 accessToken = bundle.getString(CLIENT_TOKEN);
-                if (accessToken != null) {
-                    // Initialize the RequestQueue
-                    StmRequestQueue.setInstance(this);
-
-                    // Create or get user
-                    this.user = new User(this);
-
-                    this.stmHttpSender = new StmHttpSender(this);
-                    locationServicesClient = new LocationServicesClient(this);
-                } else {
+                if (accessToken == null) {
                     Log.w(TAG, "Access token is null. Please make sure to include the access token when binding.");
                 }
 
@@ -124,22 +116,44 @@ public class StmService extends Service {
             Log.e(TAG, "Package name not found. Cannot start StmService.", ex);
         }
 
+        // Initialize the RequestQueue
+        StmRequestQueue.setInstance(this);
+
+        // Create or get user
+        this.user = new User(this);
+
+        this.stmHttpSender = new StmHttpSender(this);
+
+        geofenceDbHelper = new GeofenceDbHelper(this);
+        geofenceManager = new GeofenceManager(this, geofenceDbHelper, new StmPreferenceManager(this));
+
+        locationServicesClient = LocationServicesClient.getInstance(this);
+        locationServicesClient.registerLocationUpdateListener(this);
+
         executorService = Executors.newFixedThreadPool(10);
 
         locationServicesClient.connectToService();
         proximitySensorClient = new ProximitySensorClient(this);
-
-        geofenceDbHelper = new GeofenceDbHelper(this);
-        geofenceManager = new GeofenceManager(this, geofenceDbHelper, new StmPreferenceManager(this));
 
         return stmBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        locationServicesClient.unregisterLocationUpdateListener(this);
         locationServicesClient.disconnectFromService();
         proximitySensorClient.stopListening();
         return super.onUnbind(intent);
+    }
+
+    @Override
+    public void onLocationUpdate(final Location location) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                geofenceManager.rebuildGeofencesInPlayServices(location);
+            }
+        }).start();
     }
 
     public Context getContext() {
@@ -371,7 +385,7 @@ public class StmService extends Service {
                 readableDatabase.close();
 
                 if (conversationsToRemove.size() > 0) {
-                    geofenceManager.removeGeofencesByIds(conversationsToRemove);
+                    geofenceManager.removeGeofencesByIds(conversationsToRemove, LocationUtils.getLastKnownCoordinates(StmService.this));
                 }
 
                 // Process the notifications. Get channel information to provide channel name.
