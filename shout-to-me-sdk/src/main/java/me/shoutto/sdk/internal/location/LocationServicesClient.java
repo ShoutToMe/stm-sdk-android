@@ -107,7 +107,6 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
 
     public void disconnectFromService() {
         stopLocationUpdates();
-        googleApiClient.disconnect();
     }
 
     public void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
@@ -146,6 +145,9 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
     }
 
     protected void stopLocationUpdates() {
-        LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+        if (googleApiClient.isConnected()) {
+            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
+            googleApiClient.disconnect();
+        }
     }
 }
