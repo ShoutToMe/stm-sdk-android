@@ -20,6 +20,7 @@ import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
+import me.shoutto.sdk.internal.location.geofence.LocationUtils;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 
@@ -69,7 +70,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
             GeofenceManager geofenceManager = new GeofenceManager(this, new GeofenceDbHelper(this),
                     new StmPreferenceManager(this));
-            geofenceManager.removeGeofencesByIds(triggeringGeofencesIdsList);
+            geofenceManager.removeGeofencesByIds(triggeringGeofencesIdsList, LocationUtils.getLastKnownCoordinates(this));
 
             // Send notification.
             sendNotification(bundles);
