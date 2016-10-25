@@ -302,7 +302,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                             @Override
                             public void run() {
                                 StmCallback<Shout> stmCallback = stmService.getShoutCreationCallback();
-                                stmCallback.onResponse(newShout);
+                                if (stmCallback != null) {
+                                    stmCallback.onResponse(newShout);
+                                }
                             }
                         });
                     }
