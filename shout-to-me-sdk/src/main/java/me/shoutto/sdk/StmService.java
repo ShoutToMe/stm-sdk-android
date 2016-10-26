@@ -288,6 +288,23 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
+     * Sends request to the Shout to Me service to see if the user is subscribed to the specified
+     * channel.
+     * @param channelId The channel ID to check subscription status.
+     * @param callback The callback to be executed or null.
+     */
+    public void isSubscribedToChannel(String channelId, final StmCallback<Boolean> callback) {
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
+
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.isSubscribed(callback);
+    }
+
+    /**
      * Handles the Android bind lifecycle event. This is where most of the initialization takes place.
      * @param   intent The Intent that was used to bind to the service.
      * @return  The IBinder through which clients can call on to the service.
@@ -469,6 +486,22 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
+     * Registers the user to receive notifications from the specified channel.
+     * @param channelId The channel ID to subscribe to.
+     * @param callback The callback to be executed or null.
+     */
+    public void subscribeToChannel(final String channelId, final StmCallback<Void> callback) {
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
+
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.subscribe(callback);
+    }
+
+    /**
      * Synchronizes Shout to Me user notifications.  For each channel that the user is subscribed to,
      * this method will retrieve active messages from the service and either display them to the
      * user or create geofences.
@@ -483,7 +516,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 StmEntityListRequestSync<Subscription> subscriptionRequest = new StmEntityListRequestSync<>();
                 List<Subscription> subscriptionList = subscriptionRequest.process("GET", getUserAuthToken(),
                         getServerUrl() + Subscription.BASE_ENDPOINT, null, Subscription.getListSerializationType(),
-                        Subscription.LIST_JSON_KEY);
+                        Subscription.LIST_SERIALIZATION_KEY);
 
                 // Get active conversations for those channels
                 if (subscriptionList != null) {
@@ -494,7 +527,7 @@ public class StmService extends Service implements LocationUpdateListener {
                         StmEntityListRequestSync<Conversation> conversationRequest = new StmEntityListRequestSync<>();
                         List<Conversation> conversationList = conversationRequest.process("GET", getUserAuthToken(),
                                 conversationRequestUrl, null, Conversation.getListSerializationType(),
-                                Conversation.LIST_JSON_KEY);
+                                Conversation.LIST_SERIALIZATION_KEY);
                         if (conversationList != null && conversationList.size() > 0) {
                             activeConversations.addAll(conversationList);
                         }
@@ -593,5 +626,21 @@ public class StmService extends Service implements LocationUpdateListener {
         if (handWaveGestureListenerList.size() == 0) {
             proximitySensorClient.stopListening();
         }
+    }
+
+    /**
+     * Unsubscribes the user from receiving notifications from the specified channel.
+     * @param channelId The channel ID to unsubscribed from.
+     * @param callback The callback to be executed or null.
+     */
+    public void unsubscribeFromChannel(final String channelId, final StmCallback<Void> callback) {
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
+
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.unsubscribe(callback);
     }
 }

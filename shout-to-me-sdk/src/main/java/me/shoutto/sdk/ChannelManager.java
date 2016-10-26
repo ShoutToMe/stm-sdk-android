@@ -24,16 +24,16 @@ import java.util.Map;
 import me.shoutto.sdk.internal.http.GsonDateAdapter;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 
-public class ChannelManager {
+class ChannelManager {
 
     private static final String TAG = ChannelManager.class.getSimpleName();
     private StmService stmService;
 
-    public ChannelManager(StmService stmService) {
+    ChannelManager(StmService stmService) {
         this.stmService = stmService;
     }
 
-    public void getChannels(final StmCallback<List<Channel>> callback) {
+    void getChannels(final StmCallback<List<Channel>> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -41,7 +41,7 @@ public class ChannelManager {
                 StmError stmError = null;
                 try {
                     JSONObject data = response.getJSONObject("data");
-                    JSONArray channelArray = data.getJSONArray(Channel.LIST_JSON_KEY);
+                    JSONArray channelArray = data.getJSONArray(Channel.LIST_SERIALIZATION_KEY);
 
                     RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                             .of(StmBaseEntity.class, StmBaseEntity.SERIALIZATION_FIELD)

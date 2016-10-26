@@ -11,20 +11,37 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 
+/**
+ * This class represents a Shout to Me Shout object.
+ */
 public class Shout extends StmBaseEntity {
 
+    /**
+     * The base endpoint of shouts on the Shout to Me REST API.
+     */
+    public static final String BASE_ENDPOINT = "/shouts";
+    /**
+     * The key used for JSON serialization of conversation objects.
+     */
+    public static final String SERIALIZATION_KEY = "shout";
+
     private static final String TAG = Shout.class.getSimpleName();
-    private static final String BASE_ENDPOINT = "/shouts";
+
     private byte[] audio;
     private String tags;
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    public Shout(StmService stmService, byte[] rawData) {
-        super(stmService, TAG, BASE_ENDPOINT);
+    Shout(StmService stmService, byte[] rawData) {
+        super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
         this.audio = addHeaderToRawData(rawData);
     }
 
+    /**
+     * This method is called internally to create a Shout object following a successful HTTP POST.
+     * @param stmService The <code>StmService</code> used for context.
+     * @param json The <code>JSONObject</code> from the response.
+     */
     public Shout(StmService stmService, JSONObject json) {
         super(stmService, TAG, "/shouts");
         try {
@@ -34,6 +51,10 @@ public class Shout extends StmBaseEntity {
         }
     }
 
+    /**
+     * Returns the byte array that contains the raw audio.
+     * @return The raw audio.
+     */
     public byte[] getAudio() {
         return audio;
     }
@@ -99,13 +120,14 @@ public class Shout extends StmBaseEntity {
         return wavData;
     }
 
+    /**
+     * Gets the shout ID.
+     * @return The shout ID.
+     */
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public void delete(final StmCallback<String> stmCallback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {

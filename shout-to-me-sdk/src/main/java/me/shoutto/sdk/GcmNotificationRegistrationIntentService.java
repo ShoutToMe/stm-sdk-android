@@ -32,9 +32,16 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * An <code>IntentService</code> implementation that registers an app to receive push notifications
+ * from GCM via the Shout to Me platform.
+ */
 public class GcmNotificationRegistrationIntentService extends IntentService {
 
-    public static final String PN_REGISTRATION_COMPLETE = "registrationComplete";
+    /**
+     * The Intent name that is broadcast when the GCM registration is complete.
+     */
+    public static final String PN_REGISTRATION_COMPLETE = "me.shoutto.sdk.GCM_REGISTRATION_COMPLETE";
 
     private static final String TAG = GcmNotificationRegistrationIntentService.class.getSimpleName();
     private static final String GCM_DEFAULT_SENDER_ID = "me.shoutto.sdk.GcmDefaultSenderId";
@@ -50,6 +57,9 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         super(TAG);
     }
 
+    /**
+     * Handles the Android onCreate lifecycle event. This is where some of the initialization takes place.
+     */
     @Override
     public void onCreate() {
         super.onCreate();
@@ -58,6 +68,9 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         bindService(intent, stmServiceConnection, BIND_AUTO_CREATE);
     }
 
+    /**
+     * Handles the Android onDestroy lifecycle event. This is where some of the cleanup takes place.
+     */
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -67,6 +80,11 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         }
     }
 
+    /**
+     * Handles the Android onHandleIntent lifecycle event and is the main method where the GCM
+     * registration occurs.
+     * @param intent The Intent delievered to this service.
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
 

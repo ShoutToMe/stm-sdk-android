@@ -9,14 +9,26 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * Subscription represents a Shout to Me Subscription entity
+ * This class represents a Shout to Me Subscription entity.
  */
 public class Subscription extends StmBaseEntity {
 
+    /**
+     * The base endpoint of subscriptions on the Shout to Me REST API.
+     */
     public static final String BASE_ENDPOINT = "/subscriptions";
-    public static final String OBJECT_JSON_KEY = "subscription";
-    public static final String LIST_JSON_KEY = "subscriptions";
+
+    /**
+     * The key used for JSON serialization of subscription objects.
+     */
     public static final String SERIALIZATION_KEY = "subscription";
+
+    /**
+     * The key used for JSON serialization of subscription lists.
+     */
+    @SuppressWarnings("all")
+    public static final String LIST_SERIALIZATION_KEY = SERIALIZATION_KEY + "s";
+
     private String channelId;
     private Date createdDate;
 

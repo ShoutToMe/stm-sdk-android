@@ -24,16 +24,16 @@ import java.util.Map;
 import me.shoutto.sdk.internal.http.GsonDateAdapter;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 
-public class MessageManager {
+class MessageManager {
 
     private static final String TAG = MessageManager.class.getSimpleName();
     private StmService stmService;
 
-    public MessageManager(StmService stmService) {
+    MessageManager(StmService stmService) {
         this.stmService = stmService;
     }
 
-    public void getMessages(final StmCallback<List<Message>> callback) {
+    void getMessages(final StmCallback<List<Message>> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -41,7 +41,7 @@ public class MessageManager {
                 StmError stmError = null;
                 try {
                     JSONObject data = response.getJSONObject("data");
-                    JSONArray messageArray = data.getJSONArray(Message.LIST_JSON_KEY);
+                    JSONArray messageArray = data.getJSONArray(Message.LIST_SERIALIZATION_KEY);
 
                     RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
                             .of(StmBaseEntity.class, StmBaseEntity.SERIALIZATION_FIELD)
@@ -100,7 +100,7 @@ public class MessageManager {
         StmRequestQueue.getInstance().addToRequestQueue(request);
     }
 
-    public void getUnreadMessageCount(final StmCallback<Integer> callback) {
+    void getUnreadMessageCount(final StmCallback<Integer> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {

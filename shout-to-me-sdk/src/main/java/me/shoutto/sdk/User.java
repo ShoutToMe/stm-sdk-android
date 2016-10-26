@@ -21,9 +21,19 @@ import java.util.TimeZone;
 import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
- * Created by tracyrojas on 9/20/15.
+ * This class represents a Shout to Me user object.
  */
 public class User extends StmBaseEntity {
+
+    /**
+     * The base endpoint of users on the Shout to Me REST API.
+     */
+    public static final String BASE_ENDPOINT = "/users";
+
+    /**
+     * The key used for JSON serialization of conversation objects.
+     */
+    public static final String SERIALIZATION_KEY = "user";
 
     private String authToken;
     private Date lastReadMessagesDate;
@@ -33,7 +43,7 @@ public class User extends StmBaseEntity {
     private boolean isInitialized = false;
 
     public User(StmService stmService) {
-        super(stmService, "user", "/users");
+        super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
     }
 
     boolean isInitialized() {

@@ -157,7 +157,7 @@ public class NotificationManager {
         String endpointUrl = serverUrl + Message.BASE_ENDPOINT + "?conversation_id=" + conversationId;
         StmEntityListRequestSync<Message> stmEntityRequestSync = new StmEntityListRequestSync<>();
         return stmEntityRequestSync.process("GET", authToken, endpointUrl, null,
-                Message.getSerializationListType(), Message.LIST_JSON_KEY);
+                Message.getSerializationListType(), Message.LIST_SERIALIZATION_KEY);
     }
 
     private Conversation getConversation(String conversationId, String authToken, String serverUrl) {
@@ -165,7 +165,7 @@ public class NotificationManager {
         String conversationEndpointUrl = serverUrl + Conversation.BASE_ENDPOINT + "/" + conversationId;
         StmEntityRequestSync<Conversation> stmEntityRequestSync = new StmEntityRequestSync<>();
         return stmEntityRequestSync.process("GET", authToken, conversationEndpointUrl, null,
-                Conversation.getSerializationType(), Conversation.OBJECT_JSON_KEY);
+                Conversation.getSerializationType(), Conversation.SERIALIZATION_KEY);
     }
 
     private boolean isUserInConversationRadius(Location conversationLocation, Location userLocation,
@@ -210,7 +210,7 @@ public class NotificationManager {
             String messageEndpointUrl = serverUrl + Message.BASE_ENDPOINT;
             StmEntityRequestSync<Message> stmEntityRequestSync = new StmEntityRequestSync<>();
             Message message = stmEntityRequestSync.process("POST", authToken, messageEndpointUrl,
-                    createMessageDataJson, Message.getSerializationType(), Message.OBJECT_JSON_KEY);
+                    createMessageDataJson, Message.getSerializationType(), Message.SERIALIZATION_KEY);
             if (message != null) {
                 newMessageId = message.getId();
             }
