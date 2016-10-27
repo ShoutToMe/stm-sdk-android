@@ -1,7 +1,10 @@
 package me.shoutto.sdk;
 
-
-interface StmCallback<T> {
+/**
+ * The interface used by {@link Callback}.
+ * @param <T>
+ */
+public interface StmCallback<T> {
     /** Invoked on successful HTTP response. */
     void onResponse(T t);
 

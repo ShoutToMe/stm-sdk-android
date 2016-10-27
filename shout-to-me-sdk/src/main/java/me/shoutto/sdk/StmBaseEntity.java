@@ -5,7 +5,6 @@ import android.util.Log;
 import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONException;
@@ -17,14 +16,21 @@ import java.util.Map;
 import me.shoutto.sdk.internal.PendingApiObjectChange;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 
+/**
+ * The base class for Shout to Me entities.  Used internally by the Shout to ME SDK.
+ */
 public abstract class StmBaseEntity {
 
+    /**
+     * The serialization field used by Gson parsing.
+     */
     public static final String SERIALIZATION_FIELD = "serializationType";
 
     protected transient StmService stmService;
     protected transient final String TAG;
-    protected transient Map<String, PendingApiObjectChange> pendingChanges;
+    transient Map<String, PendingApiObjectChange> pendingChanges;
     protected String id;
+    @SuppressWarnings("all")
     protected transient String serializationType;
     private transient String baseEndpoint;
 
@@ -40,22 +46,44 @@ public abstract class StmBaseEntity {
         this.serializationType = serializationType;
     }
 
+    /**
+     * Returns a String that represents the Shout to Me REST API endpoint for a specific entity.
+     * @return A URI for a single entity.
+     */
     public String getSingleResourceEndpoint() {
         return stmService.getServerUrl() + baseEndpoint + "/:id";
     }
 
+    /**
+     * Gets the ID of the entity.
+     * @return The ID of the entity.
+     */
     public String getId() {
         return id;
     }
 
+    /**
+     * Sets the ID of the entity.  Generally used internally by the SDK following a Shout to Me API
+     * create request.
+     * @param id The ID of the entity.
+     */
     public void setId(String id) {
         this.id = id;
     }
 
+    /**
+     * Sets the <code>StmService</code> reference for an entity for context.
+     * @param stmService The StmService instance.
+     */
     public void setStmService(StmService stmService) {
         this.stmService = stmService;
     }
 
+    /**
+     * Gets a list of pending changes to an object.  Generally used by the SDK to build a Shout to
+     * Me API request.
+     * @return A <code>Map</code> of the pending changes to the object.
+     */
     public Map<String, PendingApiObjectChange> getPendingChanges() {
         return pendingChanges;
     }
@@ -66,6 +94,7 @@ public abstract class StmBaseEntity {
      * Synchronous version of create base entity. Should only be run in background threads.
      * @return StmError
      */
+    @SuppressWarnings("all")
     synchronized public StmError save() {
         StmError stmError = null;
         try {
@@ -86,7 +115,7 @@ public abstract class StmBaseEntity {
         return stmError;
     }
 
-    protected void sendAuthorizedGetRequest(final String urlSuffix,
+    void sendAuthorizedGetRequest(final String urlSuffix,
                                             final Response.Listener<JSONObject> responseListener,
                                             final Response.ErrorListener errorListener) {
         stmService.getExecutorService().execute(new Runnable() {
@@ -112,7 +141,7 @@ public abstract class StmBaseEntity {
         });
     }
 
-    protected void sendAuthorizedPostRequest(final String urlSuffix,
+    void sendAuthorizedPostRequest(final String urlSuffix,
                                              final JSONObject data,
                                              final Response.Listener<JSONObject> responseListener,
                                              final Response.ErrorListener errorListener) {
@@ -139,7 +168,7 @@ public abstract class StmBaseEntity {
         });
     }
 
-    protected void sendAuthorizedPutRequest(final StmBaseEntity entity, final JSONObject data,
+    void sendAuthorizedPutRequest(final StmBaseEntity entity, final JSONObject data,
                                             final Response.Listener<JSONObject> responseListener,
                                             final Response.ErrorListener errorListener) {
 
@@ -167,7 +196,7 @@ public abstract class StmBaseEntity {
         });
     }
 
-    protected void sendAuthorizedDeleteRequest(String urlSuffix,
+    void sendAuthorizedDeleteRequest(String urlSuffix,
                                                Response.Listener<JSONObject> responseListener,
                                                Response.ErrorListener errorListener) {
 
@@ -180,7 +209,7 @@ public abstract class StmBaseEntity {
                     errorListener) {
                 @Override
                 public Map<String, String> getHeaders() throws AuthFailureError {
-                    Map<String, String> params = new HashMap<String, String>();
+                    Map<String, String> params = new HashMap<>();
                     params.put("Authorization", "Bearer " + authToken);
                     return params;
                 }
@@ -191,15 +220,5 @@ public abstract class StmBaseEntity {
         } catch (Exception ex) {
             Log.e(TAG, "Error occurred getting user's auth token. Aborting request", ex);
         }
-    }
-
-    protected Response.ErrorListener createErrorListener(final String message) {
-        return new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                Log.d(TAG, new String(error.networkResponse.data));
-                Log.e(TAG, message, error);
-            }
-        };
     }
 }

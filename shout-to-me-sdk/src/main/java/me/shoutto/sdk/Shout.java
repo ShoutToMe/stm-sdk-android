@@ -128,7 +128,11 @@ public class Shout extends StmBaseEntity {
         return id;
     }
 
-
+    /**
+     * Sends a request to the Shout to Me REST API to delete the Shout. Generally used as a way
+     * for the user to take back a newly created Shout.
+     * @param stmCallback The callback to be executed or null.
+     */
     public void delete(final StmCallback<String> stmCallback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
@@ -187,27 +191,39 @@ public class Shout extends StmBaseEntity {
         sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id, responseListener, errorListener);
     }
 
+    /**
+     * Gets the tags associated with the Shout.  The format of the tags is a comma separated list.
+     * @return A String representing a comma separated list of tags.
+     */
     public String getTags() {
         return tags;
     }
 
-    public void setTags(String tags) {
+    void setTags(String tags) {
         this.tags = tags;
     }
 
+    /**
+     * Gets the topic associated with the Shout.
+     * @return The topic.
+     */
     public String getTopic() {
         return topic;
     }
 
-    public void setTopic(String topic) {
+    void setTopic(String topic) {
         this.topic = topic;
     }
 
+    /**
+     * Gets the length of the recording in seconds.
+     * @return The length of the recording in seconds.
+     */
     public Integer getRecordingLengthInSeconds() {
         return recordingLengthInSeconds;
     }
 
-    public void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
+    void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
         this.recordingLengthInSeconds = recordingLengthInSeconds;
     }
 
@@ -216,6 +232,11 @@ public class Shout extends StmBaseEntity {
         // Stubbed
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
+    @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<Shout>(){}.getType();
     }

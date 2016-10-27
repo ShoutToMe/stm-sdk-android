@@ -32,6 +32,9 @@ public class Subscription extends StmBaseEntity {
     private String channelId;
     private Date createdDate;
 
+    /**
+     * The default constructor.
+     */
     public Subscription() { super(SERIALIZATION_KEY); }
 
     @Override
@@ -43,14 +46,29 @@ public class Subscription extends StmBaseEntity {
         return channelId;
     }
 
+    /**
+     * Gets the <code>Date</code> the subscription was created.
+     * @return The <code>Date</code> subscription was created.
+     */
+    @SuppressWarnings("unused")
     public Date getCreatedDate() {
         return createdDate;
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
+    @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<Subscription>(){}.getType();
     }
 
+    /**
+     * Gets the serialization type of a subscription list that is used in Gson parsing.
+     * @return The serialization type of a subscription list to be used in Gson parsing.
+     */
+    @SuppressWarnings("all")
     public static Type getListSerializationType() {
         return new TypeToken<List<Subscription>>(){}.getType();
     }
