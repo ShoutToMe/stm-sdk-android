@@ -2,7 +2,7 @@
 <html lang="en-us">
   <head>
     <meta charset="UTF-8">
-    <title>stm-sdk-android by ShoutToMe</title>
+    <title>Shout to Me Android SDK</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
     <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
@@ -11,7 +11,7 @@
   </head>
   <body>
     <section class="page-header">
-      <h1 class="project-name">stm-sdk-android</h1>
+      <h1 class="project-name">Shout to Me Android SDK</h1>
       <h2 class="project-tagline">An Android SDK that can be used to consume the Shout to Me cloud services</h2>
       <a href="https://github.com/ShoutToMe/stm-sdk-android" class="btn">View on GitHub</a>
       <a href="https://github.com/ShoutToMe/stm-sdk-android/zipball/master" class="btn">Download .zip</a>
