@@ -12,8 +12,8 @@ documents that describe how to integrate the Shout to Me functionality into your
 
 <div style="width:200px;margin-left:100px">
 <ul style="list-type:none">
-  <li><a href="/docs/getting-started">Getting Started</a></li>
+  <li><a href="getting-started">Getting Started</a></li>
   <li><a href="https://www.github.com/ShoutToMe/stm-sdk-android">Source Code</a></li>
-  <li><a href="/reference">Reference</a></li>
+  <li><a href="reference">Reference</a></li>
 </ul>
 </div>

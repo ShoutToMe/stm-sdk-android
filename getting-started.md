@@ -8,8 +8,8 @@ In order to use the Shout to Me Android SDK, you must first have contacted Shout
 
 <div style="width:200px;margin-left:100px">
 <ul style="list-type:none">
-  <li><a href="/docs/setup">Setup</a></li>
-  <li><a href="/docs/sample-app">Sample App</a></li>
+  <li><a href="setup">Setup</a></li>
+  <li><a href="sample-app">Sample App</a></li>
 
 </ul>
 </div>
