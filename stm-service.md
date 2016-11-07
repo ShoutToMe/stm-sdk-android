@@ -134,3 +134,118 @@ public class StmError {
     }
 }
 ```
+
+## User
+The User object represents the Shout to Me user entity that is bound to your application.  Although you may have your
+own user domain objects, Shout to Me still needs a context in which to create shouts, accumulate statistics, etc.  A
+Shout to Me user created by your mobile app will be unique to your system.  For example, if a mobile user has
+installed two apps that utilize the Shout to Me SDK on the same phone, there will be two distinct Shout to Me users,
+one for each app.  Much of the generic code around creating and authenticating the user is hidden from you by the SDK
+to make your life easier.  However, there are a few items that do need to be exposed, such as setting a user handle
+to match the handle in your system.
+
+Retrieving the user object from StmService can be done with or without a Callback. Retrieving the user
+object without a Callback does not guarantee that the user object will have been initialized by the service, however,
+it is convenient for certain write-only scenarios such as wanting to change the user's handle.
+
+```java
+// Without a callback
+User user = stmService.getUser()
+
+// With a callback
+stmService.getUser(new Callback<User>() {
+    @Override
+    public void onSuccess(final StmResponse<User> stmResponse) {
+        Log.d(TAG, "Shout to Me user has been loaded");
+
+	User user = stmResponse.get();
+	Log.d(TAG, "User's handle is: " + user.getHandle());
+    }
+
+    @Override
+    public void onFailure(final StmError stmError) {
+        Log.w(TAG, "Could not retrieve Shout to Me user.");
+    }
+});
+```
+
+Retrieving and updating the user’s handle.  Calling `save(Callback<User>)` is required to persist the new handle
+to the Shout to Me service.
+
+```java
+String handle = user.getHandle();
+
+User user = stmService.getUser();
+user.setHandle("BobSmith");
+user.save(new Callback<User>() {
+    @Override
+    public void onSuccess(final StmResponse<User> stmResponse) {
+        Log.d(TAG, "User handle update was successful. Handle is " + stmResponse.get().getHandle());
+    }
+
+    @Override
+    public void onFailure(final StmError stmError) {
+        Log.w(TAG, "Could not save changes to user. Message is: " + stmError.getMessage());
+    }
+});
+```
+
+## Subscribing to a Channel
+
+A subscription to a channel indicates that push notifications will be sent to the app when a broadcaster
+publishes a channel-wide message.  The SDK provides a way for the client app to subscribe, unsubscribe and
+tell if the user is currently subscribed or not.  This can be used in an app setting to allow the user
+control over their subscription status. (For more information about notifications, see the [Notifications](notifications)
+section).
+
+Determining subscription status
+
+```java
+stmService.isSubscribedToChannel("[channel ID]", new Callback<Boolean>() {
+    @Override
+    public void onSuccess(StmResponse<Boolean> isSubscribedResponse) {
+        if (isSubscribedResponse.get()) {
+            Log.d(TAG, "User is subscribed to channel");
+        } else {
+            Log.d(TAG, "User is not subscribed to channel");
+        }
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred checking user's subscribed status. " + stmError.getMessage());
+    }
+});
+```
+
+Subscribing to a channel
+
+```java
+stmService.subscribeToChannel("[channel ID]", new Callback<Void>() {
+    @Override
+    public void onSuccess(StmResponse<Void> subscribeResponse) {
+        Log.d(TAG, "User is now subscribed");
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred subscribing to channel. " + stmError.getMessage());
+    }
+});
+```
+
+Unsubscribing to a channel
+
+```java
+stmService.unsubscribeFromChannel("[channel ID]", new Callback<Void>() {
+    @Override
+    public void onSuccess(StmResponse<Void> unsubscribeResponse) {
+        Log.d(TAG, "User is now unsubscribed.");
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        Log.w(TAG, "An error occurred unsubscribing to channel. " + stmError.getMessage());
+    }
+});
+```

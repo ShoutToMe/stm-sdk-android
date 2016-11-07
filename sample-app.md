@@ -291,7 +291,7 @@ Next modify the `activity_main.xml` file to look like the following.
 </RelativeLayout>
 ```
 
-### Run the App
+## Run the App
 
 After the code has been modified, click **Run -> Run 'app'** to build and start the app.  You should see the initial Activity with the **RECORD A SHOUT** button enabled.  When you press that button, it will launch the Shout to Me recording overlay as seen in the following images and immediately begin recording. Pressing the Done button on the overlay will transmit the recorded audio to the Shout to Me service for processing.
 
