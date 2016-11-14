@@ -21,7 +21,6 @@ private ServiceConnection stmServiceConnection = new ServiceConnection() {
     public void onServiceConnected(ComponentName className,
                                    IBinder service) {
         // We've bound to StmService, cast the IBinder and get StmService instance
-        Log.d(TAG, "in onServiceConnected");
         StmService.StmBinder binder = (StmService.StmBinder) service;
         stmService = binder.getService();
         isStmServiceBound = true;
@@ -156,15 +155,12 @@ User user = stmService.getUser()
 stmService.getUser(new Callback<User>() {
     @Override
     public void onSuccess(final StmResponse<User> stmResponse) {
-        Log.d(TAG, "Shout to Me user has been loaded");
-
-	User user = stmResponse.get();
-	Log.d(TAG, "User's handle is: " + user.getHandle());
+	    User user = stmResponse.get();
     }
 
     @Override
     public void onFailure(final StmError stmError) {
-        Log.w(TAG, "Could not retrieve Shout to Me user.");
+        // Error occurred retrieving user
     }
 });
 ```
@@ -180,12 +176,12 @@ user.setHandle("BobSmith");
 user.save(new Callback<User>() {
     @Override
     public void onSuccess(final StmResponse<User> stmResponse) {
-        Log.d(TAG, "User handle update was successful. Handle is " + stmResponse.get().getHandle());
+        User updatedUser = stmResponse.get();
     }
 
     @Override
     public void onFailure(final StmError stmError) {
-        Log.w(TAG, "Could not save changes to user. Message is: " + stmError.getMessage());
+        // Could not save changes to user
     }
 });
 ```
@@ -205,15 +201,15 @@ stmService.isSubscribedToChannel("[channel ID]", new Callback<Boolean>() {
     @Override
     public void onSuccess(StmResponse<Boolean> isSubscribedResponse) {
         if (isSubscribedResponse.get()) {
-            Log.d(TAG, "User is subscribed to channel");
+            // User is subscribed to channel
         } else {
-            Log.d(TAG, "User is not subscribed to channel");
+            // User is not subscribed to channel
         }
     }
 
     @Override
     public void onFailure(StmError stmError) {
-        Log.w(TAG, "An error occurred checking user's subscribed status. " + stmError.getMessage());
+        // An error occurred checking user's subscribed status
     }
 });
 ```
@@ -224,12 +220,12 @@ Subscribing to a channel
 stmService.subscribeToChannel("[channel ID]", new Callback<Void>() {
     @Override
     public void onSuccess(StmResponse<Void> subscribeResponse) {
-        Log.d(TAG, "User is now subscribed");
+        // User is now subscribed
     }
 
     @Override
     public void onFailure(StmError stmError) {
-        Log.w(TAG, "An error occurred subscribing to channel. " + stmError.getMessage());
+        // An error occurred subscribing to channel
     }
 });
 ```
@@ -240,12 +236,12 @@ Unsubscribing to a channel
 stmService.unsubscribeFromChannel("[channel ID]", new Callback<Void>() {
     @Override
     public void onSuccess(StmResponse<Void> unsubscribeResponse) {
-        Log.d(TAG, "User is now unsubscribed.");
+        // User is now unsubscribed.
     }
 
     @Override
     public void onFailure(StmError stmError) {
-        Log.w(TAG, "An error occurred unsubscribing to channel. " + stmError.getMessage());
+        // An error occurred unsubscribing to channel
     }
 });
 ```

@@ -10,8 +10,9 @@ audio content that is sent to mobile users to convey a communication.  A **Notif
 technology term "Push Notification") is the delivery mechanism used to transport a Message.
 
 ## Messages
-The Message object represents text or audio messages that can be sent from broadcasters to users.  A
-user may receive messages from more than one channel if the client app supports multiple channels.
+The Message object represents a text or audio message that was sent from a broadcaster.  A
+user may receive messages from more than one channel if the client app supports multiple channels.  Some messages have
+audio associated with them. When they do, you can use the conversation ID to get access to the audio.
 
 ```java
 public class Message {
@@ -42,27 +43,29 @@ stmService.getMessages(new Callback<List<Message>>() {
     @Override
     public void onSuccess(StmResponse<List<Message>> messagesResponse) {
         List<Message> messageList = messagesResponse.get();
-        Log.d(TAG, "Number of messages = " + String.valueOf(messageList.size()));
     }
 
     @Override
     public void onFailure(StmError stmError) {
-        Log.w(TAG, "Could not retrieve message list");
+        // Could not retrieve message list
     }
 });
 ```
 
 ## Notifications
-The Shout to Me SDK supports receiving push notifications from the Shout to Me platform.  There are a number of technologies used in receiving notifications, and consequently, there are a number of items that need to be wired up. The following high level steps occur in the notifications system:
+The Shout to Me SDK supports receiving push notifications from the Shout to Me platform.  The SDK will only handle
+  notifications sent from the Shout to Me system.  There are a number of technologies used in receiving notifications,
+  and consequently, there are a number of items that need to be wired up. The following high level steps occur in the
+  notifications system:
 
 1. A notification is received from GCM
 2. The SDK processes the notification and may do one of two things:
-    1. Immediately broadcast a message to the client app
-    2. Create a geofence which may be triggered later if and when a user enters the geofence area
-3. A listener in the client app receives a broadcast and displays data to the mobile user
+    * Immediately broadcast a message to the client app
+    * Create a geofence which may be triggered later if and when a user enters the geofence area
+3. A listener in the client app receives a broadcast and can take further action
 
-### GCM
-The Shout to Me system uses (GCM)[https://developers.google.com/cloud-messaging/] to send and receive messages. Add the following to your AndroidManifest.xml if you wish to receive notifications.  Be sure to set your own values for the string resource references.  Check with Shout to Me support for specific values to use.
+### Google Cloud Messaging
+The Shout to Me system uses [Google Cloud Messaging (GCM)](https://developers.google.com/cloud-messaging/) to send and receive messages. Add the following to your AndroidManifest.xml if you wish to receive notifications.  Be sure to set your own values for the string resource references.  Check with Shout to Me support for specific values to use.
 
 ```xml
 <service
@@ -109,14 +112,16 @@ The Shout to Me system uses (GCM)[https://developers.google.com/cloud-messaging/
 ```
 
 ### Geofencing
-Location based notifications will be created as (geofences)[https://developers.google.com/android/reference/com/google/android/gms/location/Geofence] in the Shout to Me SDK.  Add this to your AndroidManifest.xml to allow the SDK to listen for geofence events:
+Location based notifications will be created as [geofences](https://developers.google.com/android/reference/com/google/android/gms/location/Geofence) in the Shout to Me SDK.  Add this to your AndroidManifest.xml to allow the SDK to listen for geofence events:
 
 ```xml
 <service android:name="me.shoutto.sdk.GeofenceTransitionsIntentService" />
 ```
 
+**Note:** Please contact Shout to Me support if you are already using geofences within your application.
+
 ### Shout to Me Broadcasts
-The Shout to Me SDK uses a standard Android broadcast to send the processed message data to client apps.  Add the following to your AndroidManifest.xml to listen for these broadcasts.  Of course, you will need to supply your own listener class. In this example, it is called StmNotificationReceiver.
+The Shout to Me SDK uses a standard Android broadcast to send the processed message data to client apps.  Add the following to your AndroidManifest.xml to listen for these broadcasts.
 
 ```xml
 <receiver
@@ -127,6 +132,8 @@ The Shout to Me SDK uses a standard Android broadcast to send the processed mess
     </intent-filter>
 </receiver>
 ```
+
+Of course, you will need to supply your own listener class. In this example, it is called StmNotificationReceiver.
 
 The broadcast receiver class should include something similar to the following to retrieve the broadcast data:
 

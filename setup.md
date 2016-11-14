@@ -18,7 +18,11 @@ The following describes how to set up your Android project to use the Shout to M
 4. Enter the location of the **shout-to-me-sdk-release.aar** file that you downloaded in Step 1. and then click **Finish**
 
 ## Client Access Token and Channel ID
-After you receive the client access token and channel ID from Shout to Me, add the following &lt;service&gt; element to the &lt;application&gt; element in your AndroidManifest.xml:
+Developers will need to get a client access token and a channel ID from Shout to Me in order to use this SDK.  A client
+access token is used to authorize the client app in HTTP calls.  The channel ID represents a Shout to Me channel which
+is linked to the broadcaster/podcaster's account.  You will need to [contact Shout to Me](http://www.shoutto.me/contact) in order to get the client access
+  token and channel ID. After you receive the client access token and channel ID from Shout to Me, add the
+  following &lt;service&gt; element to the &lt;application&gt; element in your AndroidManifest.xml:
 
 ```xml
 <application>
@@ -48,7 +52,14 @@ Be sure to place the appropriate client token and channel ID values into your st
 The Shout to Me Android SDK has the following dependencies:
 
 ### Google Play Services
-The Shout to Me SDK Android SDK uses [Google Play Services](https://developers.google.com/android/guides/overview) for location and notification functionality.  Add the following to your gradle file in the dependencies section if you have not already integrated to Google Play Services.
+The Shout to Me SDK Android SDK uses [Google Play Services](https://developers.google.com/android/guides/overview) for
+the following functionality.
+
+* Determining the user's location
+* Registering the user for Google Cloud Messaging
+* Managing geotargeted notifications with geofences
+
+Add the following to your gradle file in the dependencies section if you have not already integrated to Google Play Services.
 
 ```gradle
 dependencies {
@@ -58,7 +69,13 @@ dependencies {
 }
 ```
 
-If Google Play Services is not installed on a user's phone, certain functionality may not work correctly.  Google Play Services provides a convenient mechanism to prompt the user to install or upgrade their Google Play Services if applicable. The following code provides an example of that mechanism.
+If Google Play Services is not installed on a user's phone, certain functionality may not work correctly.
+Most modern Android phones come bundled with Google Play Services, however it is
+recommended to check for the availability of it to support older phones.
+Google Play Services provides a convenient mechanism to prompt the user to install or upgrade their Google Play
+Services if applicable.  The following code provides an example of the call to make to prompt the user to install
+Google Play Services if they do not already have it.  This code is normally placed in the first Activity so that the
+user sees it after installing your app and the app can immediately be registered to receive notifications.
 
 ```java
 GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
@@ -109,7 +126,8 @@ Beginning with API level 23 (6.0), [Android requires that certain permissions be
 2. Location (Optional)
 
 ### Record Audio
-Being that Shout to Me is an audio-based platform, this permission is considered required. Launching the recording overlay without the permission will result in a failure response indicating that the record audio permission is denied. Here is an example of one way to check for this permission and requesting it if not granted:
+Being that Shout to Me is an audio-based platform, this permission is considered required. Launching the recording
+overlay without the permission will result in a failure response indicating that the record audio permission is denied.
 
 ```java
 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {

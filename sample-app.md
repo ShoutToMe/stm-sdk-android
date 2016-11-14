@@ -81,18 +81,16 @@ public class MainActivity extends AppCompatActivity {
 
     public void launchRecordingOverlay(View view) {
         if (isStmServiceBound) {
-            Log.d(TAG, "Launching overlay");
             stmService.setShoutCreationCallback(new Callback<Shout>() {
                 @Override
                 public void onSuccess(StmResponse<Shout> stmResponse) {
-                    Log.d(TAG, "Shout created successfully. ID = " + stmResponse.get().getId());
                     newlyCreatedShout = stmResponse.get();
                     showDeleteButton();
                 }
 
                 @Override
                 public void onFailure(StmError stmError) {
-                    Log.e(TAG, "An error occurred during shout creation. Message is " + stmError.getMessage());
+                    // An error occurred during shout creation
                 }
             });
 
@@ -110,11 +108,9 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == 1) {
             if(resultCode == RESULT_OK){
                 String result = data.getStringExtra(StmRecorderActivity.ACTIVITY_RESULT);
-                Log.d(TAG, "The recording overlay has closed successfully. Result is: " + result);
 
                 if (result.equals(StmService.FAILURE)) {
                     String failureReasonCode = data.getStringExtra(StmRecorderActivity.ACTIVITY_REASON);
-                    Log.d(TAG, "Failure code: " + failureReasonCode);
                     if (failureReasonCode.equals(StmRecorderActivity.RECORD_AUDIO_PERMISSION_DENIED)) {
 
                         // User has not granted access to record audio.  Ask the user for permission now.
@@ -123,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             if (resultCode == RESULT_CANCELED) {
-                Log.d(TAG, "Recording was cancelled");
+                // Recording was cancelled
             }
         }
     }
@@ -140,9 +136,6 @@ public class MainActivity extends AppCompatActivity {
             user.save(new Callback<User>() {
                 @Override
                 public void onSuccess(final StmResponse<User> stmResponse) {
-                    Log.d(TAG, "User handle update was successful. Handle is " + stmResponse.get().getHandle());
-                    Log.d(TAG, "stmReponse.get() && stmService.getUser() point to the same object. "
-                            + (stmResponse.get() == stmService.getUser()));
                     editText.setError(null);
                     editText.setText(stmService.getUser().getHandle());
                 }
@@ -158,19 +151,17 @@ public class MainActivity extends AppCompatActivity {
 
     public void deleteShout(View view) {
         if (newlyCreatedShout != null) {
-            Log.d(TAG, "Deleting shout " + newlyCreatedShout.getId());
             newlyCreatedShout.delete(new Callback<String>() {
                 @Override
                 public void onSuccess(StmResponse<String> stmResponse) {
                     if (stmResponse.get().equals(StmService.SUCCESS)) {
-                        Log.d(TAG, "Deletion of shout succeeded.");
                         hideDeleteButton();
                     }
                 }
 
                 @Override
                 public void onFailure(StmError stmError) {
-                    Log.e(TAG, "Error occurred deleting shout. Error message: " + stmError.getMessage());
+                    // An error occurred deleting shout
                 }
             });
         }
@@ -192,13 +183,12 @@ public class MainActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName className,
                                        IBinder service) {
             // We've bound to StmService, cast the IBinder and get StmService instance
-            Log.d(TAG, "in onServiceConnected");
             StmService.StmBinder binder = (StmService.StmBinder) service;
             stmService = binder.getService();
             isStmServiceBound = true;
 
             // You can also set the channel programmatically if you have access to more than one channel
-            // stmService.setChannelId("s2m-sandbox");
+            // stmService.setChannelId("[channel ID]");
 
             // Get a reference to the UI text box
             final EditText handleEditText = (EditText) findViewById(R.id.editTextUserHandle);
@@ -207,13 +197,12 @@ public class MainActivity extends AppCompatActivity {
             stmService.getUser(new Callback<User>() {
                 @Override
                 public void onSuccess(final StmResponse<User> stmResponse) {
-                    Log.d(TAG, "Shout to Me user has been loaded");
                     handleEditText.setText(stmResponse.get().getHandle());
                 }
 
                 @Override
                 public void onFailure(final StmError stmError) {
-                    Log.w(TAG, "Could not retrieve Shout to Me user.");
+                    // Could not retrieve Shout to Me user.
                 }
             });
         }
