@@ -9,13 +9,17 @@ import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 
+/**
+ * Implementation of <code>GcmListenerService</code> that handles notifications from the Shout to Me
+ * platform.
+ * @see <a href="https://developers.google.com/android/reference/com/google/android/gms/gcm/GcmListenerService" target="_blank">GcmListenerService</a>
+ */
 public class StmGcmListenerService extends GcmListenerService {
 
     private static final String TAG = StmGcmListenerService.class.getSimpleName();
 
     /**
-     * Called when message is received.  This class must use synchronous calls to STM API because
-     * trying to start the async StmService when the app is closed causes a memory leak.
+     * Called when a notification is received from the Shout to Me platform.
      *
      * @param from SenderID of the sender.
      * @param data Data bundle containing message data as key/value pairs.

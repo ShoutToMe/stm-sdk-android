@@ -1,110 +1,112 @@
 package me.shoutto.sdk;
 
-import android.util.Log;
+import android.support.annotation.NonNull;
 
-import com.android.volley.Response;
-import com.android.volley.VolleyError;
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-
-import me.shoutto.sdk.internal.http.GsonDateAdapter;
 
 /**
- * This class represents a Shout to Me Message.
+ * This class represents a Shout to Me Message object.
  */
 public class Message extends StmBaseEntity implements Comparable<Message> {
 
-    private transient static final String TAG = "Message";
+    /**
+     * The base endpoint of messages on the Shout to Me REST API.
+     */
     public transient static final String BASE_ENDPOINT = "/messages";
-    public transient static final String LIST_JSON_KEY = "messages";
-    public transient static final String OBJECT_JSON_KEY = "message";
+
+    /**
+     * The key used for JSON serialization of message objects.
+     */
     public transient static final String SERIALIZATION_KEY = "message";
+
+    /**
+     * The key used for JSON serialization of message lists.
+     */
+    public transient static final String LIST_SERIALIZATION_KEY = SERIALIZATION_KEY + "s";
+
+    @SuppressWarnings("unused")
     private Channel channel;
+
+    @SuppressWarnings("unused")
     private String channelId;
+
+    @SuppressWarnings("unused")
     private String conversationId;
-    private String message = "";
+
+    @SuppressWarnings("unused")
+    private String message;
+
+    @SuppressWarnings("unused")
     private String recipientId;
+
+    @SuppressWarnings("unused")
     private Sender sender;
+
+    @SuppressWarnings("unused")
     @SerializedName("created_date")
     private Date sentDate;
 
-    public Message(StmService stmService) {
-        super(stmService, TAG, BASE_ENDPOINT);
-        try {
-            sentDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US).parse("1970-01-01");
-        } catch (ParseException ex) {
-            Log.w(TAG, "Could not parse sentDate default.");
-        }
-    }
-
-    public Message(StmService stmService, String channelId, String conversationId, String message, String recipientId) {
-        super(stmService, TAG, BASE_ENDPOINT);
-        this.channelId = channelId;
-        this.conversationId = conversationId;
-        this.message = message;
-        this.recipientId = recipientId;
-    }
-
+    /**
+     * The default constructor.
+     */
     public Message() {
         super(SERIALIZATION_KEY);
     }
 
+    /**
+     * Gets the Channel associated with the Message.
+     * @return The Channel associated with the Message.
+     */
     public Channel getChannel() {
         return channel;
     }
 
-    void setChannel(Channel channel) {
-        this.channel = channel;
-    }
-
+    /**
+     * Gets the conversation ID for the Conversation associated with the Message.
+     * @return The conversation ID.
+     */
     public String getConversationId() {
         return conversationId;
     }
 
-    public void setConversationId(String conversationId) {
-        this.conversationId = conversationId;
-    }
-
+    /**
+     * Gets the message body.
+     * @return The message body.
+     */
     public String getMessage() {
         return message;
     }
 
-    void setMessage(String message) {
-        this.message = message;
-    }
-
+    /**
+     * Gets the Sender of the Message.
+     * @return The Sender of the Message.
+     */
     public Sender getSender() {
         return sender;
     }
 
-    void setSender(Sender sender) {
-        this.sender = sender;
-    }
-
+    /**
+     * Gets the date the Message was sent.
+     * @return The date the Message was sent.
+     */
     public Date getSentDate() {
         return sentDate;
     }
 
-    void setSentDate(Date sentDate) {
-        this.sentDate = sentDate;
-    }
-
+    /**
+     * Implementaion of Comparable interface.
+     * @param message The Message to compare to the instance.
+     * @return The comparison result.
+     */
     @Override
-    public int compareTo(Message message) {
+    public int compareTo(@NonNull Message message) {
         return message.getSentDate().compareTo(this.getSentDate());
     }
 
@@ -113,130 +115,36 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         // Stubbed
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
     public static Type getSerializationType() {
         return new TypeToken<Message>(){}.getType();
     }
 
+    /**
+     * Gets the serialization type of a message list that is used in Gson parsing.
+     * @return The serialization type of a message list to be used in Gson parsing.
+     */
     public static Type getSerializationListType() {
         return new TypeToken<List<Message>>(){}.getType();
     }
 
-    void create(final StmCallback<Message> callback) {
-        Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
-            @Override
-            public void onResponse(JSONObject response) {
-                RuntimeTypeAdapterFactory<StmBaseEntity> runtimeTypeAdapterFactory = RuntimeTypeAdapterFactory
-                        .of(StmBaseEntity.class, "serializationType")
-                        .registerSubtype(Message.class, "message");
-
-                Gson gson = new GsonBuilder()
-                        .registerTypeAdapterFactory(runtimeTypeAdapterFactory)
-                        .registerTypeAdapter(Date.class, new GsonDateAdapter())
-                        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-                        .create();
-
-                Message message = gson.fromJson(response.toString(), Message.class);
-
-                callback.onResponse(message);
-            }
-        };
-
-        Response.ErrorListener errorListener = new Response.ErrorListener() {
-            @Override
-            public void onErrorResponse(VolleyError error) {
-                StmError stmError = new StmError();
-                stmError.setSeverity(StmError.SEVERITY_MAJOR);
-                stmError.setBlockingError(false);
-                try {
-                    JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
-                    stmError.setMessage(responseData.getString("message"));
-                } catch (JSONException ex) {
-                    Log.e(TAG, "Error parsing JSON from create message response");
-                    stmError.setMessage("An error occurred trying to create a message.");
-                }
-                if (callback != null) {
-                    callback.onError(stmError);
-                }
-            }
-        };
-
-        JSONObject data = new JSONObject();
-        try {
-            data.put("channel_id", channelId);
-        } catch (JSONException ex) {
-            Log.w(TAG, "Message channel_id field not included. " + ex.getMessage());
-        }
-
-        try {
-            data.put("conversation_id", conversationId);
-        } catch (JSONException ex) {
-            Log.w(TAG, "Message conversation_id field not included. " + ex.getMessage());
-        }
-
-        try {
-            data.put("message", message);
-        } catch (JSONException ex) {
-            Log.w(TAG, "Message message field not included. " + ex.getMessage());
-        }
-
-        try {
-            data.put("recipient_id", recipientId);
-        } catch (JSONException ex) {
-            Log.w(TAG, "Message recipient not included. " + ex.getMessage());
-        }
-
-        sendAuthorizedPostRequest(BASE_ENDPOINT, data, responseListener, errorListener);
-    }
-
-    public static class Builder {
-
-        private String nestedChannelId;
-        private String nestedConversationId;
-        private String nestedMessage;
-        private String nestedRecipientId;
-        private StmService nestedStmService;
-
-        public Builder(StmService stmService) {
-            this.nestedStmService = stmService;
-        }
-
-        public Builder channelId(String channelId) {
-            this.nestedChannelId = channelId;
-            return this;
-        }
-
-        public Builder conversationId(String conversationId) {
-            this.nestedConversationId = conversationId;
-            return this;
-        }
-
-        public Builder message(String message) {
-            this.nestedMessage = message;
-            return this;
-        }
-
-        public Builder recipientId(String recipientId) {
-            this.nestedRecipientId = recipientId;
-            return this;
-        }
-
-        public void create(StmCallback<Message> callback) {
-            Message message = new Message(nestedStmService, nestedChannelId, nestedConversationId,
-                    nestedMessage, nestedRecipientId);
-            message.create(callback);
-        }
-    }
-
+    /**
+     * The class represents the user who sent the Message.
+     */
     public class Sender {
 
+        @SuppressWarnings("unused")
         private String handle;
 
+        /**
+         *  Gets the sender's handle.
+         * @return The sender's handle.
+         */
         public String getHandle() {
             return handle;
-        }
-
-        public void setHandle(String handle) {
-            this.handle = handle;
         }
     }
 }

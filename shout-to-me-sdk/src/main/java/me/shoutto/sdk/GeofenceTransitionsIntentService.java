@@ -25,17 +25,25 @@ import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 
 /**
- * An {@link IntentService} subclass for handling Geofence transitions.
+ * An <code>IntentService</code> implementation for handling Geofence transitions.  This is part of
+ * the Shout to Me hyperlocal delivery mechanism.
  */
 public class GeofenceTransitionsIntentService extends IntentService {
 
     private static final String TAG = GeofenceTransitionsIntentService.class.getSimpleName();
     private GeofenceDbHelper geofenceDbHelper;
 
+    /**
+     * The default constructor.
+     */
     public GeofenceTransitionsIntentService() {
         super(TAG);
     }
 
+    /**
+     * Handles the Android onCreate lifecycle event. This is where the processing of the geofence
+     * event and delivery of the notification occurs.  This method is never called directly.
+     */
     @Override
     protected void onHandleIntent(Intent intent) {
 

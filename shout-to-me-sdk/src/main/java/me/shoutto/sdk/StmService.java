@@ -2,7 +2,6 @@ package me.shoutto.sdk;
 
 import android.app.Service;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
@@ -35,23 +34,47 @@ import me.shoutto.sdk.internal.http.StmRequestQueue;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
 
 /**
- * The primary service class for Shout to Me functionality.
+ * The main entry point to interact with the Shout to Me platform.  <code>StmService</code> is implemented as
+ * an Android service and can therefore be bound or started in accordance with standard Android
+ * usage.
+ * <p>
+ *
+ * @see <a href="https://developer.android.com/guide/components/services.html" target="_blank">Android Services</a>
  */
 public class StmService extends Service implements LocationUpdateListener {
 
+    /**
+     * The shared preferences key that <code>StmService</code> uses.
+     */
     @Deprecated
     public static final String STM_SETTINGS_KEY = "stm_settings";
+
+    /**
+     * The Shout to Me REST API url.
+     */
     public static final String DEFAULT_SERVER_URL = "https://app.shoutto.me/api/v1";
 
     /**
-     * For general usage in communicating status
+     * For general usage in communicating a failure result.
      */
     public static final String FAILURE = "me.shoutto.sdk.FAILURE";
+
+    /**
+     * For general usage in communicating a successful result.
+     */
     public static final String SUCCESS = "me.shoutto.sdk.SUCCESS";
 
+    /**
+     * The key for the Shout to Me channel ID in the Android manifest.
+     */
+    public static final String CHANNEL_ID = "me.shoutto.sdk.CHANNEL_ID";
+
+    /**
+     * The key for the Shout to Me client token in the Android manifest.
+     */
+    public static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
+
     private static final String TAG = StmService.class.getSimpleName();
-    private static final String CHANNEL_ID = "me.shoutto.sdk.CHANNEL_ID";
-    private static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private User user;
@@ -68,26 +91,224 @@ public class StmService extends Service implements LocationUpdateListener {
     private GeofenceManager geofenceManager;
     private MessageManager messageManager;
 
-    public StmService() {}
+    public StmService() {
+    }
 
+    /**
+     * The class to be used when binding via the Android bound service method.
+     */
     public class StmBinder extends Binder {
         public StmService getService() {
-            // Return this instance of LocalService so clients can call public methods
             return StmService.this;
         }
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        Log.d(TAG, "Destroying StmService");
+    /**
+     * Gets the client access token that was set in the Android manifest.
+     * @return The client access token.
+     */
+    public String getAccessToken() {
+        return accessToken;
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return START_REDELIVER_INTENT;
+    /**
+     * Returns the Shout to Me channel ID from local storage.
+     * @return The Shout to Me channel ID
+     */
+    public String getChannelId() {
+        return stmPreferenceManager.getChannelId();
     }
 
+    /**
+     * Calls the service asynchronously to get the available list of channels and returns
+     * that list in the callback.
+     * @param callback The callback to be executed or null.
+     */
+    public void getChannels(final StmCallback<List<Channel>> callback) {
+        if (channelManager == null) {
+            channelManager = new ChannelManager(this);
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                channelManager.getChannels(callback);
+            }
+        }).start();
+    }
+
+    ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    /**
+     * Gets the Shout to ME SDK installation ID.  Creates one if it didn't previously exist.
+     * @return The Shout to Me SDK installation ID.
+     */
+    public String getInstallationId() {
+
+        String installationId = stmPreferenceManager.getInstallationId();
+        if (installationId == null) {
+            stmPreferenceManager.setInstallationId(UUID.randomUUID().toString());
+        }
+
+        return stmPreferenceManager.getInstallationId();
+    }
+
+    /**
+     * Returns the <code>LocationServicesClient</code>.
+     * @return The LocationServicesClient.
+     */
+    public LocationServicesClient getLocationServicesClient() {
+        return locationServicesClient;
+    }
+
+    /**
+     * Calls the service to get the list of user's messages and returns the list in the callback.
+     * Currently only returns 1000 records.
+     * @param callback The callback to execute or null.
+     */
+    public void getMessages(final StmCallback<List<Message>> callback) {
+        if (messageManager == null) {
+            messageManager = new MessageManager(this);
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                messageManager.getMessages(callback);
+            }
+        }).start();
+    }
+
+    /**
+     * Returns the Shout to Me API URL.
+     * @return The Shout to Me API URL.
+     */
+    public String getServerUrl() {
+        return stmPreferenceManager.getServerUrl();
+    }
+
+    StmCallback<Shout> getShoutCreationCallback() {
+        return shoutCreationCallback;
+    }
+
+    StmHttpSender getStmHttpSender() {
+        return stmHttpSender;
+    }
+
+    /**
+     * Calls the service to get the unread message count and returns the count to the callback.
+     * @param callback The callback to execute or null.
+     */
+    public void getUnreadMessageCount(final StmCallback<Integer> callback) {
+        if (messageManager == null) {
+            messageManager = new MessageManager(this);
+        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                messageManager.getUnreadMessageCount(callback);
+            }
+        }).start();
+    }
+
+    /**
+     * Gets the in memory User object. If not previously instantiated, returns an empty
+     * User object.
+     * @return The User object.
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * Instantiates a User object asynchronously and returns it in the Callback.
+     * @param callback The Callback to be executed or null.
+     */
+    public void getUser(final StmCallback<User> callback) {
+        synchronized (this) {
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    if (!user.isInitialized()) {
+                        initializeUserSession();
+                    }
+                    user.get(callback);
+                }
+            }).start();
+        }
+    }
+
+    private void initializeUserSession() {
+        String userId = stmPreferenceManager.getUserId();
+        String authToken = stmPreferenceManager.getAuthToken();
+        if (userId == null || authToken == null) {
+            createOrGetUserAccount();
+            authToken = stmPreferenceManager.getAuthToken();
+            userId = stmPreferenceManager.getUserId();
+        }
+        user.setId(userId);
+        user.setAuthToken(authToken);
+        user.setIsInitialized(true);
+        Log.d(TAG, "User has been initialized");
+    }
+
+    private void createOrGetUserAccount() {
+        try {
+            stmHttpSender.getUserWithClientToken(user);
+            stmPreferenceManager.setAuthToken(user.getAuthToken());
+            stmPreferenceManager.setUserId(user.getId());
+        } catch (Exception ex) {
+            Log.e(TAG, "Could not create or get user account.", ex);
+        }
+    }
+
+    /**
+     * Returns the user auth token from local storage or gets it from the service if not in local
+     * storage.  This token can be used to make calls to the Shout to Me REST API outside of the SDK.
+     * @return The user auth token.
+     */
+    public String getUserAuthToken() {
+        synchronized (this) {
+            initializeUserSession();
+            return stmPreferenceManager.getAuthToken();
+        }
+    }
+
+    /**
+     * Calls registered listeners when a hand wave gesture occurs.
+     */
+    public void handleHandWaveGesture() {
+        if (overlay != null) {
+            overlay.onHandWaveGesture();
+        } else if (handWaveGestureListenerList.size() > 0) {
+            for (HandWaveGestureListener handWaveGestureListener : handWaveGestureListenerList) {
+                handWaveGestureListener.onHandWaveGesture();
+            }
+        }
+    }
+
+    /**
+     * Sends request to the Shout to Me service to see if the user is subscribed to the specified
+     * channel.
+     * @param channelId The channel ID to check subscription status.
+     * @param callback The callback to be executed or null.
+     */
+    public void isSubscribedToChannel(String channelId, final StmCallback<Boolean> callback) {
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
+
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.isSubscribed(callback);
+    }
+
+    /**
+     * Handles the Android bind lifecycle event. This is where most of the initialization takes place.
+     * @param   intent The Intent that was used to bind to the service.
+     * @return  The IBinder through which clients can call on to the service.
+     */
     @Override
     public IBinder onBind(Intent intent) {
 
@@ -138,14 +359,10 @@ public class StmService extends Service implements LocationUpdateListener {
         return stmBinder;
     }
 
-    @Override
-    public boolean onUnbind(Intent intent) {
-        locationServicesClient.unregisterLocationUpdateListener(this);
-        locationServicesClient.disconnectFromService();
-        proximitySensorClient.stopListening();
-        return super.onUnbind(intent);
-    }
-
+    /**
+     * Handles location updates.
+     * @param location The updated Location object.
+     */
     @Override
     public void onLocationUpdate(final Location location) {
         new Thread(new Runnable() {
@@ -156,119 +373,36 @@ public class StmService extends Service implements LocationUpdateListener {
         }).start();
     }
 
-    public Context getContext() {
-        return this;
+    /**
+     * Handles the Android <code>startService</code> event.
+     * @param   intent The Intent used to the start the service.
+     * @param   flags The flags passed into the start service process.
+     * @param   startId The unique ID used to identify the start service request.
+     * @return  The behavior of how to continue the service if it was killed.
+     */
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_REDELIVER_INTENT;
     }
 
-    public String getAccessToken() {
-        return accessToken;
+    /**
+     * Handles the Android unbind lifecycle event.  Performs some clean up tasks.
+     * @param   intent The Intent that was used to bind to this service.
+     * @return  Return true if you would like to have the service's <code>onRebind(Intent)</code>
+     *          method later called when new clients bind to it.
+     */
+    @Override
+    public boolean onUnbind(Intent intent) {
+        locationServicesClient.unregisterLocationUpdateListener(this);
+        locationServicesClient.disconnectFromService();
+        proximitySensorClient.stopListening();
+        return super.onUnbind(intent);
     }
 
-    public User getUser() {
-        return user;
-    }
-
-    public void getUser(final StmCallback<User> callback) {
-        synchronized (this) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!user.isInitialized()) {
-                        initializeUserSession();
-                    }
-                    user.get(callback);
-                }
-            }).start();
-        }
-    }
-
-    public void reloadUser(final StmCallback<User> callback) {
-        synchronized (this) {
-            user.setIsInitialized(false);
-            getUser(callback);
-        }
-    }
-
-    public void handleHandWaveGesture() {
-        if (overlay != null) {
-            overlay.onHandWaveGesture();
-        } else if (handWaveGestureListenerList.size() > 0) {
-            for (HandWaveGestureListener handWaveGestureListener : handWaveGestureListenerList) {
-                handWaveGestureListener.onHandWaveGesture();
-            }
-        }
-    }
-
-    public String getChannelId() {
-        return stmPreferenceManager.getChannelId();
-    }
-
-    public void setChannelId(String channelId) {
-        stmPreferenceManager.setChannelId(channelId);
-    }
-
-    public void getChannels(final StmCallback<List<Channel>> callback) {
-        if (channelManager == null) {
-            channelManager = new ChannelManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                channelManager.getChannels(callback);
-            }
-        }).start();
-    }
-
-    public void getMessages(final StmCallback<List<Message>> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getMessages(callback);
-            }
-        }).start();
-    }
-
-    public void getUnreadMessageCount(final StmCallback<Integer> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getUnreadMessageCount(callback);
-            }
-        }).start();
-    }
-
-    public String getUserAuthToken() {
-        synchronized (this) {
-            initializeUserSession();
-            return stmPreferenceManager.getAuthToken();
-        }
-    }
-
-    private void initializeUserSession() {
-        String userId = stmPreferenceManager.getUserId();
-        String authToken = stmPreferenceManager.getAuthToken();
-        if (userId == null || authToken == null) {
-            try {
-                stmHttpSender.getUserWithClientToken(user);
-                stmPreferenceManager.setAuthToken(user.getAuthToken());
-                stmPreferenceManager.setUserId(user.getId());
-            } catch (Exception ex) {
-                Log.e(TAG, "Could not initialize user session.", ex);
-            }
-        } else {
-            user.setId(userId);
-            user.setAuthToken(authToken);
-        }
-        user.setIsInitialized(true);
-        Log.d(TAG, "User has been initialized");
-    }
-
+    /**
+     * Clears the user auth token from local storage and gets it from the service.
+     * @throws Exception The exception that occurred.
+     */
     public void refreshUserAuthToken() throws Exception {
         synchronized (this) {
             stmPreferenceManager.setAuthToken(null);
@@ -277,26 +411,10 @@ public class StmService extends Service implements LocationUpdateListener {
         }
     }
 
-    public StmHttpSender getStmHttpSender() {
-        return stmHttpSender;
-    }
-
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
-
-    public LocationServicesClient getLocationServicesClient() {
-        return locationServicesClient;
-    }
-
-    public void setShoutCreationCallback(StmCallback<Shout> shoutCreationCallback) {
-        this.shoutCreationCallback = shoutCreationCallback;
-    }
-
-    StmCallback<Shout> getShoutCreationCallback() {
-        return shoutCreationCallback;
-    }
-
+    /**
+     * Registers a listener for hand wave gestures and starts listening if the first registration.
+     * @param handWaveGestureListener The listener for hand wave gestures.
+     */
     public void registerHandGestureListener(HandWaveGestureListener handWaveGestureListener) {
         if (!handWaveGestureListenerList.contains(handWaveGestureListener)) {
             handWaveGestureListenerList.add(handWaveGestureListener);
@@ -306,27 +424,88 @@ public class StmService extends Service implements LocationUpdateListener {
         }
     }
 
-    public void unregisterHandGestureListener(HandWaveGestureListener handWaveGestureListener) {
-        handWaveGestureListenerList.remove(handWaveGestureListener);
-        if (handWaveGestureListenerList.size() == 0) {
-            proximitySensorClient.stopListening();
+    /**
+     * Reinitializes the user by making a call to the service. Overrides previous values stored
+     * in Shared Preferences following the call to the service.
+     *
+     * @param callback The callback to be executed or null
+     */
+    public void reloadUser(final StmCallback<User> callback) {
+        synchronized (this) {
+            user.setIsInitialized(false);
+            stmPreferenceManager.setAuthToken(null);
+            stmPreferenceManager.setUserId(null);
+            getUser(callback);
         }
     }
 
-    public void setOverlay(HandWaveGestureListener overlay) {
+    /**
+     * Removes all geofences from the Android geofencing API and local storage. Not for general use.
+     * Contact Shout to Me for more information.
+     */
+    public void removeAllGeofences() {
+        geofenceManager.removeAllGeofences();
+    }
+
+    /**
+     * Sets the Shout to Me channel ID in local storage.
+     * @param channelId The Shout to Me channel ID.
+     */
+    public void setChannelId(String channelId) {
+        stmPreferenceManager.setChannelId(channelId);
+    }
+
+    /**
+     * Sets the maximum number of geofences to override the Android default in Shout to Me
+     * processing.  Not for general use. Contact Shout to Me for more information.
+     * @param maxGeofences The maximum number of geofences to create.
+     */
+    public void setMaxGeofences(Integer maxGeofences) {
+        stmPreferenceManager.setMaxGeofences(maxGeofences);
+    }
+
+    void setOverlay(HandWaveGestureListener overlay) {
         this.overlay = overlay;
     }
 
-    public String getInstallationId() {
-
-        String installationId = stmPreferenceManager.getInstallationId();
-        if (installationId == null) {
-            stmPreferenceManager.setInstallationId(UUID.randomUUID().toString());
-        }
-
-        return stmPreferenceManager.getInstallationId();
+    /**
+     * Sets the Shout to Me API URL.  This method is not normally used for production releases.
+     * It can be used to point to testing environments.  Contact Shout to Me for more information.
+     * @param serverUrl The Shout to Me API server URL to use for HTTP calls.
+     */
+    public void setServerUrl(String serverUrl) {
+        stmPreferenceManager.setServerUrl(serverUrl);
     }
 
+    /**
+     * Sets the callback to be executed following the creation of a shout.
+     * @param shoutCreationCallback The callback to be executed following the creation of a shout or null.
+     */
+    public void setShoutCreationCallback(StmCallback<Shout> shoutCreationCallback) {
+        this.shoutCreationCallback = shoutCreationCallback;
+    }
+
+    /**
+     * Registers the user to receive notifications from the specified channel.
+     * @param channelId The channel ID to subscribe to.
+     * @param callback The callback to be executed or null.
+     */
+    public void subscribeToChannel(final String channelId, final StmCallback<Void> callback) {
+
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
+
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.subscribe(callback);
+    }
+
+    /**
+     * Synchronizes Shout to Me user notifications.  For each channel that the user is subscribed to,
+     * this method will retrieve active messages from the service and either display them to the
+     * user or create geofences.
+     */
     public void synchronizeNotifications() {
         new Thread(new Runnable() {
             @Override
@@ -337,7 +516,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 StmEntityListRequestSync<Subscription> subscriptionRequest = new StmEntityListRequestSync<>();
                 List<Subscription> subscriptionList = subscriptionRequest.process("GET", getUserAuthToken(),
                         getServerUrl() + Subscription.BASE_ENDPOINT, null, Subscription.getListSerializationType(),
-                        Subscription.LIST_JSON_KEY);
+                        Subscription.LIST_SERIALIZATION_KEY);
 
                 // Get active conversations for those channels
                 if (subscriptionList != null) {
@@ -348,7 +527,7 @@ public class StmService extends Service implements LocationUpdateListener {
                         StmEntityListRequestSync<Conversation> conversationRequest = new StmEntityListRequestSync<>();
                         List<Conversation> conversationList = conversationRequest.process("GET", getUserAuthToken(),
                                 conversationRequestUrl, null, Conversation.getListSerializationType(),
-                                Conversation.LIST_JSON_KEY);
+                                Conversation.LIST_SERIALIZATION_KEY);
                         if (conversationList != null && conversationList.size() > 0) {
                             activeConversations.addAll(conversationList);
                         }
@@ -360,7 +539,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 SQLiteDatabase readableDatabase = geofenceDbHelper.getReadableDatabase();
                 Cursor cursor = readableDatabase.query(
                         GeofenceDatabaseSchema.GeofenceEntry.TABLE_NAME,
-                        new String[] {GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID},
+                        new String[]{GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID},
                         null,
                         null,
                         null,
@@ -438,19 +617,30 @@ public class StmService extends Service implements LocationUpdateListener {
         }).start();
     }
 
-    public String getServerUrl() {
-        return stmPreferenceManager.getServerUrl();
+    /**
+     * Unregisters a previously registered <code>HandWaveGestureListener</code>.
+     * @param handWaveGestureListener The <code>HandWaveGestureListener</code> to unregister.
+     */
+    public void unregisterHandGestureListener(HandWaveGestureListener handWaveGestureListener) {
+        handWaveGestureListenerList.remove(handWaveGestureListener);
+        if (handWaveGestureListenerList.size() == 0) {
+            proximitySensorClient.stopListening();
+        }
     }
 
-    public void setServerUrl(String serverUrl) {
-        stmPreferenceManager.setServerUrl(serverUrl);
-    }
+    /**
+     * Unsubscribes the user from receiving notifications from the specified channel.
+     * @param channelId The channel ID to unsubscribed from.
+     * @param callback The callback to be executed or null.
+     */
+    public void unsubscribeFromChannel(final String channelId, final StmCallback<Void> callback) {
 
-    public void setMaxGeofences(Integer maxGeofences) {
-        stmPreferenceManager.setMaxGeofences(maxGeofences);
-    }
+        if (channelId == null) {
+            throw new IllegalArgumentException("channelId cannot be null");
+        }
 
-    public void removeAllGeofences() {
-        geofenceManager.removeAllGeofences();
+        Channel channel = new Channel(this);
+        channel.setId(channelId);
+        channel.unsubscribe(callback);
     }
 }

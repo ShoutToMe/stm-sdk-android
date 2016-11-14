@@ -14,6 +14,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
@@ -21,9 +22,22 @@ import java.util.TimeZone;
 import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
- * Created by tracyrojas on 9/20/15.
+ * This class represents a Shout to Me user entity. A Shout to Me User entity is generally used
+ * by client apps to enable push notifications, get/set a user's handle, get/set the last time the user
+ * read messages (to alert the Shout to Me service so Shout to Me can update the unread count value),
+ * and to access the user's auth token in the event the client app wants to call the Shout to Me REST API directly.
  */
 public class User extends StmBaseEntity {
+
+    /**
+     * The base endpoint of users on the Shout to Me REST API.
+     */
+    public static final String BASE_ENDPOINT = "/users";
+
+    /**
+     * The key used for JSON serialization of conversation objects.
+     */
+    public static final String SERIALIZATION_KEY = "user";
 
     private String authToken;
     private Date lastReadMessagesDate;
@@ -32,8 +46,13 @@ public class User extends StmBaseEntity {
 
     private boolean isInitialized = false;
 
+    /**
+     * A constructor that allows setting <code>StmService</code> which is used for context and other
+     * SDK functionality.
+     * @param stmService
+     */
     public User(StmService stmService) {
-        super(stmService, "user", "/users");
+        super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
     }
 
     boolean isInitialized() {
@@ -48,26 +67,47 @@ public class User extends StmBaseEntity {
         return authToken;
     }
 
+    /**
+     * Sets the auth token to be used in requests to the Shout to Me service.
+     * @param authToken
+     */
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
     }
 
+    /**
+     * Gets the user's handle.
+     * @return The user's handle.
+     */
     public String getHandle() {
         return handle;
     }
 
+    /**
+     * Sets the user's handle.
+     * @param handle The user's handle.
+     */
     public void setHandle(String handle) {
         pendingChanges.put("handle", new PendingApiObjectChange("handle", handle, this.handle));
         this.handle = handle;
     }
 
+    /**
+     * Gets the <code>Date</code> of the last time the user read messages.
+     * @return The <code>Date</code> representing the last time the user read their messages.
+     */
+    @SuppressWarnings("unused")
     public Date getLastReadMessagesDate() {
         return lastReadMessagesDate;
     }
 
+    /**
+     * Sets the <code>Date</code> of the last time the user read their messages.
+     * @param lastReadMessagesDate The <code>Date</code> representing the last time the user read their messages.
+     */
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
         TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
         df.setTimeZone(tz);
         String lastReadMessagesDateString = df.format(lastReadMessagesDate);
         pendingChanges.put("last_read_messages_date",
@@ -76,11 +116,16 @@ public class User extends StmBaseEntity {
         this.lastReadMessagesDate = lastReadMessagesDate;
     }
 
+    /**
+     * Gets the platform endpoint ARN. This is the unique ID that the Shout to Me system uses to
+     * send push notifications.
+     * @return The platform endpoint ARN.
+     */
     public String getPlatformEndpointArn() {
         return platformEndpointArn;
     }
 
-    public void setPlatformEndpointArn(String platformEndpointArn) {
+    void setPlatformEndpointArn(String platformEndpointArn) {
         pendingChanges.put("platform_endpoint_arn",
                 new PendingApiObjectChange("platform_endpoing_arn", platformEndpointArn, this.platformEndpointArn));
         this.platformEndpointArn = platformEndpointArn;
@@ -91,10 +136,19 @@ public class User extends StmBaseEntity {
         populateUserFieldsFromJson(jsonObject);
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
+    @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<User>(){}.getType();
     }
 
+    /**
+     * Sends an update request to save the <code>User</code> object to the Shout to Me platform.
+     * @param callback The callback to be executed on completion of the request or null.
+     */
     public void save(final StmCallback<User> callback) {
 
         if (pendingChanges.size() == 0) {
@@ -156,7 +210,7 @@ public class User extends StmBaseEntity {
 
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -215,8 +269,10 @@ public class User extends StmBaseEntity {
                 StmError stmError = new StmError();
                 stmError.setMessage("Error occurred loading user");
                 stmError.setSeverity(StmError.SEVERITY_MAJOR);
-                stmError.setBlockingError(true);
-                callback.onError(stmError);
+                stmError.setBlocking(true);
+                if (callback != null) {
+                    callback.onError(stmError);
+                }
             }
         };
 
@@ -234,7 +290,7 @@ public class User extends StmBaseEntity {
 
         try {
             String lastReadMessagesDateString = json.getString("last_read_messages_date");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             lastReadMessagesDate = sdf.parse(lastReadMessagesDateString);
         } catch(ParseException ex) {

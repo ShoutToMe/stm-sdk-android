@@ -14,54 +14,102 @@ import java.lang.reflect.Type;
 import java.util.List;
 
 /**
- * The Channel class represents a Shout to Me Channel.
+ * This class represents a Shout to Me Channel object.
  */
 public class Channel extends StmBaseEntity {
 
+    /**
+     * The base endpoint of channels on the Shout to Me REST API.
+     */
     public transient static final String BASE_ENDPOINT = "/channels";
-    public transient static final String LIST_JSON_KEY = "channels";
-    public transient static final String SERIALIZATION_KEY = "channel";
+
+    /**
+     * The key used for JSON serialization of channel objects.
+     */
+    transient static final String SERIALIZATION_KEY = "channel";
+
+    /**
+     * The key used for JSON serialization of channel lists.
+     */
+    @SuppressWarnings("all")
+    public transient static final String LIST_SERIALIZATION_KEY = SERIALIZATION_KEY + "s";
+
     public transient static final int GLOBAL_DEFAULT_MAX_RECORDING_TIME = 15;
 
     private transient static final String TAG = "Channel";
     private String name;
+    @SuppressWarnings("unused")
     private String description;
+    @SuppressWarnings("unused")
     @SerializedName("channel_image")
     private String imageUrl;
+    @SuppressWarnings("unused")
     @SerializedName("channel_list_image")
     private String listImageUrl;
+    @SuppressWarnings("unused")
     @SerializedName("default_voigo_max_recording_length_seconds")
     private int defaultMaxRecordingLengthSeconds;
 
-    public Channel(StmService stmService) {
+    Channel(StmService stmService) {
         super(stmService, TAG, BASE_ENDPOINT);
         defaultMaxRecordingLengthSeconds = 0;
     }
 
-    public Channel() {
+    /**
+     * The default constructor.
+     */
+    @SuppressWarnings("unused")
+    Channel() {
         super(SERIALIZATION_KEY);
     }
 
+    /**
+     * Gets the channel name.
+     * @return Channel name.
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Sets the channel name.
+     * @param name The channel name.
+     */
     void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Gets the channel description.
+     * @return The channel description.
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Gets the URL for the channel image that was set in the Shout to Me platform.
+     * This is generally a larger image.
+     * @return The URL for the channel image.
+     */
     public String getImageUrl() {
         return imageUrl;
     }
 
+    /**
+     * Gets the URL for the channel list image that was set in the Shout to Me platform. This
+     * image is smaller and used for list images or notification icons.
+     * @return The URL for the channel list image.
+     */
     public String getListImageUrl() {
         return listImageUrl;
     }
 
+    /**
+     * Gets the default maximum recording length in seconds that was set in the Shout to Me
+     * platform.  If one was not set for a channel, the global default of 15 seconds will be used.
+     * @return The channel specific maximum recording length in seconds.
+     */
     public int getDefaultMaxRecordingLengthSeconds() {
         if (defaultMaxRecordingLengthSeconds == 0) {
             return GLOBAL_DEFAULT_MAX_RECORDING_TIME;
@@ -70,13 +118,18 @@ public class Channel extends StmBaseEntity {
         }
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
+    @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<Channel>(){}.getType();
     }
 
-    public static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
+    static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
 
-    public void subscribe(final StmCallback<Void> callback) {
+    void subscribe(final StmCallback<Void> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -88,7 +141,7 @@ public class Channel extends StmBaseEntity {
                         Log.w(TAG, "Channel subscribe response was not 'success'");
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Channel subscribe response was not 'success'");
                         callback.onError(stmError);
                     }
@@ -96,7 +149,7 @@ public class Channel extends StmBaseEntity {
                     Log.w(TAG, "Could not parse channel subscribe response.", ex);
                     StmError stmError = new StmError();
                     stmError.setSeverity(StmError.SEVERITY_MINOR);
-                    stmError.setBlockingError(false);
+                    stmError.setBlocking(false);
                     stmError.setMessage("Could not parse channel subscribe response.");
                     callback.onError(stmError);
                 }
@@ -108,7 +161,7 @@ public class Channel extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -125,7 +178,7 @@ public class Channel extends StmBaseEntity {
         sendAuthorizedPostRequest(BASE_ENDPOINT + "/" + id + "/subscriptions", null, responseListener, errorListener);
     }
 
-    public void unsubscribe(final StmCallback<Void> callback) {
+    void unsubscribe(final StmCallback<Void> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -137,7 +190,7 @@ public class Channel extends StmBaseEntity {
                         Log.w(TAG, "Channel unsubscribe response was not 'success'");
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Channel unsubscribe response was not 'success'");
                         callback.onError(stmError);
                     }
@@ -145,7 +198,7 @@ public class Channel extends StmBaseEntity {
                     Log.w(TAG, "Could not parse channel unsubscribe response.", ex);
                     StmError stmError = new StmError();
                     stmError.setSeverity(StmError.SEVERITY_MINOR);
-                    stmError.setBlockingError(false);
+                    stmError.setBlocking(false);
                     stmError.setMessage("Could not parse channel unsubscribe response.");
                     callback.onError(stmError);
                 }
@@ -157,7 +210,7 @@ public class Channel extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -174,7 +227,7 @@ public class Channel extends StmBaseEntity {
         sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id + "/subscriptions", responseListener, errorListener);
     }
 
-    public void isSubscribed(final StmCallback<Boolean> callback) {
+    void isSubscribed(final StmCallback<Boolean> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -197,7 +250,7 @@ public class Channel extends StmBaseEntity {
                     if (error == null || error.networkResponse == null) {
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Error occurred trying to get channel isSubscribed status.");
                         callback.onError(stmError);
                     } else if (error.networkResponse.statusCode == 404) {
@@ -205,7 +258,7 @@ public class Channel extends StmBaseEntity {
                     } else {
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         try {
                             JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                             stmError.setMessage(responseData.getString("message"));

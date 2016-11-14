@@ -11,20 +11,37 @@ import org.json.JSONObject;
 
 import java.lang.reflect.Type;
 
+/**
+ * This class represents a Shout to Me Shout object.
+ */
 public class Shout extends StmBaseEntity {
 
+    /**
+     * The base endpoint of shouts on the Shout to Me REST API.
+     */
+    public static final String BASE_ENDPOINT = "/shouts";
+    /**
+     * The key used for JSON serialization of conversation objects.
+     */
+    public static final String SERIALIZATION_KEY = "shout";
+
     private static final String TAG = Shout.class.getSimpleName();
-    private static final String BASE_ENDPOINT = "/shouts";
+
     private byte[] audio;
     private String tags;
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    public Shout(StmService stmService, byte[] rawData) {
-        super(stmService, TAG, BASE_ENDPOINT);
+    Shout(StmService stmService, byte[] rawData) {
+        super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
         this.audio = addHeaderToRawData(rawData);
     }
 
+    /**
+     * This method is called internally to create a Shout object following a successful HTTP POST.
+     * @param stmService The <code>StmService</code> used for context.
+     * @param json The <code>JSONObject</code> from the response.
+     */
     public Shout(StmService stmService, JSONObject json) {
         super(stmService, TAG, "/shouts");
         try {
@@ -34,6 +51,10 @@ public class Shout extends StmBaseEntity {
         }
     }
 
+    /**
+     * Returns the byte array that contains the raw audio.
+     * @return The raw audio.
+     */
     public byte[] getAudio() {
         return audio;
     }
@@ -99,14 +120,19 @@ public class Shout extends StmBaseEntity {
         return wavData;
     }
 
+    /**
+     * Gets the shout ID.
+     * @return The shout ID.
+     */
     public String getId() {
         return id;
     }
 
-    public void setId(String id) {
-        this.id = id;
-    }
-
+    /**
+     * Sends a request to the Shout to Me REST API to delete the Shout. Generally used as a way
+     * for the user to take back a newly created Shout.
+     * @param stmCallback The callback to be executed or null.
+     */
     public void delete(final StmCallback<String> stmCallback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
@@ -119,7 +145,7 @@ public class Shout extends StmBaseEntity {
                     Log.e(TAG, "Unable to parse response JSON", ex);
                     if (stmCallback != null) {
                         StmError stmError = new StmError();
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
                         stmError.setMessage("Error occurred during JSON parsing of delete shout response" +
                                 " Error message: " + ex.getMessage());
@@ -133,7 +159,7 @@ public class Shout extends StmBaseEntity {
                         stmCallback.onResponse(StmService.SUCCESS);
                     } else {
                         StmError stmError = new StmError();
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
                         stmError.setMessage("Delete shout failed.  Response from server: " + result);
                         stmCallback.onError(stmError);
@@ -148,7 +174,7 @@ public class Shout extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -165,27 +191,39 @@ public class Shout extends StmBaseEntity {
         sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id, responseListener, errorListener);
     }
 
+    /**
+     * Gets the tags associated with the Shout.  The format of the tags is a comma separated list.
+     * @return A String representing a comma separated list of tags.
+     */
     public String getTags() {
         return tags;
     }
 
-    public void setTags(String tags) {
+    void setTags(String tags) {
         this.tags = tags;
     }
 
+    /**
+     * Gets the topic associated with the Shout.
+     * @return The topic.
+     */
     public String getTopic() {
         return topic;
     }
 
-    public void setTopic(String topic) {
+    void setTopic(String topic) {
         this.topic = topic;
     }
 
+    /**
+     * Gets the length of the recording in seconds.
+     * @return The length of the recording in seconds.
+     */
     public Integer getRecordingLengthInSeconds() {
         return recordingLengthInSeconds;
     }
 
-    public void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
+    void setRecordingLengthInSeconds(int recordingLengthInSeconds) {
         this.recordingLengthInSeconds = recordingLengthInSeconds;
     }
 
@@ -194,6 +232,11 @@ public class Shout extends StmBaseEntity {
         // Stubbed
     }
 
+    /**
+     * Gets the serialization type that is used in Gson parsing.
+     * @return The serialization type to be used in Gson parsing.
+     */
+    @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<Shout>(){}.getType();
     }

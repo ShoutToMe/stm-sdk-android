@@ -1,7 +1,8 @@
 package me.shoutto.sdk;
 
 /**
- * Created by tracyrojas on 9/20/15.
+ * This class is used in the onSuccess method of the {@link Callback} class.  A client will normally
+ * only use one method, the get() method which will return the typed response object.
  */
 public class StmResponse<T> {
 

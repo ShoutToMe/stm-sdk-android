@@ -34,6 +34,9 @@ import me.shoutto.sdk.internal.RecordingGraphicView;
 import me.shoutto.sdk.internal.audio.StmAudioRecorder;
 import me.shoutto.sdk.internal.audio.StmAudioRecorderResult;
 
+/**
+ * The <code>Activity</code> class that is displayed to the user during audio recording.
+ */
 public class StmRecorderActivity extends Activity implements HandWaveGestureListener,
         SoundPool.OnLoadCompleteListener, StmAudioRecorder.RecordingCountdownListener {
 
@@ -302,7 +305,9 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                             @Override
                             public void run() {
                                 StmCallback<Shout> stmCallback = stmService.getShoutCreationCallback();
-                                stmCallback.onResponse(newShout);
+                                if (stmCallback != null) {
+                                    stmCallback.onResponse(newShout);
+                                }
                             }
                         });
                     }
