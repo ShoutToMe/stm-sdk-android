@@ -20,19 +20,19 @@ public class StmError {
     @SuppressWarnings("all")
     public static final String SEVERITY_MINOR = "SEVERITY_MINOR";
 
-    private boolean blockingError;
+    private boolean blocking;
     private String message;
     private String severity;
 
     /**
      * The constructor used by the SDK when handling a failure scenario.
      * @param message A descriptive message of the error that occurred.
-     * @param blockingError A boolean that describes whether the error is blocking or not.
+     * @param blocking A boolean that describes whether the error is blocking or not.
      * @param severity The severity of the error.
      */
-    public StmError(String message, boolean blockingError, String severity) {
+    public StmError(String message, boolean blocking, String severity) {
         this.message = message;
-        this.blockingError = blockingError;
+        this.blocking = blocking;
         this.severity = severity;
     }
 
@@ -79,15 +79,15 @@ public class StmError {
      * @return The boolean describing whether the error is blocking or not.
      */
     @SuppressWarnings("unused")
-    public boolean isBlockingError() {
-        return blockingError;
+    public boolean isBlocking() {
+        return blocking;
     }
 
     /**
      * Sets the boolean that describes whether the error is blocking or not.
-     * @param blockingError The boolean describing whether the error is blocking or not.
+     * @param blocking The boolean describing whether the error is blocking or not.
      */
-    void setBlockingError(boolean blockingError) {
-        this.blockingError = blockingError;
+    void setBlocking(boolean blocking) {
+        this.blocking = blocking;
     }
 }

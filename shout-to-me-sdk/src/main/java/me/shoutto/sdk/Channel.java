@@ -141,7 +141,7 @@ public class Channel extends StmBaseEntity {
                         Log.w(TAG, "Channel subscribe response was not 'success'");
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Channel subscribe response was not 'success'");
                         callback.onError(stmError);
                     }
@@ -149,7 +149,7 @@ public class Channel extends StmBaseEntity {
                     Log.w(TAG, "Could not parse channel subscribe response.", ex);
                     StmError stmError = new StmError();
                     stmError.setSeverity(StmError.SEVERITY_MINOR);
-                    stmError.setBlockingError(false);
+                    stmError.setBlocking(false);
                     stmError.setMessage("Could not parse channel subscribe response.");
                     callback.onError(stmError);
                 }
@@ -161,7 +161,7 @@ public class Channel extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -190,7 +190,7 @@ public class Channel extends StmBaseEntity {
                         Log.w(TAG, "Channel unsubscribe response was not 'success'");
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Channel unsubscribe response was not 'success'");
                         callback.onError(stmError);
                     }
@@ -198,7 +198,7 @@ public class Channel extends StmBaseEntity {
                     Log.w(TAG, "Could not parse channel unsubscribe response.", ex);
                     StmError stmError = new StmError();
                     stmError.setSeverity(StmError.SEVERITY_MINOR);
-                    stmError.setBlockingError(false);
+                    stmError.setBlocking(false);
                     stmError.setMessage("Could not parse channel unsubscribe response.");
                     callback.onError(stmError);
                 }
@@ -210,7 +210,7 @@ public class Channel extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -250,7 +250,7 @@ public class Channel extends StmBaseEntity {
                     if (error == null || error.networkResponse == null) {
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setMessage("Error occurred trying to get channel isSubscribed status.");
                         callback.onError(stmError);
                     } else if (error.networkResponse.statusCode == 404) {
@@ -258,7 +258,7 @@ public class Channel extends StmBaseEntity {
                     } else {
                         StmError stmError = new StmError();
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         try {
                             JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                             stmError.setMessage(responseData.getString("message"));

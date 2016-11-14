@@ -145,7 +145,7 @@ public class Shout extends StmBaseEntity {
                     Log.e(TAG, "Unable to parse response JSON", ex);
                     if (stmCallback != null) {
                         StmError stmError = new StmError();
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
                         stmError.setMessage("Error occurred during JSON parsing of delete shout response" +
                                 " Error message: " + ex.getMessage());
@@ -159,7 +159,7 @@ public class Shout extends StmBaseEntity {
                         stmCallback.onResponse(StmService.SUCCESS);
                     } else {
                         StmError stmError = new StmError();
-                        stmError.setBlockingError(false);
+                        stmError.setBlocking(false);
                         stmError.setSeverity(StmError.SEVERITY_MINOR);
                         stmError.setMessage("Delete shout failed.  Response from server: " + result);
                         stmCallback.onError(stmError);
@@ -174,7 +174,7 @@ public class Shout extends StmBaseEntity {
             public void onErrorResponse(VolleyError error) {
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));

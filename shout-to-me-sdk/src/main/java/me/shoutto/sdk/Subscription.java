@@ -9,7 +9,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * This class represents a Shout to Me Subscription entity.
+ * This class represents a Shout to Me Subscription entity.  Manipulating the subscription entity allows
+ * the client app to specify to the Shout to Me service whether or not the user should be sent
+ * notifications.  A client app can expose a UI to the user to control their subscription, or
+ * the client app can make this decision without input from the user.
+ *
  */
 public class Subscription extends StmBaseEntity {
 
@@ -29,7 +33,9 @@ public class Subscription extends StmBaseEntity {
     @SuppressWarnings("all")
     public static final String LIST_SERIALIZATION_KEY = SERIALIZATION_KEY + "s";
 
+    @SuppressWarnings("unused")
     private String channelId;
+    @SuppressWarnings("unused")
     private Date createdDate;
 
     /**
@@ -42,6 +48,10 @@ public class Subscription extends StmBaseEntity {
         // Stubbed
     }
 
+    /**
+     * Gets the channel ID.
+     * @return The channel ID.
+     */
     public String getChannelId() {
         return channelId;
     }

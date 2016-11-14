@@ -22,7 +22,10 @@ import java.util.TimeZone;
 import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
- * This class represents a Shout to Me user object.
+ * This class represents a Shout to Me user entity. A Shout to Me User entity is generally used
+ * by client apps to enable push notifications, get/set a user's handle, get/set the last time the user
+ * read messages (to alert the Shout to Me service so Shout to Me can update the unread count value),
+ * and to access the user's auth token in the event the client app wants to call the Shout to Me REST API directly.
  */
 public class User extends StmBaseEntity {
 
@@ -44,7 +47,8 @@ public class User extends StmBaseEntity {
     private boolean isInitialized = false;
 
     /**
-     * A constructor that allows setting <code>StmService</code> which is used for context.
+     * A constructor that allows setting <code>StmService</code> which is used for context and other
+     * SDK functionality.
      * @param stmService
      */
     public User(StmService stmService) {
@@ -115,7 +119,7 @@ public class User extends StmBaseEntity {
     /**
      * Gets the platform endpoint ARN. This is the unique ID that the Shout to Me system uses to
      * send push notifications.
-     * @return
+     * @return The platform endpoint ARN.
      */
     public String getPlatformEndpointArn() {
         return platformEndpointArn;
@@ -206,7 +210,7 @@ public class User extends StmBaseEntity {
 
                 StmError stmError = new StmError();
                 stmError.setSeverity(StmError.SEVERITY_MINOR);
-                stmError.setBlockingError(false);
+                stmError.setBlocking(false);
                 try {
                     JSONObject responseData = new JSONObject(new String(error.networkResponse.data));
                     stmError.setMessage(responseData.getString("message"));
@@ -265,7 +269,7 @@ public class User extends StmBaseEntity {
                 StmError stmError = new StmError();
                 stmError.setMessage("Error occurred loading user");
                 stmError.setSeverity(StmError.SEVERITY_MAJOR);
-                stmError.setBlockingError(true);
+                stmError.setBlocking(true);
                 if (callback != null) {
                     callback.onError(stmError);
                 }
