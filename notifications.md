@@ -58,11 +58,12 @@ The Shout to Me SDK supports receiving push notifications from the Shout to Me p
   and consequently, there are a number of items that need to be wired up. The following high level steps occur in the
   notifications system:
 
-1. A notification is received from GCM
-2. The SDK processes the notification and may do one of two things:
-    * Immediately broadcast a message to the client app
-    * Create a geofence which may be triggered later if and when a user enters the geofence area
-3. A listener in the client app receives a broadcast and can take further action
+1. A message is sent from the Shout to Me Broadcaster Application
+2. The message is delivered to the mobile app as a Google Cloud Messaging notification
+3. The Shout to Me SDK receives the notification and broadcasts a message
+4. A listener in the client app receives a broadcast and can take further action using the data
+
+![Notifications](https://s3-us-west-2.amazonaws.com/sdk-public-images/android-notifications.png)
 
 ### Google Cloud Messaging
 The Shout to Me system uses [Google Cloud Messaging (GCM)](https://developers.google.com/cloud-messaging/) to send and receive messages. Add the following to your AndroidManifest.xml if you wish to receive notifications.  Be sure to set your own values for the string resource references.  Check with Shout to Me support for specific values to use.

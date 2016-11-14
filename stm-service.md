@@ -128,8 +128,8 @@ public class StmError {
         return severity;
     }
 
-    public boolean isBlockingError() {
-        return blockingError;
+    public boolean isBlocking() {
+        return blocking;
     }
 }
 ```
