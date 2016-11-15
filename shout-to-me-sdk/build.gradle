@@ -47,3 +47,34 @@ dependencies {
     // Optional -- UI testing with UI Automator
     androidTestCompile 'com.android.support.test.uiautomator:uiautomator-v18:2.1.2'
 }
+
+ext {
+    bintrayRepo = 'maven'
+    bintrayName = 'shouttome-android-sdk'   // Has to be same as your library module name
+    bintrayOrg = 'shout-to-me'
+
+    publishedGroupId = 'me.shoutto.sdk'
+    libraryName = 'ShoutToMeAndroidSDK'
+    artifact = 'stm-sdk-android'     // Has to be same as your library module name
+
+    libraryDescription = 'An Android SDK that can be used to consume the Shout to Me cloud services'
+
+    // Your github repo link
+    siteUrl = 'https://github.com/ShoutToMe/stm-sdk-android'
+    gitUrl = 'https://github.com/ShoutToMe/stm-sdk-android.git'
+    githubRepository= 'ShoutToMe/stm-sdk-android'
+
+    libraryVersion = '1.0.10'
+
+    developerId = 'trojas'
+    developerName = 'Tracy Rojas'
+    developerEmail = 'tracy@shoutto.me'
+
+    licenseName = 'The MIT License (MIT)'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
+
+// Place it at the end of the file
+apply from: 'https://raw.githubusercontent.com/trojas/JCenter/master/installv1.gradle'
+apply from: 'https://raw.githubusercontent.com/trojas/JCenter/master/bintrayv1.gradle'
