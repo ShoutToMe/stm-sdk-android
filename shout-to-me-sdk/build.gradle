@@ -55,7 +55,7 @@ ext {
 
     publishedGroupId = 'me.shoutto.sdk'
     libraryName = 'ShoutToMeAndroidSDK'
-    artifact = 'stm-sdk-android'     // Has to be same as your library module name
+    artifact = 'shout-to-me-sdk'     // Has to be same as your library module name
 
     libraryDescription = 'An Android SDK that can be used to consume the Shout to Me cloud services'
 
