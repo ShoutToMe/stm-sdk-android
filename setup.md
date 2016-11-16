@@ -11,11 +11,27 @@ The following describes how to set up your Android project to use the Shout to M
 * A Shout to Me channel ID
 * [Android Studio](https://developer.android.com/studio/intro/index.html) and all its dependencies
 
-## Import the Shout to Me SDK into your Project
-1. [Download the most recent version of the Shout to Me SDK](https://github.com/ShoutToMe/stm-sdk-android/releases)
-2. In Android Studio, navigate to **File > New > New Module**
-3. Select **Import .JAR/.AAR Package** then click **Next**
-4. Enter the location of the **shout-to-me-sdk-release.aar** file that you downloaded in Step 1. and then click **Finish**
+## Add the Shout to Me SDK into your Project
+
+### JCenter
+The Shout to Me Android SDK is available in the JCenter repository.  By default, Android Studio includes a reference to
+JCenter. If you do not currently have a reference to JCenter, add it to your app's `build.gradle` file.
+
+```gradle
+repositories {
+    jcenter()
+}
+```
+
+### Add the Shout to Me SDK dependency
+Add the following to your app's `build.gradle` file.
+
+```gradle
+dependencies {
+
+    compile 'me.shoutto.sdk:shout-to-me-sdk:1.0.+'
+}
+```
 
 ## Client Access Token and Channel ID
 Developers will need to get a client access token and a channel ID from Shout to Me in order to use this SDK.  A client
@@ -49,7 +65,8 @@ Be sure to place the appropriate client token and channel ID values into your st
 ```
 
 ## Dependencies
-The Shout to Me Android SDK has the following dependencies:
+If you included the Shout to Me SDK by adding it to your gradle file, the dependencies will be automatically included in your build.
+Here is a list of dependencies that the Shout to Me SDK uses.
 
 ### Google Play Services
 The Shout to Me SDK Android SDK uses [Google Play Services](https://developers.google.com/android/guides/overview) for
@@ -59,15 +76,6 @@ the following functionality.
 * Registering the user for Google Cloud Messaging
 * Managing geotargeted notifications with geofences
 
-Add the following to your gradle file in the dependencies section if you have not already integrated to Google Play Services.
-
-```gradle
-dependencies {
-    ...
-    compile 'com.google.android.gms:play-services:9.6.+'
-    ...
-}
-```
 
 If Google Play Services is not installed on a user's phone, certain functionality may not work correctly.
 Most modern Android phones come bundled with Google Play Services, however it is
@@ -87,27 +95,12 @@ if (val != ConnectionResult.SUCCESS) {
 ```
 
 ### Volley
-The Shout to Me SDK utilizes Volley to optimize asynchronous communication with the API service. For more information about volley, see the [Android Volley documentation](https://developer.android.com/training/volley/index.html).  Add the following to your gradle file in the dependencies section to incorporate Volley.
+The Shout to Me SDK utilizes Volley to optimize asynchronous communication with the API service. For more information about volley, see the [Android Volley documentation](https://developer.android.com/training/volley/index.html).
 
-```gradle
-dependencies {
-    ...
-    compile 'com.android.volley:volley:1.0.+'
-    ...
-}
-```
 
 ### Amazon Web Services
-The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. For more information about the Amazon Android AWS SDK, see the [Amazon mobile SDK documentation](https://aws.amazon.com/mobile/sdk/).   Add the following to your gradle file in the dependencies section to incorporate the Amazon AWS SDK.
+The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. For more information about the Amazon Android AWS SDK, see the [Amazon mobile SDK documentation](https://aws.amazon.com/mobile/sdk/).
 
-```gradle
-dependencies {
-    ...
-    compile 'com.amazonaws:aws-android-sdk-core:2.2.+'
-    compile 'com.amazonaws:aws-android-sdk-sns:2.2.+'
-    ...
-}
-```
 
 ## Permissions
 
