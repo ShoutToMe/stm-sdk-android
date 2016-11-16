@@ -28,7 +28,6 @@ Add the following to your app's `build.gradle` file.
 
 ```gradle
 dependencies {
-
     compile 'me.shoutto.sdk:shout-to-me-sdk:1.0.+'
 }
 ```
