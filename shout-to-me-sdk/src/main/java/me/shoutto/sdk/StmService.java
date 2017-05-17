@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
@@ -131,7 +132,7 @@ public class StmService extends Service implements LocationUpdateListener {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                channelManager.getChannels(callback);
+                channelManager.getChannels(StmService.this, callback);
             }
         }).start();
     }
@@ -510,112 +511,12 @@ public class StmService extends Service implements LocationUpdateListener {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                final List<Conversation> activeConversations = new ArrayList<>();
-
-                // Get subscribed channels
-                StmEntityListRequestSync<Subscription> subscriptionRequest = new StmEntityListRequestSync<>();
-                List<Subscription> subscriptionList = subscriptionRequest.process("GET", getUserAuthToken(),
-                        getServerUrl() + Subscription.BASE_ENDPOINT, null, Subscription.getListSerializationType(),
-                        Subscription.LIST_SERIALIZATION_KEY);
-
-                // Get active conversations for those channels
-                if (subscriptionList != null) {
-                    for (Subscription subscription : subscriptionList) {
-                        String conversationRequestUrl = getServerUrl() + Conversation.BASE_ENDPOINT
-                                + "?channel_id=" + subscription.getChannelId() + "&date_field=expiration_date"
-                                + "&hours=0";
-                        StmEntityListRequestSync<Conversation> conversationRequest = new StmEntityListRequestSync<>();
-                        List<Conversation> conversationList = conversationRequest.process("GET", getUserAuthToken(),
-                                conversationRequestUrl, null, Conversation.getListSerializationType(),
-                                Conversation.LIST_SERIALIZATION_KEY);
-                        if (conversationList != null && conversationList.size() > 0) {
-                            activeConversations.addAll(conversationList);
-                        }
-                    }
-                }
-
-                // Remove geofences not in the list
-                List<String> conversationsToRemove = new ArrayList<>();
-                SQLiteDatabase readableDatabase = geofenceDbHelper.getReadableDatabase();
-                Cursor cursor = readableDatabase.query(
-                        GeofenceDatabaseSchema.GeofenceEntry.TABLE_NAME,
-                        new String[]{GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID},
-                        null,
-                        null,
-                        null,
-                        null,
-                        null
-                );
-                if (cursor.moveToFirst()) {
-                    do {
-                        String conversationId = cursor.getString(cursor.getColumnIndexOrThrow(GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID));
-                        boolean isConversationActive = false;
-                        for (Conversation conversation : activeConversations) {
-                            if (conversation.getId().equals(conversationId)) {
-                                isConversationActive = true;
-                            }
-                        }
-                        if (!isConversationActive) {
-                            conversationsToRemove.add(conversationId);
-                        }
-                    } while (cursor.moveToNext());
-                }
-                cursor.close();
-                readableDatabase.close();
-
-                if (conversationsToRemove.size() > 0) {
-                    geofenceManager.removeGeofencesByIds(conversationsToRemove, LocationUtils.getLastKnownCoordinates(StmService.this));
-                }
-
-                // Process the notifications. Get channel information to provide channel name.
-                getChannels(new Callback<List<Channel>>() {
-                    @Override
-                    public void onSuccess(StmResponse<List<Channel>> stmResponse) {
-                        for (final Conversation conversation : activeConversations) {
-                            String channelName = "";
-                            for (Channel channel : stmResponse.get()) {
-                                if (channel.getId().equals(conversation.getChannelId())) {
-                                    channelName = channel.getName();
-                                }
-                            }
-
-                            Bundle bundle = new Bundle();
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TITLE, channelName);
-                            processNotificationBundle(bundle);
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(StmError stmError) {
-                        Log.d(TAG, "Could not get channel info to process notifications. " + stmError.getMessage());
-
-                        for (final Conversation conversation : activeConversations) {
-                            Bundle bundle = new Bundle();
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, conversation.getId());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, conversation.getPublishingMessage());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, conversation.getChannelId());
-                            bundle.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, "conversation message");
-                            processNotificationBundle(bundle);
-                        }
-                    }
-                });
+                NotificationManager notificationManager = new NotificationManager(StmService.this);
+                notificationManager.syncNotifications();
             }
         }).start();
     }
 
-    private void processNotificationBundle(final Bundle bundle) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                NotificationManager notificationManager = new NotificationManager(StmService.this, bundle);
-                notificationManager.processIncomingNotification(getServerUrl(), getUserAuthToken(), user.getId());
-            }
-        }).start();
-    }
 
     /**
      * Unregisters a previously registered <code>HandWaveGestureListener</code>.

@@ -26,7 +26,7 @@ public class Channel extends StmBaseEntity {
     /**
      * The key used for JSON serialization of channel objects.
      */
-    transient static final String SERIALIZATION_KEY = "channel";
+    public transient static final String SERIALIZATION_KEY = "channel";
 
     /**
      * The key used for JSON serialization of channel lists.
@@ -127,7 +127,7 @@ public class Channel extends StmBaseEntity {
         return new TypeToken<Channel>(){}.getType();
     }
 
-    static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
+    public static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
 
     void subscribe(final StmCallback<Void> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {

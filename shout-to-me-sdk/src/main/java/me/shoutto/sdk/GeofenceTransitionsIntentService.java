@@ -155,8 +155,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
     private void sendNotification(List<Bundle> bundles) {
         StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
         for (Bundle bundle : bundles) {
-            NotificationManager notificationManager = new NotificationManager(this, bundle);
-            notificationManager.processIncomingNotification(stmPreferenceManager.getServerUrl(),
+            NotificationManager notificationManager = new NotificationManager(this);
+            notificationManager.processIncomingNotification(bundle, stmPreferenceManager.getServerUrl(),
                     stmPreferenceManager.getAuthToken(), stmPreferenceManager.getUserId());
         }
     }

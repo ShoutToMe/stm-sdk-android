@@ -9,6 +9,7 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDatabaseLockedException;
 import android.location.Location;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -55,8 +56,35 @@ public class GeofenceManager {
         }
     }
 
-    public void setMaxGeofences(int maxGeofences) {
+    void setMaxGeofences(int maxGeofences) {
         this.maxGeofences = maxGeofences;
+    }
+
+    public List<String> getGeofenceIds() {
+        List<String> geofenceIds = new ArrayList<>();
+
+        SQLiteDatabase readableDatabase = geofenceDbHelper.getReadableDatabase();
+        Cursor cursor = readableDatabase.query(
+                GeofenceDatabaseSchema.GeofenceEntry.TABLE_NAME,
+                new String[]{GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID},
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        if (cursor.moveToFirst()) {
+            do {
+                int columnIndex = cursor.getColumnIndexOrThrow(GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID);
+                if (!cursor.isNull(columnIndex)) {
+                    geofenceIds.add(cursor.getString(columnIndex));
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+        readableDatabase.close();
+
+        return geofenceIds;
     }
 
     public synchronized void addGeofence(MessageGeofence messageGeofence, Location userLocation) throws SecurityException {
@@ -351,7 +379,6 @@ public class GeofenceManager {
     }
 
     public void removeAllGeofences() {
-
 
         SQLiteDatabase readableDatabase = geofenceDbHelper.getReadableDatabase();
         String[] projection = { GeofenceDatabaseSchema.GeofenceEntry.COLUMN_CONVERSATION_ID };
