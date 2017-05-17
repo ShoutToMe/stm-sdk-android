@@ -32,6 +32,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import me.shoutto.sdk.internal.StmPreferenceManager;
+
 /**
  * An <code>IntentService</code> implementation that registers an app to receive push notifications
  * from GCM via the Shout to Me platform.
@@ -44,9 +46,10 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     public static final String PN_REGISTRATION_COMPLETE = "me.shoutto.sdk.GCM_REGISTRATION_COMPLETE";
 
     private static final String TAG = GcmNotificationRegistrationIntentService.class.getSimpleName();
-    private static final String GCM_DEFAULT_SENDER_ID = "me.shoutto.sdk.GcmDefaultSenderId";
-    private static final String PLATFORM_APPLICATION_ARN = "me.shoutto.sdk.PlatformApplicationArn";
-    private static final String IDENTITY_POOL_ID = "me.shoutto.sdk.IdentityPoolId";
+    private static final String GCM_DEFAULT_SENDER_ID = "895198831543";
+    private static final String NOTIFICATION_APP_ID = "me.shoutto.sdk.NotificationAppId";
+    private static final String PLATFORM_APPLICATION_ARN_PREFIX = "arn:aws:sns:us-west-2:810633828709:app/GCM/";
+    private static final String IDENTITY_POOL_ID = "us-east-1:4ec2b44e-0dde-43e6-a279-6ee1cf241b05";
     private static final String[] TOPICS = {"global"};
     private AmazonSNSClient snsClient;
     private boolean isStmServiceBound = false;
@@ -88,25 +91,23 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
 
-        String gcmDefaultSenderId = "", identityPoolId = "";
         try {
             ServiceInfo serviceInfo = getPackageManager().getServiceInfo(new ComponentName(this, this.getClass()), PackageManager.GET_META_DATA);
             Bundle bundle = serviceInfo.metaData;
 
-            gcmDefaultSenderId = bundle.getString(GCM_DEFAULT_SENDER_ID);
-            if (gcmDefaultSenderId == null || "".equals(gcmDefaultSenderId)) {
-                Log.e(TAG, "gcmDefaultSenderId is null.  Please ensure the value is set in AndroidManifest.xml.");
+            String notificationAppId = bundle.getString(NOTIFICATION_APP_ID);
+            if (notificationAppId == null || "".equals(notificationAppId)) {
+                Log.e(TAG, "me.shoutto.sdk.NotificationAppId is null. Please ensure the value is set in AndroidManifest.xml");
             }
 
-            identityPoolId = bundle.getString(IDENTITY_POOL_ID);
-            if (identityPoolId == null || "".equals(identityPoolId)) {
-                Log.e(TAG, "identityPoolId is null. Please ensure the value is set in AndroidManifest.xml.");
+            StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(getApplicationContext());
+            String serverUrl = stmPreferenceManager.getServerUrl();
+            if (serverUrl.contains("-test")) {
+                notificationAppId += "-test";
             }
 
-            platformApplicationArn = bundle.getString(PLATFORM_APPLICATION_ARN);
-            if (platformApplicationArn == null || "".equals(platformApplicationArn)) {
-                Log.e(TAG, "platformApplicationArn is null. Please ensure the value is set in AndroidManifest.xml");
-            }
+            platformApplicationArn = PLATFORM_APPLICATION_ARN_PREFIX + notificationAppId;
+
         } catch (PackageManager.NameNotFoundException ex) {
             Log.e(TAG, "Package name not found. Cannot start GcmNotificationRegistrationIntentService.", ex);
         }
@@ -114,7 +115,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         // Initialize the Amazon Cognito credentials provider
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
-                identityPoolId, // Identity Pool ID
+                IDENTITY_POOL_ID, // Identity Pool ID
                 Regions.US_EAST_1 // Region
         );
         snsClient = new AmazonSNSClient(credentialsProvider);
@@ -129,7 +130,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             // See https://developers.google.com/cloud-messaging/android/start for details on this file.
             // [START get_token]
             InstanceID instanceID = InstanceID.getInstance(this);
-            String token = instanceID.getToken(gcmDefaultSenderId, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
+            String token = instanceID.getToken(GCM_DEFAULT_SENDER_ID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
             // [END get_token]
             Log.i(TAG, "GCM Registration Token: " + token);
 
