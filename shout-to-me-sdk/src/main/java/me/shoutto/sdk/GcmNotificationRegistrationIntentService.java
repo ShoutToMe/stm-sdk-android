@@ -55,6 +55,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     private boolean isStmServiceBound = false;
     private StmService stmService;
     private String platformApplicationArn;
+    private StmPreferenceManager stmPreferenceManager;
 
     public GcmNotificationRegistrationIntentService() {
         super(TAG);
@@ -69,6 +70,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         Intent intent = new Intent(getApplicationContext(), StmService.class);
         startService(intent);
         bindService(intent, stmServiceConnection, BIND_AUTO_CREATE);
+        stmPreferenceManager = new StmPreferenceManager(getApplicationContext());
     }
 
     /**
@@ -100,7 +102,6 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
                 Log.e(TAG, "me.shoutto.sdk.NotificationAppId is null. Please ensure the value is set in AndroidManifest.xml");
             }
 
-            StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(getApplicationContext());
             String serverUrl = stmPreferenceManager.getServerUrl();
             if (serverUrl.contains("-test")) {
                 notificationAppId += "-test";
@@ -179,7 +180,9 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
                     snsClient.getEndpointAttributes(geaReq);
 
             updateNeeded = !geaRes.getAttributes().get("Token").equals(token)
-                    || !geaRes.getAttributes().get("Enabled").equalsIgnoreCase("true");
+                    || !geaRes.getAttributes().get("Enabled").equalsIgnoreCase("true")
+                    || geaRes.getAttributes().get("CustomUserData") == null
+                    || !geaRes.getAttributes().get("CustomUserData").equals(buildUserDataAttributes());
 
         } catch (NotFoundException nfe) {
             // We had a stored ARN, but the platform endpoint associated with it
@@ -197,6 +200,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             Map<String, String> attribs = new HashMap<>();
             attribs.put("Token", token);
             attribs.put("Enabled", "true");
+            attribs.put("CustomUserData", buildUserDataAttributes());
             SetEndpointAttributesRequest saeReq =
                     new SetEndpointAttributesRequest()
                             .withEndpointArn(endpointArn)
@@ -230,7 +234,8 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             CreatePlatformEndpointRequest cpeReq =
                     new CreatePlatformEndpointRequest()
                             .withPlatformApplicationArn(platformApplicationArn)
-                            .withToken(token);
+                            .withToken(token)
+                            .withCustomUserData(buildUserDataAttributes());
             CreatePlatformEndpointResult cpeRes = snsClient
                     .createPlatformEndpoint(cpeReq);
             endpointArn = cpeRes.getEndpointArn();
@@ -281,6 +286,11 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         if (stmError != null) {
             Log.w(TAG, "An error occurred trying to save the user platform endpoint arn. Message" + stmError.getMessage());
         }
+    }
+
+    private String buildUserDataAttributes() {
+        String userId = (stmPreferenceManager.getUserId() != null ? stmPreferenceManager.getUserId() : "");
+        return "{ \"user_id\": \"" + userId + "\" }";
     }
 
     private ServiceConnection stmServiceConnection = new ServiceConnection() {
