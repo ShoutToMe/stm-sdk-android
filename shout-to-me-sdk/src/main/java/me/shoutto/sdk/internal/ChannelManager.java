@@ -1,5 +1,6 @@
-package me.shoutto.sdk;
+package me.shoutto.sdk.internal;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -21,19 +22,28 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import me.shoutto.sdk.Channel;
+import me.shoutto.sdk.StmBaseEntity;
+import me.shoutto.sdk.StmCallback;
+import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.StmService;
 import me.shoutto.sdk.internal.http.GsonDateAdapter;
+import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 
-class ChannelManager {
+/**
+ * ChannelManager provides methods to retrieve channel information.
+ */
+public class ChannelManager {
 
     private static final String TAG = ChannelManager.class.getSimpleName();
-    private StmService stmService;
+    private StmPreferenceManager stmPreferenceManager;
 
-    ChannelManager(StmService stmService) {
-        this.stmService = stmService;
+    public ChannelManager(Context context) {
+        stmPreferenceManager = new StmPreferenceManager(context);
     }
 
-    void getChannels(final StmCallback<List<Channel>> callback) {
+    public void getChannels(final StmService stmService, final StmCallback<List<Channel>> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
@@ -90,8 +100,8 @@ class ChannelManager {
             }
         };
 
-        String url = stmService.getServerUrl() + Channel.BASE_ENDPOINT;
-        final String authToken = stmService.getUserAuthToken();
+        String url = stmPreferenceManager.getServerUrl() + Channel.BASE_ENDPOINT;
+        final String authToken = stmPreferenceManager.getAuthToken();
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 responseListener, errorListener) {
             @Override
@@ -102,5 +112,12 @@ class ChannelManager {
             }
         };
         StmRequestQueue.getInstance().addToRequestQueue(request);
+    }
+
+    List<Channel> getChannels() {
+        StmEntityListRequestSync<Channel> channelRequest = new StmEntityListRequestSync<>();
+        return channelRequest.process("GET", stmPreferenceManager.getAuthToken(),
+                stmPreferenceManager.getServerUrl() + Channel.BASE_ENDPOINT, null,
+                Channel.getSerializationListType(), Channel.LIST_SERIALIZATION_KEY);
     }
 }

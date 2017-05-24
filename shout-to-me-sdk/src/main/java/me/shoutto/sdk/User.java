@@ -216,7 +216,7 @@ public class User extends StmBaseEntity {
                     stmError.setMessage(responseData.getString("message"));
                 } catch (JSONException ex) {
                     Log.e(TAG, "Error parsing JSON from user update response");
-                    stmError.setMessage("An error occurred trying to create user");
+                    stmError.setMessage("An error occurred trying to PUT user");
                 }
                 if (callback != null) {
                     callback.onError(stmError);

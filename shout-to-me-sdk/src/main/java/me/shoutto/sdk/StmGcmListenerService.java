@@ -40,8 +40,8 @@ public class StmGcmListenerService extends GcmListenerService {
         notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, data.getString("type"));
 
         StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
-        NotificationManager notificationManager = new NotificationManager(this, notificationData);
-        notificationManager.processIncomingNotification(stmPreferenceManager.getServerUrl(),
+        NotificationManager notificationManager = new NotificationManager(this);
+        notificationManager.processIncomingNotification(notificationData, stmPreferenceManager.getServerUrl(),
                 stmPreferenceManager.getAuthToken(), stmPreferenceManager.getUserId());
     }
     // [END receive_message]
