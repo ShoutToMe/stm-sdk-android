@@ -9,6 +9,7 @@ The following describes how to set up your Android project to use the Shout to M
 ## Prerequisites
 * A Shout to Me client access token
 * A Shout to Me channel ID
+* A Shout to Me notification app ID if using the Shout to Me notification system
 * [Android Studio](https://developer.android.com/studio/intro/index.html) and all its dependencies
 
 ## Add the Shout to Me SDK into your Project
@@ -110,6 +111,7 @@ The Shout to Me SDK requests the following permissions in the manifest:
 <uses-permission android:name="android.permission.RECORD_AUDIO" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 ```
 
 Beginning with API level 23 (6.0), [Android requires that certain permissions be requested at run time](https://developer.android.com/training/permissions/requesting.html). The Shout to Me SDK uses two permissions that fall into this category:

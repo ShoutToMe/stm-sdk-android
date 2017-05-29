@@ -6,8 +6,7 @@ layout: home
 
 The Shout to Me platform allows you to enable your app to receive communications sent from Shout to Me's Broadcaster
 Application.  Messages and notifications are two separate concepts in the Shout to Me system.  A **Message** is text or
-audio content that is sent to mobile users to convey a communication.  A **Notification** (which is taken from the mobile
-technology term "Push Notification") is the delivery mechanism used to transport a Message.
+audio content that is sent to mobile users to convey a communication.  A **Notification** is the delivery mechanism used to transport a Message.
 
 ## Messages
 The Message object represents a text or audio message that was sent from a broadcaster.  A
@@ -29,7 +28,7 @@ public class Message {
 
     public Date getSentDate()
 
-    // A reference to a Shout to Me conversation.  May be null
+    // A reference to a Shout to Me conversation.  May be null if message was not associated with a conversation
     public String getConversationId()
 }
 ```
@@ -72,9 +71,7 @@ The Shout to Me system uses [Google Cloud Messaging (GCM)](https://developers.go
 <service
     android:name="me.shoutto.sdk.GcmNotificationRegistrationIntentService"
     android:exported="false">
-    <meta-data android:name="me.shoutto.sdk.GcmDefaultSenderId" android:value="@string/gcm_default_sender_id" />
-    <meta-data android:name="me.shoutto.sdk.PlatformApplicationArn" android:value="@string/platform_application_arn" />
-    <meta-data android:name="me.shoutto.sdk.IdentityPoolId" android:value="@string/identity_pool_id" />
+    <meta-data android:name="me.shoutto.sdk.NotificationAppId" android:value="@string/notification_app_id" />
 </service>
 
 <!-- [START gcm_receiver] -->
