@@ -2,8 +2,14 @@
 layout: home
 ---
 
-# Recording
+# Creating a Shout
 
+There are two ways to create a shout using the Shout to Me SDK:
+
+1. Using the recording overlay activity
+2. Uploading a media file
+
+## Recording Overlay
 <img src="https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-4.png" style="float:right" />
 The StmRecorderActivity class provides client apps a way to capture audio and send it to the Shout to Me platform. It is
 implemented as a native [Android Activity](http://developer.android.com/reference/android/app/Activity.html) to allow
@@ -33,7 +39,7 @@ stmService.setShoutCreationCallback(new Callback<Shout>() {
 });
 ```
 
-## Launching the StmRecorderActivity
+### Launching the StmRecorderActivity
 Launching the StmRecorderActivity is done using standard Android Activity functionality.  You can pass in certain extras
 to provide additional data.
 
@@ -60,7 +66,7 @@ intent.putExtra(StmRecorderActivity.TOPIC, topic);                              
 startActivityForResult(intent, 1);
 ```
 
-## Handling the Activity result of StmRecorderActivity
+### Handling the Activity result of StmRecorderActivity
 The StmRecorderActivity uses the standard Android Activity callback to indicate whether the Activity was closed OK, or whether
 the action was cancelled.  In addition, the StmRecorderActivity will provide data to confirm whether or not the
 recording process completed successfully.  The example below shows how to detect the
@@ -85,6 +91,41 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
        }
     }
 }
+```
+
+## Uploading a Media File
+The Shout to Me SDK allows for file uploads to create new shouts. To accomplish this, you pass the SDK a java `File` object along with
+the optional callback if you wish to receive notification when the create shout process has completed.
+
+```java
+CreateShoutRequest createShoutRequest = new CreateShoutRequest();
+createShoutRequest.setFile(file);
+List<String> tags = new ArrayList<>();
+tags.add("tag 1");
+tags.add("tag 2");
+createShoutRequest.setTags(tags);
+createShoutRequest.setTopic("My topic");
+createShoutRequest.setDescription("This is a description of the shout");
+
+stmService.createShout(createShoutRequest, new Callback<Shout>() {
+    @Override
+    public void onSuccess(final StmResponse<Shout> stmResponse) {
+        Shout shout = stmResponse.get();
+        Log.d(TAG, shout.getId());
+    }
+
+    @Override
+    public void onFailure(final StmError stmError) {
+        // Could not create shout.
+    }
+});
+```
+
+For media files, there is a helper function in `CreateShoutRequest` that you can use to pass in a `Uri` instead of a `File`.
+It requires a context in order to search the `MediaStore`.
+
+```java
+createShoutRequest.setFileFromMediaUri(mediaFileUri, context);
 ```
 
 ## Shout

@@ -60,7 +60,7 @@ stmService.getUserAuthToken();
 ## Hand Wave Gesture Initiated Shout Recording
 The Shout to Me SDK includes a usability feature design to help make an app safe for driving.  When
 enabled, a driver need only wave their hand in front of the phone to launch the
-[Recording Overlay](recording-overlay).
+[Recording Overlay](creating-a-shout).
 
 The hand wave gesture functionality utilizes the phone's proximity sensor.  Therefore, if a phone
 does not have a proximity sensor, or the user has revoked proximity sensor permission, this

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Shout to Me Android SDK</title>
+  <meta name="description" content="The Shout to Me Android SDK Documentation provides information, reference, and examples of how to incorporate Shout to Me platform functionality into your An...">
+
+  <link rel="stylesheet" href="/stm-sdk-android/assets/main.css">
+  <link rel="canonical" href="/stm-sdk-android/setup.html">
+  <link rel="alternate" type="application/rss+xml" title="Shout to Me Android SDK" href="/stm-sdk-android/feed.xml">
+  
+  
+</head>
+
+
+  <body>
+
+    <header class="site-header" role="banner">
+
+  <div class="wrapper">
+
+    <a class="site-title" href="/stm-sdk-android/">Shout to Me Android SDK</a>
+
+    <nav class="site-nav">
+      <span class="menu-icon">
+        <svg viewBox="0 0 18 15" width="18px" height="15px">
+          <path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+          <path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+          <path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+        </svg>
+      </span>
+
+      <div class="trigger">
+        
+          
+          <a class="page-link" href="/stm-sdk-android/about/">About</a>
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+          
+        
+      </div>
+    </nav>
+
+  </div>
+
+</header>
+
+
+    <main class="page-content" aria-label="Content">
+      <div class="wrapper">
+        <div class="home">
+
+  <div style="width:100%">
+    <div style="float:left;width:170px;margin-top:50px;margin-left: -170px;">
+      <div>Android SDK</div>
+      <ul style="margin-left:10px;list-style: none">
+        <li><a href="/stm-sdk-android/">Home</a></li>
+        <li><a href="getting-started">Getting Started</a>
+          <ul>
+            <li><a href="setup">Setup</a></li>
+            <li><a href="sample-app">Sample App</a></li>
+          </ul>
+        </li>
+        <li><a href="stm-service">StmService</a></li>
+        <li><a href="creating-a-shout">Recording</a></li>
+        <li><a href="notifications">Messages and Notifications</a></li>
+        <li><a href="reference">Reference</a></li>
+
+      </ul>
+    </div>
+    <div style="width:100%;">
+      <h1 id="setting-up-the-shout-to-me-android-sdk">Setting up the Shout to Me Android SDK</h1>
+
+<p>The following describes how to set up your Android project to use the Shout to Me Android SDK.</p>
+
+<h2 id="prerequisites">Prerequisites</h2>
+<ul>
+  <li>A Shout to Me client access token</li>
+  <li>A Shout to Me channel ID</li>
+  <li>A Shout to Me notification app ID if using the Shout to Me notification system</li>
+  <li><a href="https://developer.android.com/studio/intro/index.html">Android Studio</a> and all its dependencies</li>
+</ul>
+
+<h2 id="add-the-shout-to-me-sdk-into-your-project">Add the Shout to Me SDK into your Project</h2>
+
+<h3 id="jcenter">JCenter</h3>
+<p>The Shout to Me Android SDK is available in the JCenter repository.  By default, Android Studio includes a reference to
+JCenter. If you do not currently have a reference to JCenter, add it to your app’s <code class="highlighter-rouge">build.gradle</code> file.</p>
+
+<div class="language-gradle highlighter-rouge"><pre class="highlight"><code><span class="k">repositories</span> <span class="o">{</span>
+    <span class="n">jcenter</span><span class="o">()</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h3 id="add-the-shout-to-me-sdk-dependency">Add the Shout to Me SDK dependency</h3>
+<p>Add the following to your app’s <code class="highlighter-rouge">build.gradle</code> file.</p>
+
+<div class="language-gradle highlighter-rouge"><pre class="highlight"><code><span class="k">dependencies</span> <span class="o">{</span>
+    <span class="n">compile</span> <span class="s1">'me.shoutto.sdk:shout-to-me-sdk:1.0.+'</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h2 id="client-access-token-and-channel-id">Client Access Token and Channel ID</h2>
+<p>Developers will need to get a client access token and a channel ID from Shout to Me in order to use this SDK.  A client
+access token is used to authorize the client app in HTTP calls.  The channel ID represents a Shout to Me channel which
+is linked to the broadcaster/podcaster’s account.  You will need to <a href="http://www.shoutto.me/contact">contact Shout to Me</a> in order to get the client access
+  token and channel ID. After you receive the client access token and channel ID from Shout to Me, add the
+  following &lt;service&gt; element to the &lt;application&gt; element in your AndroidManifest.xml:</p>
+
+<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;application&gt;</span>
+    ...
+    <span class="nt">&lt;service</span>
+        <span class="na">android:name=</span><span class="s">"me.shoutto.sdk.StmService"</span>
+        <span class="na">android:exported=</span><span class="s">"false"</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;meta-data</span>
+            <span class="na">android:name=</span><span class="s">"me.shoutto.sdk.CLIENT_TOKEN"</span>
+            <span class="na">android:value=</span><span class="s">"[Your client token]"</span> <span class="nt">/&gt;</span>
+        <span class="nt">&lt;meta-data</span>
+            <span class="na">android:name=</span><span class="s">"me.shoutto.sdk.CHANNEL_ID"</span>
+            <span class="na">android:value=</span><span class="s">"[Your channel ID]"</span> <span class="nt">/&gt;</span>
+    <span class="nt">&lt;/service&gt;</span>
+    ...
+<span class="nt">&lt;/application&gt;</span>
+</code></pre>
+</div>
+
+<h2 id="dependencies">Dependencies</h2>
+<p>If you included the Shout to Me SDK by adding it to your gradle file, the dependencies will be automatically included in your build.
+Here is a list of dependencies that the Shout to Me SDK uses.</p>
+
+<h3 id="google-play-services">Google Play Services</h3>
+<p>The Shout to Me SDK Android SDK uses <a href="https://developers.google.com/android/guides/overview">Google Play Services</a> for
+the following functionality.</p>
+
+<ul>
+  <li>Determining the user’s location</li>
+  <li>Registering the user for Google Cloud Messaging</li>
+  <li>Managing geotargeted notifications with geofences</li>
+</ul>
+
+<p>If Google Play Services is not installed on a user’s phone, certain functionality may not work correctly.
+Most modern Android phones come bundled with Google Play Services, however it is
+recommended to check for the availability of it to support older phones.
+Google Play Services provides a convenient mechanism to prompt the user to install or upgrade their Google Play
+Services if applicable.  The following code provides an example of the call to make to prompt the user to install
+Google Play Services if they do not already have it.  This code is normally placed in the first Activity so that the
+user sees it after installing your app and the app can immediately be registered to receive notifications.</p>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">GoogleApiAvailability</span> <span class="n">googleApiAvailability</span> <span class="o">=</span> <span class="n">GoogleApiAvailability</span><span class="o">.</span><span class="na">getInstance</span><span class="o">();</span>
+<span class="kt">int</span> <span class="n">val</span> <span class="o">=</span> <span class="n">googleApiAvailability</span><span class="o">.</span><span class="na">isGooglePlayServicesAvailable</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+<span class="k">if</span> <span class="o">(</span><span class="n">val</span> <span class="o">!=</span> <span class="n">ConnectionResult</span><span class="o">.</span><span class="na">SUCCESS</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">Dialog</span> <span class="n">gpsErrorDialog</span> <span class="o">=</span> <span class="n">googleApiAvailability</span><span class="o">.</span><span class="na">getErrorDialog</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">val</span><span class="o">,</span> <span class="mi">2</span><span class="o">);</span>
+    <span class="n">gpsErrorDialog</span><span class="o">.</span><span class="na">show</span><span class="o">();</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h3 id="volley">Volley</h3>
+<p>The Shout to Me SDK utilizes Volley to optimize asynchronous communication with the API service. For more information about volley, see the <a href="https://developer.android.com/training/volley/index.html">Android Volley documentation</a>.</p>
+
+<h3 id="amazon-web-services">Amazon Web Services</h3>
+<p>The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. For more information about the Amazon Android AWS SDK, see the <a href="https://aws.amazon.com/mobile/sdk/">Amazon mobile SDK documentation</a>.</p>
+
+<h2 id="permissions">Permissions</h2>
+
+<p>The Shout to Me SDK requests the following permissions in the manifest:</p>
+
+<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"android.permission.ACCESS_COARSE_LOCATION"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"android.permission.ACCESS_FINE_LOCATION"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"android.permission.INTERNET"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"android.permission.READ_EXTERNAL_STORAGE"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"android.permission.RECORD_AUDIO"</span> <span class="nt">/&gt;</span>
+<span class="nt">&lt;uses-permission</span> <span class="na">android:name=</span><span class="s">"com.google.android.c2dm.permission.RECEIVE"</span> <span class="nt">/&gt;</span>
+</code></pre>
+</div>
+
+<p>Beginning with API level 23 (6.0), <a href="https://developer.android.com/training/permissions/requesting.html">Android requires that certain permissions be requested at run time</a>. The Shout to Me SDK uses two permissions that fall into this category:</p>
+
+<ol>
+  <li>Mic/record audio (Optional)</li>
+  <li>Read external storage (Optional)</li>
+  <li>Location (Optional)</li>
+</ol>
+
+<h3 id="record-audio">Record Audio</h3>
+<p>If you plan to use Shout to Me’s recording overlay to create shouts, then the record audio permission is required.
+Launching the recording overlay without the permission will result in a failure response indicating that the record
+audio permission is denied.</p>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">RECORD_AUDIO</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// User has not granted access to record audio.  Ask the user for permission now.</span>
+    <span class="n">ActivityCompat</span><span class="o">.</span><span class="na">requestPermissions</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="o">{</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">RECORD_AUDIO</span> <span class="o">},</span> <span class="mi">0</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h3 id="read-external-storage">Read External Storage</h3>
+<p>If you plan to upload media files to create new shouts, then the read external storage permission is required.  With
+permission to read external storage, you may not have access to certain media files.</p>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">READ_EXTERNAL_STORAGE</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span><span class="o">)</span> <span class="o">{</span>
+    <span class="c1">// User has not granted access to read external storage.  Ask the user for permission now.</span>
+    <span class="n">ActivityCompat</span><span class="o">.</span><span class="na">requestPermissions</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="o">{</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">READ_EXTERNAL_STORAGE</span> <span class="o">},</span> <span class="mi">0</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<h3 id="location">Location</h3>
+<p>Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, the coordinates (lat/lon) of the person shouting are included with the Shout creation request and broadcasters will be able to see the geographical coordinates of where the user created the shout.</p>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_COARSE_LOCATION</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span>
+        <span class="o">||</span> <span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_FINE_LOCATION</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span><span class="o">)</span> <span class="o">{</span>
+    <span class="n">ActivityCompat</span><span class="o">.</span><span class="na">requestPermissions</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="k">new</span> <span class="n">String</span><span class="o">[]</span> <span class="o">{</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_COARSE_LOCATION</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_FINE_LOCATION</span> <span class="o">},</span> <span class="mi">0</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre>
+</div>
+
+<p>If the user rejects the permission request, there is a way to explain the rationale for the request. This is beyond the scope of this document. More information can be found in the <a href="https://developer.android.com/training/permissions/requesting.html#perm-request">Android - Request Permissions documentation</a>.</p>
+
+    </div>
+  </div>
+
+</div>
+      </div>
+    </main>
+
+    <footer class="site-footer">
+
+  <div class="wrapper">
+
+    <h2 class="footer-heading">Shout to Me Android SDK</h2>
+
+    <div class="footer-col-wrapper">
+      <div class="footer-col footer-col-1">
+        <ul class="contact-list">
+          <li>
+            
+              Shout to Me Android SDK
+            
+            </li>
+            
+            <li><a href="mailto:support@shoutto.me">support@shoutto.me</a></li>
+            
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-2">
+        <ul class="social-media-list">
+          
+          <li>
+            <a href="https://github.com/ShoutToMe"><span class="icon icon--github"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M7.999,0.431c-4.285,0-7.76,3.474-7.76,7.761 c0,3.428,2.223,6.337,5.307,7.363c0.388,0.071,0.53-0.168,0.53-0.374c0-0.184-0.007-0.672-0.01-1.32 c-2.159,0.469-2.614-1.04-2.614-1.04c-0.353-0.896-0.862-1.135-0.862-1.135c-0.705-0.481,0.053-0.472,0.053-0.472 c0.779,0.055,1.189,0.8,1.189,0.8c0.692,1.186,1.816,0.843,2.258,0.645c0.071-0.502,0.271-0.843,0.493-1.037 C4.86,11.425,3.049,10.76,3.049,7.786c0-0.847,0.302-1.54,0.799-2.082C3.768,5.507,3.501,4.718,3.924,3.65 c0,0,0.652-0.209,2.134,0.796C6.677,4.273,7.34,4.187,8,4.184c0.659,0.003,1.323,0.089,1.943,0.261 c1.482-1.004,2.132-0.796,2.132-0.796c0.423,1.068,0.157,1.857,0.077,2.054c0.497,0.542,0.798,1.235,0.798,2.082 c0,2.981-1.814,3.637-3.543,3.829c0.279,0.24,0.527,0.713,0.527,1.437c0,1.037-0.01,1.874-0.01,2.129 c0,0.208,0.14,0.449,0.534,0.373c3.081-1.028,5.302-3.935,5.302-7.362C15.76,3.906,12.285,0.431,7.999,0.431z"/></svg>
+</span><span class="username">ShoutToMe</span></a>
+
+          </li>
+          
+
+          
+          <li>
+            <a href="https://twitter.com/shout_to_me"><span class="icon icon--twitter"><svg viewBox="0 0 16 16" width="16px" height="16px"><path fill="#828282" d="M15.969,3.058c-0.586,0.26-1.217,0.436-1.878,0.515c0.675-0.405,1.194-1.045,1.438-1.809c-0.632,0.375-1.332,0.647-2.076,0.793c-0.596-0.636-1.446-1.033-2.387-1.033c-1.806,0-3.27,1.464-3.27,3.27 c0,0.256,0.029,0.506,0.085,0.745C5.163,5.404,2.753,4.102,1.14,2.124C0.859,2.607,0.698,3.168,0.698,3.767 c0,1.134,0.577,2.135,1.455,2.722C1.616,6.472,1.112,6.325,0.671,6.08c0,0.014,0,0.027,0,0.041c0,1.584,1.127,2.906,2.623,3.206 C3.02,9.402,2.731,9.442,2.433,9.442c-0.211,0-0.416-0.021-0.615-0.059c0.416,1.299,1.624,2.245,3.055,2.271 c-1.119,0.877-2.529,1.4-4.061,1.4c-0.264,0-0.524-0.015-0.78-0.046c1.447,0.928,3.166,1.469,5.013,1.469 c6.015,0,9.304-4.983,9.304-9.304c0-0.142-0.003-0.283-0.009-0.423C14.976,4.29,15.531,3.714,15.969,3.058z"/></svg>
+</span><span class="username">shout_to_me</span></a>
+
+          </li>
+          
+        </ul>
+      </div>
+
+      <div class="footer-col footer-col-3">
+        <p>The Shout to Me Android SDK Documentation provides information, reference, and examples of how to incorporate Shout to Me platform functionality into your Android app.  
+</p>
+      </div>
+    </div>
+
+  </div>
+
+</footer>
+
+
+  </body>
+
+</html>

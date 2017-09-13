@@ -48,20 +48,13 @@ is linked to the broadcaster/podcaster's account.  You will need to [contact Sho
         android:exported="false">
         <meta-data
             android:name="me.shoutto.sdk.CLIENT_TOKEN"
-            android:value="@string/client_token" />
+            android:value="[Your client token]" />
         <meta-data
             android:name="me.shoutto.sdk.CHANNEL_ID"
-            android:value="@string/channel_id" />
+            android:value="[Your channel ID]" />
     </service>
     ...
 </application>
-```
-
-Be sure to place the appropriate client token and channel ID values into your strings.xml file.
-
-```xml
-<string name="client_token">[Your client token]</string>
-<string name="channel_id">[Your channel ID]</string>
 ```
 
 ## Dependencies
@@ -107,21 +100,24 @@ The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. F
 The Shout to Me SDK requests the following permissions in the manifest:
 
 ```xml
-<uses-permission android:name="android.permission.INTERNET" />
-<uses-permission android:name="android.permission.RECORD_AUDIO" />
 <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+<uses-permission android:name="android.permission.RECORD_AUDIO" />
 <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 ```
 
 Beginning with API level 23 (6.0), [Android requires that certain permissions be requested at run time](https://developer.android.com/training/permissions/requesting.html). The Shout to Me SDK uses two permissions that fall into this category:
 
-1. Mic/Record Audio (Required)
+1. Mic/record audio (Optional)
+2. Read external storage (Optional)
 2. Location (Optional)
 
 ### Record Audio
-Being that Shout to Me is an audio-based platform, this permission is considered required. Launching the recording
-overlay without the permission will result in a failure response indicating that the record audio permission is denied.
+If you plan to use Shout to Me's recording overlay to create shouts, then the record audio permission is required.
+Launching the recording overlay without the permission will result in a failure response indicating that the record
+audio permission is denied.
 
 ```java
 if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
@@ -130,8 +126,19 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
 }
 ```
 
+### Read External Storage
+If you plan to upload media files to create new shouts, then the read external storage permission is required.  With
+permission to read external storage, you may not have access to certain media files.
+
+```java
+if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+    // User has not granted access to read external storage.  Ask the user for permission now.
+    ActivityCompat.requestPermissions(this, new String[] { Manifest.permission.READ_EXTERNAL_STORAGE }, 0);
+}
+```
+
 ### Location
-Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, the coordinates (lat/lon) of the person shouting are included with the Shout creation request and broadcasters will be able to see the location of the user.
+Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, the coordinates (lat/lon) of the person shouting are included with the Shout creation request and broadcasters will be able to see the geographical coordinates of where the user created the shout.
 
 ```java
 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
