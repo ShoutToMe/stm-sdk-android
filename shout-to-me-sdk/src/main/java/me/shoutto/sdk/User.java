@@ -49,7 +49,7 @@ public class User extends StmBaseEntity {
     /**
      * A constructor that allows setting <code>StmService</code> which is used for context and other
      * SDK functionality.
-     * @param stmService
+     * @param stmService the Shout to Me service
      */
     public User(StmService stmService) {
         super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
@@ -69,7 +69,7 @@ public class User extends StmBaseEntity {
 
     /**
      * Sets the auth token to be used in requests to the Shout to Me service.
-     * @param authToken
+     * @param authToken the auth token
      */
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
@@ -143,6 +143,11 @@ public class User extends StmBaseEntity {
     @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<User>(){}.getType();
+    }
+
+    @Override
+    public Type getEntitySerializationType() {
+        return User.getSerializationType();
     }
 
     /**

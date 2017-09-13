@@ -10,9 +10,7 @@ import com.google.gson.typeadapters.RuntimeTypeAdapterFactory;
 import org.json.JSONObject;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.net.HttpURLConnection;
@@ -28,7 +26,7 @@ import me.shoutto.sdk.StmBaseEntity;
  * This class is used to make HTTP requests for Shout to Me entity objects. Note that
  * use of this class without going through StmService may result in partial object trees.
  */
-public class StmEntityRequestSync<T extends StmBaseEntity> {
+public class StmEntityRequestSync<T extends StmBaseEntity> extends StmHttpRequestBase {
 
     private static final String TAG = "StmEntityRequestSync";
 
@@ -119,19 +117,5 @@ public class StmEntityRequestSync<T extends StmBaseEntity> {
             Log.w(TAG, "Cannot process request due to no persisted authToken authToken=" + authToken);
         }
         return null;
-    }
-
-    private String convertStreamToString(InputStream is) throws Exception {
-        BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-        StringBuilder sb = new StringBuilder();
-        String line;
-
-        while ((line = reader.readLine()) != null) {
-            sb.append(line);
-        }
-
-        is.close();
-
-        return sb.toString();
     }
 }

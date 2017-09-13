@@ -82,4 +82,9 @@ public class Subscription extends StmBaseEntity {
     public static Type getListSerializationType() {
         return new TypeToken<List<Subscription>>(){}.getType();
     }
+
+    @Override
+    public Type getEntitySerializationType() {
+        return Subscription.getSerializationType();
+    }
 }

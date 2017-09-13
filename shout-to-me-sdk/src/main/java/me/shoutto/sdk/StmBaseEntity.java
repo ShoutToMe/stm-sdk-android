@@ -10,6 +10,7 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,6 +45,10 @@ public abstract class StmBaseEntity {
     protected StmBaseEntity(String serializationType) {
         TAG = this.getClass().getName();
         this.serializationType = serializationType;
+    }
+
+    public String getBaseEndpoint() {
+        return baseEndpoint;
     }
 
     /**
@@ -89,6 +94,12 @@ public abstract class StmBaseEntity {
     }
 
     abstract protected void adaptFromJson(JSONObject jsonObject) throws JSONException;
+
+    abstract public Type getEntitySerializationType();
+
+    public String getSerializationKey() {
+        return TAG;
+    }
 
     /**
      * Synchronous version of create base entity. Should only be run in background threads.

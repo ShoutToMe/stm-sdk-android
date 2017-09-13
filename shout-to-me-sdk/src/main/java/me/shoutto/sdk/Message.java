@@ -131,6 +131,11 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
         return new TypeToken<List<Message>>(){}.getType();
     }
 
+    @Override
+    public Type getEntitySerializationType() {
+        return Message.getSerializationType();
+    }
+
     /**
      * The class represents the user who sent the Message.
      */

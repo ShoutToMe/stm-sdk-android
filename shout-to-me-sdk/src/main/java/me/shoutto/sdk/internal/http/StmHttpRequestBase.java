@@ -7,9 +7,9 @@ import java.io.InputStreamReader;
 /**
  * Base class for Shout to Me HTTP request objects
  */
-public class StmHttpRequestBase {
+class StmHttpRequestBase {
 
-    protected String convertStreamToString(InputStream is) throws Exception {
+    String convertStreamToString(InputStream is) throws Exception {
         BufferedReader reader = new BufferedReader(new InputStreamReader(is));
         StringBuilder sb = new StringBuilder();
         String line;

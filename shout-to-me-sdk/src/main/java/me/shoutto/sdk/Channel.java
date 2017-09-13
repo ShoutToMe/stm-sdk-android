@@ -129,6 +129,11 @@ public class Channel extends StmBaseEntity {
 
     public static Type getSerializationListType() { return new TypeToken<List<Channel>>(){}.getType(); }
 
+    @Override
+    public Type getEntitySerializationType() {
+        return Channel.getSerializationType();
+    }
+
     void subscribe(final StmCallback<Void> callback) {
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override

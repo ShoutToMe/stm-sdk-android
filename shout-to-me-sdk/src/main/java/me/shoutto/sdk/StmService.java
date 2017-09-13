@@ -5,8 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
-import android.database.Cursor;
-import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.os.Binder;
 import android.os.Bundle;
@@ -20,15 +18,17 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import me.shoutto.sdk.internal.ChannelManager;
-import me.shoutto.sdk.internal.MessageNotificationIntentWrapper;
 import me.shoutto.sdk.internal.ProximitySensorClient;
-import me.shoutto.sdk.internal.http.StmEntityListRequestSync;
+import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.http.DefaultUrlProvider;
+import me.shoutto.sdk.internal.http.GsonRequestAdapter;
+import me.shoutto.sdk.internal.http.GsonResponseAdapter;
+import me.shoutto.sdk.internal.http.VolleyRequestProcessor;
 import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
-import me.shoutto.sdk.internal.location.geofence.LocationUtils;
-import me.shoutto.sdk.internal.location.geofence.database.GeofenceDatabaseSchema;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 import me.shoutto.sdk.internal.http.StmHttpSender;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
@@ -75,6 +75,11 @@ public class StmService extends Service implements LocationUpdateListener {
      */
     public static final String CLIENT_TOKEN = "me.shoutto.sdk.CLIENT_TOKEN";
 
+    /**
+     * AWS Cognito Identity Pool ID for use with the AWS SDK
+     */
+    public static final String AWS_COGNITO_IDENTITY_POOL_ID = "us-east-1:4ec2b44e-0dde-43e6-a279-6ee1cf241b05";
+
     private static final String TAG = StmService.class.getSimpleName();
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
@@ -101,6 +106,25 @@ public class StmService extends Service implements LocationUpdateListener {
     public class StmBinder extends Binder {
         public StmService getService() {
             return StmService.this;
+        }
+    }
+
+    /**
+     * Create a new Shout
+     */
+    public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
+        if (createShoutRequest.isValid()) {
+            VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                    new GsonRequestAdapter(),
+                    StmRequestQueue.getInstance(),
+                    new GsonResponseAdapter<Shout>(),
+                    this,
+                    new DefaultUrlProvider(this.getServerUrl())
+            );
+            UploadShout shoutUploader = new UploadShout(this, new S3Client(this), volleyRequestProcessor);
+            shoutUploader.upload(createShoutRequest, callback);
+        } else {
+            Log.w(TAG, "CreateShoutRequest is invalid");
         }
     }
 

@@ -49,7 +49,6 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     private static final String GCM_DEFAULT_SENDER_ID = "895198831543";
     private static final String NOTIFICATION_APP_ID = "me.shoutto.sdk.NotificationAppId";
     private static final String PLATFORM_APPLICATION_ARN_PREFIX = "arn:aws:sns:us-west-2:810633828709:app/GCM/";
-    private static final String IDENTITY_POOL_ID = "us-east-1:4ec2b44e-0dde-43e6-a279-6ee1cf241b05";
     private static final String[] TOPICS = {"global"};
     private AmazonSNSClient snsClient;
     private boolean isStmServiceBound = false;
@@ -116,7 +115,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         // Initialize the Amazon Cognito credentials provider
         CognitoCachingCredentialsProvider credentialsProvider = new CognitoCachingCredentialsProvider(
                 getApplicationContext(),
-                IDENTITY_POOL_ID, // Identity Pool ID
+                StmService.AWS_COGNITO_IDENTITY_POOL_ID,
                 Regions.US_EAST_1 // Region
         );
         snsClient = new AmazonSNSClient(credentialsProvider);

@@ -28,12 +28,20 @@ public class Shout extends StmBaseEntity {
     private static final String TAG = Shout.class.getSimpleName();
 
     private byte[] audio;
+    private String channelId;
+    private String description;
+    private String mediaFileUrl;
     private String tags;
+    private String text;
     private String topic;
     private Integer recordingLengthInSeconds;
 
-    Shout(StmService stmService, byte[] rawData) {
+    public Shout(StmService stmService) {
         super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
+    }
+
+    Shout(StmService stmService, byte[] rawData) {
+        this(stmService);
         this.audio = addHeaderToRawData(rawData);
     }
 
@@ -43,7 +51,7 @@ public class Shout extends StmBaseEntity {
      * @param json The <code>JSONObject</code> from the response.
      */
     public Shout(StmService stmService, JSONObject json) {
-        super(stmService, TAG, "/shouts");
+        this(stmService);
         try {
             this.id = json.getString("id");
         } catch (JSONException ex) {
@@ -191,6 +199,30 @@ public class Shout extends StmBaseEntity {
         sendAuthorizedDeleteRequest(BASE_ENDPOINT + "/" + id, responseListener, errorListener);
     }
 
+    public String getChannelId() {
+        return channelId;
+    }
+
+    public void setChannelId(String channelId) {
+        this.channelId = channelId;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public String getMediaFileUrl() {
+        return mediaFileUrl;
+    }
+
+    public void setMediaFileUrl(String mediaFileUrl) {
+        this.mediaFileUrl = mediaFileUrl;
+    }
+
     /**
      * Gets the tags associated with the Shout.  The format of the tags is a comma separated list.
      * @return A String representing a comma separated list of tags.
@@ -199,8 +231,16 @@ public class Shout extends StmBaseEntity {
         return tags;
     }
 
-    void setTags(String tags) {
+    public void setTags(String tags) {
         this.tags = tags;
+    }
+
+    public String getText() {
+        return text;
+    }
+
+    public void setText(String text) {
+        this.text = text;
     }
 
     /**
@@ -211,7 +251,7 @@ public class Shout extends StmBaseEntity {
         return topic;
     }
 
-    void setTopic(String topic) {
+    public void setTopic(String topic) {
         this.topic = topic;
     }
 
@@ -239,5 +279,10 @@ public class Shout extends StmBaseEntity {
     @SuppressWarnings("unused")
     public static Type getSerializationType() {
         return new TypeToken<Shout>(){}.getType();
+    }
+
+    @Override
+    public Type getEntitySerializationType() {
+        return Shout.getSerializationType();
     }
 }

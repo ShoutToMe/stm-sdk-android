@@ -99,6 +99,11 @@ public class Conversation extends StmBaseEntity {
         return new TypeToken<List<Conversation>>(){}.getType();
     }
 
+    @Override
+    public Type getEntitySerializationType() {
+        return Conversation.getSerializationType();
+    }
+
     /**
      * The location coordinates and area associated with a Conversation.
      */
