@@ -69,7 +69,7 @@ public class CreateShoutRequest implements StmEntityActionRequest {
     }
 
     /**
-     * Helper function only for files in media storage.  For other files, use setFile
+     * Helper function only for files in media storage.  For files in other storage, use setFile
      * @param uri the Uri of a media file
      * @param context the Context
      */
