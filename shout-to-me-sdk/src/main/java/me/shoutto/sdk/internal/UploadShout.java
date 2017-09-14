@@ -93,12 +93,16 @@ public class UploadShout implements StmObserver {
     }
 
     private void processPostShoutResult(Shout shout) {
-        callback.onResponse(shout);
+        if (callback != null) {
+            callback.onResponse(shout);
+        }
     }
 
     private void processCallbackError(String errorMessage) {
-        StmError stmError = new StmError(errorMessage, false, StmError.SEVERITY_MAJOR);
-        callback.onError(stmError);
+        if (callback != null) {
+            StmError stmError = new StmError(errorMessage, false, StmError.SEVERITY_MAJOR);
+            callback.onError(stmError);
+        }
     }
 
     interface FileUploader extends StmObservable {
