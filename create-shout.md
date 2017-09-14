@@ -133,7 +133,7 @@ createShoutRequest.setFileFromMediaUri(mediaFileUri, context);
 ```
 
 ## Shout
-The callback from StmRecorderActivity returns a Shout object.  The Shout object represents the recording a user created
+The callback from StmRecorderActivity and StmService.createShout() returns a Shout object.  The Shout object represents the recording a user created
 and its metadata in the Shout to Me system.  This object may be used to allow the user the opportunity to review the
 audio or delete the shout.
 
