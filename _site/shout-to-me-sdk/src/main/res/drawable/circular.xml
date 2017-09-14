@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
+    <item android:id="@android:id/background">
+        <rotate android:fromDegrees="90"
+            android:toDegrees="90">
+            <shape
+                android:useLevel="true"
+                android:innerRadiusRatio="3"
+                android:shape="ring"
+                android:thickness="14dp">
+                <solid android:color="@color/white" />
+                <size android:width="200dp" android:height="200dp" />
+            </shape>
+        </rotate>
+    </item>
+</layer-list>
+
