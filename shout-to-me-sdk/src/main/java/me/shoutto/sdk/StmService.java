@@ -110,7 +110,10 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
-     * Create a new Shout
+     * The method to create a new shout programmatically, as opposed to through the Shout to Me
+     * Recording Overlay
+     * @param createShoutRequest A CreateShoutRequest object with all required fields
+     * @param callback An optional callback or null
      */
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
         if (createShoutRequest.isValid()) {

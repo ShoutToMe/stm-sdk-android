@@ -28,42 +28,83 @@ public class CreateShoutRequest implements StmEntityActionRequest {
         tags = new ArrayList<>();
     }
 
+    /**
+     * Gets the user defined description of the shout
+     * @return The user defined description of the shout
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Sets the user defined description of the shout
+     * @param description The user defined description of the shout
+     */
     public void setDescription(String description) {
         this.description = description;
     }
 
+    /**
+     * Gets the shout media File object
+     * @return The shout media File object
+     */
     public File getFile() {
         return file;
     }
 
+    /**
+     * Sets the File object that represents the shout.  Must be a supported media file.
+     * @param file The File object that represents the shout.
+     */
     public void setFile(File file) {
         this.file = file;
     }
 
+    /**
+     * Gets the list of tags
+     * @return The list of tags
+     */
     public List<String> getTags() {
         return tags;
     }
 
+    /**
+     * Sets the list of tags
+     * @param tags The list of tags
+     */
     public void setTags(List<String> tags) {
         this.tags = tags;
     }
 
+    /**
+     * Gets the shout text
+     * @return The shout text
+     */
     public String getText() {
         return text;
     }
 
+    /**
+     * Sets the shout text.  The shout text is used for display in the Shout to Me broadcaster application
+     * and various social media publishing
+     * @param text The shout text
+     */
     public void setText(String text) {
         this.text = text;
     }
 
+    /**
+     * Gets the shout topic
+     * @return The shout topic
+     */
     public String getTopic() {
         return topic;
     }
 
+    /**
+     * Sets the shout topic
+     * @param topic The shout topic
+     */
     public void setTopic(String topic) {
         this.topic = topic;
     }
@@ -94,6 +135,11 @@ public class CreateShoutRequest implements StmEntityActionRequest {
         }
     }
 
+    /**
+     * Returns the logical result of the whether the CreateShoutRequest instance is ready to be
+     * consumed by the Shout to Me SDK
+     * @return true if CreateShoutRequest object is ready to be processed by the Shout to Me SDK
+     */
     public boolean isValid() {
         return file != null && file.length() > 0;
     }
