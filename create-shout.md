@@ -6,10 +6,10 @@ layout: home
 
 There are two ways to create a shout using the Shout to Me SDK:
 
-1. Using the recording overlay activity
-2. Uploading a media file
+1. [Using the recording overlay activity](#record-overlay)
+2. [Uploading a media file](#upload-file)
 
-## Recording Overlay
+## <a name="record-overlay"></a>Recording Overlay
 <img src="https://s3-us-west-2.amazonaws.com/sdk-public-images/sample-app-4.png" style="float:right" />
 The StmRecorderActivity class provides client apps a way to capture audio and send it to the Shout to Me platform. It is
 implemented as a native [Android Activity](http://developer.android.com/reference/android/app/Activity.html) to allow
@@ -93,7 +93,7 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 }
 ```
 
-## Uploading a Media File
+## <a name="upload-file"></a>Uploading a Media File
 The Shout to Me SDK allows for file uploads to create new shouts. To accomplish this, you pass the SDK a CreateShoutRequest
  object which contains a java <a href="https://developer.android.com/reference/java/io/File.html" target="_blank">File</a> object.
 You can pass an optional callback if you wish to receive notification when the create shout process has completed.
