@@ -2,7 +2,7 @@
 layout: home
 ---
 
-# Creating a Shout
+# Create a Shout
 
 There are two ways to create a shout using the Shout to Me SDK:
 
