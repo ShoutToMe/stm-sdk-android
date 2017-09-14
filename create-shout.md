@@ -94,8 +94,9 @@ protected void onActivityResult(int requestCode, int resultCode, Intent data) {
 ```
 
 ## Uploading a Media File
-The Shout to Me SDK allows for file uploads to create new shouts. To accomplish this, you pass the SDK a java `File` object along with
-the optional callback if you wish to receive notification when the create shout process has completed.
+The Shout to Me SDK allows for file uploads to create new shouts. To accomplish this, you pass the SDK a CreateShoutRequest
+ object which contains a java <a href="https://developer.android.com/reference/java/io/File.html" target="_blank">File</a> object.
+You can pass an optional callback if you wish to receive notification when the create shout process has completed.
 
 ```java
 CreateShoutRequest createShoutRequest = new CreateShoutRequest();
