@@ -122,8 +122,11 @@ stmService.createShout(createShoutRequest, new Callback<Shout>() {
 });
 ```
 
-For media files, there is a helper function in `CreateShoutRequest` that you can use to pass in a `Uri` instead of a `File`.
-It requires a context in order to search the `MediaStore`.
+For media files, there is a helper function in CreateShoutRequest that you can use to pass in a
+<a href="https://developer.android.com/reference/android/net/Uri.html" target="_blank">Uri</a>
+instead of a <a href="https://developer.android.com/reference/java/io/File.html" target="_blank">File</a>.
+It requires a context in order to search the
+<a href="https://developer.android.com/reference/android/provider/MediaStore.html" target="_blank">MediaStore</a>.
 
 ```java
 createShoutRequest.setFileFromMediaUri(mediaFileUri, context);
