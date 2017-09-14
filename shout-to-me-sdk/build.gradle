@@ -10,7 +10,7 @@ android {
         minSdkVersion 15
         targetSdkVersion 25
         versionCode 15
-        versionName "1.0.12"
+        versionName "1.0.13"
     }
     buildTypes {
         release {
@@ -67,7 +67,7 @@ ext {
     gitUrl = 'https://github.com/ShoutToMe/stm-sdk-android.git'
     githubRepository= 'ShoutToMe/stm-sdk-android'
 
-    libraryVersion = '1.0.12'
+    libraryVersion = '1.0.13'
 
     developerId = 'trojas'
     developerName = 'Tracy Rojas'
