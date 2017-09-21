@@ -20,7 +20,7 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
-import me.shoutto.sdk.internal.UploadShout;
+import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;

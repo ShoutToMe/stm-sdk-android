@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal;
+package me.shoutto.sdk.internal.usecases;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -10,6 +10,9 @@ import me.shoutto.sdk.Shout;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.internal.StmObservable;
+import me.shoutto.sdk.internal.StmObservableResults;
+import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmEntityRequestAsyncProcessor;
 
