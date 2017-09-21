@@ -25,7 +25,7 @@ import me.shoutto.sdk.internal.StmObserver;
  * Volley based HTTP request processor
  */
 
-public class VolleyRequestProcessor<T extends StmBaseEntity> implements StmEntityRequestAsyncProcessor {
+public class VolleyRequestProcessor<T extends StmBaseEntity> implements StmEntityRequestProcessor {
 
     private static final String TAG = VolleyRequestProcessor.class.getSimpleName();
     private ArrayList<StmObserver> observers;

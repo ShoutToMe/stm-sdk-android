@@ -14,7 +14,7 @@ import me.shoutto.sdk.internal.StmObservable;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestAsyncProcessor;
+import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 /**
  * Used to upload a Shout to the Shout to Me system.  The two steps of the process are
@@ -28,10 +28,10 @@ public class UploadShout implements StmObserver {
     private CreateShoutRequest createShoutRequest;
     private FileUploader fileUploader;
     private StmCallback<Shout> callback;
-    private StmEntityRequestAsyncProcessor requestProcessor;
+    private StmEntityRequestProcessor requestProcessor;
     private StmService stmService;
 
-    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestAsyncProcessor requestProcessor) {
+    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor requestProcessor) {
         this.fileUploader = fileUploader;
         this.stmService = stmService;
         this.requestProcessor = requestProcessor;
