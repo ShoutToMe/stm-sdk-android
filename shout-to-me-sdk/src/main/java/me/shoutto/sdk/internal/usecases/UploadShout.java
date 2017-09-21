@@ -108,7 +108,7 @@ public class UploadShout implements StmObserver {
         }
     }
 
-    interface FileUploader extends StmObservable {
+    public interface FileUploader extends StmObservable {
         void uploadFile(File file);
     }
 }
