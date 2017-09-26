@@ -20,6 +20,7 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
@@ -116,19 +117,15 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback An optional callback or null
      */
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
-        if (createShoutRequest.isValid()) {
-            VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
-                    new GsonRequestAdapter(),
-                    StmRequestQueue.getInstance(),
-                    new GsonResponseAdapter<Shout>(),
-                    this,
-                    new DefaultUrlProvider(this.getServerUrl())
-            );
-            UploadShout shoutUploader = new UploadShout(this, new S3Client(this), volleyRequestProcessor);
-            shoutUploader.upload(createShoutRequest, callback);
-        } else {
-            Log.w(TAG, "CreateShoutRequest is invalid");
-        }
+        VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonResponseAdapter<Shout>(),
+                this,
+                new DefaultUrlProvider(this.getServerUrl())
+        );
+        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), volleyRequestProcessor);
+        shoutUploader.upload(createShoutRequest, callback);
     }
 
     /**
@@ -570,5 +567,32 @@ public class StmService extends Service implements LocationUpdateListener {
         Channel channel = new Channel(this);
         channel.setId(channelId);
         channel.unsubscribe(callback);
+    }
+
+    /**
+     * Updates a user with properties from a {@link UpdateUserRequest} object
+     * @param updateUserRequest The object containing the updated properties.
+     * @param callback The callback to be executed or null.
+     */
+    public void updateUser(UpdateUserRequest updateUserRequest, StmCallback<User> callback) {
+
+        if (user.getId() == null) {
+            if (callback != null) {
+                StmError error = new StmError("Shout to Me user not initialized", false, StmError.SEVERITY_MAJOR);
+                callback.onError(error);
+                return;
+            }
+        }
+
+        VolleyRequestProcessor<User> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonResponseAdapter<User>(),
+                this,
+                new DefaultUrlProvider(this.getServerUrl())
+        );
+
+        UpdateUser updateUser = new UpdateUser(volleyRequestProcessor);
+        updateUser.update(updateUserRequest, user.getId(), callback);
     }
 }

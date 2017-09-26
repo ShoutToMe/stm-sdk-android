@@ -45,6 +45,10 @@ public class Shout extends StmBaseEntity {
         this.audio = addHeaderToRawData(rawData);
     }
 
+    public Shout() {
+        super(SERIALIZATION_KEY, BASE_ENDPOINT);
+    }
+
     /**
      * This method is called internally to create a Shout object following a successful HTTP POST.
      * @param stmService The <code>StmService</code> used for context.

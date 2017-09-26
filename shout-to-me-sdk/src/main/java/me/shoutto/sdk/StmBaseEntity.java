@@ -47,6 +47,12 @@ public abstract class StmBaseEntity {
         this.serializationType = serializationType;
     }
 
+    protected StmBaseEntity(String tag, String baseEndpoint) {
+        TAG = tag;
+        this.baseEndpoint = baseEndpoint;
+        pendingChanges = new HashMap<>();
+    }
+
     public String getBaseEndpoint() {
         return baseEndpoint;
     }
