@@ -20,13 +20,15 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.http.GsonNullResponseAdapter;
+import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
-import me.shoutto.sdk.internal.http.GsonResponseAdapter;
+import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
 import me.shoutto.sdk.internal.http.VolleyRequestProcessor;
 import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
@@ -120,7 +122,7 @@ public class StmService extends Service implements LocationUpdateListener {
         VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonResponseAdapter<Shout>(),
+                new GsonObjectResponseAdapter<Shout>(),
                 this,
                 new DefaultUrlProvider(this.getServerUrl())
         );
@@ -521,9 +523,18 @@ public class StmService extends Service implements LocationUpdateListener {
             throw new IllegalArgumentException("channelId cannot be null");
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.subscribe(callback);
+        String baseUrl = String.format("%s%s/%s", getServerUrl(), user.getBaseEndpoint(), user.getId());
+        VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonNullResponseAdapter<String>(),
+                this,
+                new DefaultUrlProvider(baseUrl)
+        );
+
+        CreateChannelSubscription createChannelSubscription =
+                new CreateChannelSubscription(volleyRequestProcessor);
+        createChannelSubscription.create(channelId, callback);
     }
 
     /**
@@ -587,7 +598,7 @@ public class StmService extends Service implements LocationUpdateListener {
         VolleyRequestProcessor<User> volleyRequestProcessor = new VolleyRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonResponseAdapter<User>(),
+                new GsonObjectResponseAdapter<User>(),
                 this,
                 new DefaultUrlProvider(this.getServerUrl())
         );

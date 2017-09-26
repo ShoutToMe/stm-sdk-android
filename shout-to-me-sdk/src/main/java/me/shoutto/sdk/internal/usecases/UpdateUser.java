@@ -23,7 +23,7 @@ public class UpdateUser implements StmObserver {
 
     public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor) {
         this.stmEntityRequestProcessor = stmEntityRequestProcessor;
-        stmEntityRequestProcessor.addObserver(this);
+        this.stmEntityRequestProcessor.addObserver(this);
     }
 
     public void update(UpdateUserRequest updateUserRequest, String userId, StmCallback<User> callback) {

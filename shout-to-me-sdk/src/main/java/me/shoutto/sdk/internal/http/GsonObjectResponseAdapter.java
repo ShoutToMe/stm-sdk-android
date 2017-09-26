@@ -18,15 +18,23 @@ import me.shoutto.sdk.StmBaseEntity;
  * GsonAdapter for converting JSON from Shout to Me service to Shout to Me entity objects
  */
 
-public class GsonResponseAdapter<T extends StmBaseEntity> implements StmHttpResponseAdapter<T> {
+public class GsonObjectResponseAdapter<T extends StmBaseEntity> implements StmHttpResponseAdapter<T> {
 
-    private static final String TAG = GsonResponseAdapter.class.getSimpleName();
+    private static final String TAG = GsonObjectResponseAdapter.class.getSimpleName();
+    private static final String SUCCESS = "success";
 
     @Override
     public T adapt(JSONObject jsonObject, String serializationKey, Type typeOfT) {
 
         T obj = null;
         try {
+            String status = jsonObject.getString("status");
+            if (!SUCCESS.equals(status)) {
+                String errorMessage = String.format("Error occurred calling Shout to Me service. JSON response = %s", jsonObject.toString());
+                Log.e(TAG, errorMessage);
+                return null;
+            }
+
             JSONObject dataNode = jsonObject.getJSONObject("data");
             JSONObject objNode = dataNode.getJSONObject(serializationKey);
 
