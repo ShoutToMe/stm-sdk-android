@@ -18,9 +18,16 @@ abstract class BaseUseCase implements StmObserver {
     }
 
     abstract void processCallback(StmObservableResults stmObservableResults);
+    abstract void processCallbackError(StmObservableResults stmObservableResults);
 
     @Override
     public void update(StmObservableResults stmObservableResults) {
+
+        if (stmObservableResults.isError()) {
+            processCallbackError(stmObservableResults);
+            return;
+        }
+
         processCallback(stmObservableResults);
     }
 }

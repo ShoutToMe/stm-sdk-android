@@ -20,8 +20,10 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
 import me.shoutto.sdk.internal.http.GsonNullResponseAdapter;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
+import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
@@ -523,13 +525,12 @@ public class StmService extends Service implements LocationUpdateListener {
             throw new IllegalArgumentException("channelId cannot be null");
         }
 
-        String baseUrl = String.format("%s%s/%s", getServerUrl(), user.getBaseEndpoint(), user.getId());
         VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonNullResponseAdapter<ChannelSubscription>(),
                 this,
-                new DefaultUrlProvider(baseUrl)
+                new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
 
         CreateChannelSubscription createChannelSubscription =
@@ -575,9 +576,16 @@ public class StmService extends Service implements LocationUpdateListener {
             throw new IllegalArgumentException("channelId cannot be null");
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.unsubscribe(callback);
+        VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonNullResponseAdapter<ChannelSubscription>(),
+                this,
+                new ChannelSubscriptionUrlProvider(getServerUrl(), user)
+        );
+
+        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(volleyRequestProcessor);
+        deleteChannelSubscription.delete(channelId, callback);
     }
 
     /**

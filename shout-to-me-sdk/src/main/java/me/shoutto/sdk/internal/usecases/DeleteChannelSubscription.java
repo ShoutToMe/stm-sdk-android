@@ -8,21 +8,20 @@ import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 /**
- * Subscribes the user to the specified channel
+ * Unsubscribes the user from a channel
  */
 
-public class CreateChannelSubscription extends BaseUseCase {
+public class DeleteChannelSubscription extends BaseUseCase {
 
     private StmCallback<Void> callback;
 
-    public CreateChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
+    public DeleteChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
     }
 
-    public void create(String channelId, StmCallback<Void> callback) {
-
+    public void delete(String channelId, StmCallback<Void> callback) {
         if (channelId == null || "".equals(channelId)) {
-            StmError error = new StmError("channelId is required for creating channel subscriptions",
+            StmError error = new StmError("channelId is required for deleting channel subscriptions",
                     false, StmError.SEVERITY_MINOR);
             callback.onError(error);
             return;
@@ -33,7 +32,7 @@ public class CreateChannelSubscription extends BaseUseCase {
         ChannelSubscription channelSubscription = new ChannelSubscription();
         channelSubscription.setChannelId(channelId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.POST, channelSubscription);
+        stmEntityRequestProcessor.processRequest(HttpMethod.DELETE, channelSubscription);
     }
 
     @Override
@@ -43,6 +42,7 @@ public class CreateChannelSubscription extends BaseUseCase {
         }
     }
 
+    @Override
     void processCallbackError(StmObservableResults stmObservableResults) {
         if (callback != null) {
             StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);

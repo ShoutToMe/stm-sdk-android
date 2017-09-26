@@ -94,6 +94,11 @@ public class UploadShout extends BaseUseCase {
         }
     }
 
+    @Override
+    void processCallbackError(StmObservableResults stmObservableResults) {
+        processCallbackError(stmObservableResults.getErrorMessage());
+    }
+
     public interface FileUploader extends StmObservable {
         void uploadFile(File file);
     }

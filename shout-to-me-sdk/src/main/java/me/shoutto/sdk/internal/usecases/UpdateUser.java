@@ -50,4 +50,12 @@ public class UpdateUser extends BaseUseCase {
             callback.onResponse((User)stmObservableResults.getResult());
         }
     }
+
+    @Override
+    void processCallbackError(StmObservableResults stmObservableResults) {
+        if (callback != null) {
+            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MAJOR);
+            callback.onError(error);
+        }
+    }
 }
