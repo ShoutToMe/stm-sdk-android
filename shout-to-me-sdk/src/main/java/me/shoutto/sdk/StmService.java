@@ -527,7 +527,7 @@ public class StmService extends Service implements LocationUpdateListener {
         VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonNullResponseAdapter<String>(),
+                new GsonNullResponseAdapter<ChannelSubscription>(),
                 this,
                 new DefaultUrlProvider(baseUrl)
         );

@@ -1,13 +1,11 @@
 package me.shoutto.sdk.internal.usecases;
 
-import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
 
 import me.shoutto.sdk.CreateShoutRequest;
 import me.shoutto.sdk.Shout;
-import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmService;
@@ -23,19 +21,18 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  *      2) post data to the Shout to Me REST API.
  */
 
-public class UploadShout implements StmObserver {
+public class UploadShout extends BaseUseCase {
 
     private static final String TAG = UploadShout.class.getSimpleName();
     private CreateShoutRequest createShoutRequest;
     private FileUploader fileUploader;
     private StmCallback<Shout> callback;
-    private StmEntityRequestProcessor requestProcessor;
     private StmService stmService;
 
-    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor requestProcessor) {
+    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor stmEntityRequestProcessor) {
+        super(stmEntityRequestProcessor);
         this.fileUploader = fileUploader;
         this.stmService = stmService;
-        this.requestProcessor = requestProcessor;
     }
 
     public void upload(final CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
@@ -43,7 +40,7 @@ public class UploadShout implements StmObserver {
         this.createShoutRequest = createShoutRequest;
 
         if (createShoutRequest.isValid()) {
-            requestProcessor.addObserver(this);
+            stmEntityRequestProcessor.addObserver(this);
             fileUploader.addObserver(this);
             fileUploader.uploadFile(createShoutRequest.getFile());
         } else {
@@ -52,7 +49,7 @@ public class UploadShout implements StmObserver {
     }
 
     @Override
-    public void update(StmObservableResults stmObservableResults) {
+    public void processCallback(StmObservableResults stmObservableResults) {
         switch (stmObservableResults.getStmObservableType()) {
             case STM_SERVICE_RESPONSE:
                 if (stmObservableResults.isError()) {
@@ -79,7 +76,7 @@ public class UploadShout implements StmObserver {
         Shout shout = (Shout)createShoutRequest.adaptToBaseEntity();
         shout.setChannelId(stmService.getChannelId());
         shout.setMediaFileUrl(fileUrl);
-        requestProcessor.processRequest(HttpMethod.POST, shout);
+        stmEntityRequestProcessor.processRequest(HttpMethod.POST, shout);
     }
 
     private void processPostShoutResult(Shout shout) {

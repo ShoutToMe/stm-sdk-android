@@ -15,15 +15,13 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Updates a Shout to Me user object.
  */
 
-public class UpdateUser implements StmObserver {
+public class UpdateUser extends BaseUseCase {
 
     private static final String TAG = UpdateUser.class.getSimpleName();
-    private StmEntityRequestProcessor stmEntityRequestProcessor;
     private StmCallback<User> callback;
 
     public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        this.stmEntityRequestProcessor = stmEntityRequestProcessor;
-        this.stmEntityRequestProcessor.addObserver(this);
+        super(stmEntityRequestProcessor);
     }
 
     public void update(UpdateUserRequest updateUserRequest, String userId, StmCallback<User> callback) {
@@ -47,7 +45,7 @@ public class UpdateUser implements StmObserver {
     }
 
     @Override
-    public void update(StmObservableResults stmObservableResults) {
+    public void processCallback(StmObservableResults stmObservableResults) {
         if (callback != null) {
             callback.onResponse((User)stmObservableResults.getResult());
         }
