@@ -1,5 +1,7 @@
 package me.shoutto.sdk.internal.usecases;
 
+import android.util.Log;
+
 import me.shoutto.sdk.ChannelSubscription;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
@@ -13,6 +15,7 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 public class DeleteChannelSubscription extends BaseUseCase {
 
+    private static final String TAG = DeleteChannelSubscription.class.getSimpleName();
     private StmCallback<Void> callback;
 
     public DeleteChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
@@ -21,9 +24,14 @@ public class DeleteChannelSubscription extends BaseUseCase {
 
     public void delete(String channelId, StmCallback<Void> callback) {
         if (channelId == null || "".equals(channelId)) {
-            StmError error = new StmError("channelId is required for deleting channel subscriptions",
-                    false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
+            String validationErrorMessage = "channelId is required for deleting channel subscriptions";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+            } else {
+                Log.w(TAG, validationErrorMessage);
+            }
+            stmEntityRequestProcessor.deleteObserver(this);
             return;
         }
 

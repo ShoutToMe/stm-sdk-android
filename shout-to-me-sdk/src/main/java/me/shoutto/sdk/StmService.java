@@ -22,7 +22,9 @@ import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
 import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
 import me.shoutto.sdk.internal.http.GsonNullResponseAdapter;
+import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
+import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
@@ -112,6 +114,37 @@ public class StmService extends Service implements LocationUpdateListener {
         public StmService getService() {
             return StmService.this;
         }
+    }
+
+    /**
+     * Adds a topic preference to the user's record. This will result in a user only receiving
+     * notifications for the specified topics.
+     * @param topic The topic
+     * @param callback An optional callback or null
+     */
+    public void addTopicPreference(String topic, StmCallback<Void> callback) {
+
+        if (topic == null) {
+            String validationErrorMessage = "topic cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
+        }
+
+        VolleyRequestProcessor<TopicPreference> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonNullResponseAdapter<TopicPreference>(),
+                this,
+                new TopicUrlProvider(getServerUrl(), user)
+        );
+
+        CreateTopicPreference createTopicPreference = new CreateTopicPreference(volleyRequestProcessor);
+        createTopicPreference.create(topic, callback);
     }
 
     /**
@@ -522,7 +555,14 @@ public class StmService extends Service implements LocationUpdateListener {
     public void subscribeToChannel(final String channelId, final StmCallback<Void> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
         VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
@@ -573,7 +613,14 @@ public class StmService extends Service implements LocationUpdateListener {
     public void unsubscribeFromChannel(final String channelId, final StmCallback<Void> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
         VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
@@ -596,10 +643,13 @@ public class StmService extends Service implements LocationUpdateListener {
     public void updateUser(UpdateUserRequest updateUserRequest, StmCallback<User> callback) {
 
         if (user.getId() == null) {
+            String validationErrorMessage = "Shout to Me user not initialized";
             if (callback != null) {
-                StmError error = new StmError("Shout to Me user not initialized", false, StmError.SEVERITY_MAJOR);
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MAJOR);
                 callback.onError(error);
                 return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
             }
         }
 

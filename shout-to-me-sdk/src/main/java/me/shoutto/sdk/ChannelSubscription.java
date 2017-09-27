@@ -21,7 +21,6 @@ public class ChannelSubscription extends StmBaseEntity {
         super(SERIALIZATION_KEY, BASE_ENDPOINT);
     }
 
-
     public String getChannelId() {
         return channelId;
     }

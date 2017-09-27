@@ -34,6 +34,8 @@ public class UpdateUser extends BaseUseCase {
             } else {
                 Log.w(TAG, errorMessage);
             }
+            stmEntityRequestProcessor.deleteObserver(this);
+            return;
         }
 
         this.callback = callback;

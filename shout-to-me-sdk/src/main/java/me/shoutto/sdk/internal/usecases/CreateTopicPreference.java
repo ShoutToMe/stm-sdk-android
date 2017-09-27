@@ -2,30 +2,30 @@ package me.shoutto.sdk.internal.usecases;
 
 import android.util.Log;
 
-import me.shoutto.sdk.ChannelSubscription;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.TopicPreference;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 /**
- * Subscribes the user to the specified channel
+ * Adds a topic preference to the user's record
  */
 
-public class CreateChannelSubscription extends BaseUseCase {
+public class CreateTopicPreference extends BaseUseCase {
 
-    private static final String TAG = CreateChannelSubscription.class.getSimpleName();
+    private static final String TAG = CreateTopicPreference.class.getSimpleName();
     private StmCallback<Void> callback;
 
-    public CreateChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
+    public CreateTopicPreference(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
     }
 
-    public void create(String channelId, StmCallback<Void> callback) {
+    public void create(String topic, StmCallback<Void> callback) {
 
-        if (channelId == null || "".equals(channelId)) {
-            String validationErrorMessage = "channelId is required for creating channel subscriptions";
+        if (topic == null || "".equals(topic)) {
+            String validationErrorMessage = "topic is required for creating a topic preference";
             if (callback != null) {
                 StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
                 callback.onError(error);
@@ -38,10 +38,10 @@ public class CreateChannelSubscription extends BaseUseCase {
 
         this.callback = callback;
 
-        ChannelSubscription channelSubscription = new ChannelSubscription();
-        channelSubscription.setChannelId(channelId);
+        TopicPreference topicPreference = new TopicPreference();
+        topicPreference.setTopic(topic);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.POST, channelSubscription);
+        stmEntityRequestProcessor.processRequest(HttpMethod.POST, topicPreference);
     }
 
     @Override
@@ -51,6 +51,7 @@ public class CreateChannelSubscription extends BaseUseCase {
         }
     }
 
+    @Override
     void processCallbackError(StmObservableResults stmObservableResults) {
         if (callback != null) {
             StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);

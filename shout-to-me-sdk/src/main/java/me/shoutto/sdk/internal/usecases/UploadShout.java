@@ -92,6 +92,7 @@ public class UploadShout extends BaseUseCase {
         } else {
             Log.w(TAG, errorMessage);
         }
+        stmEntityRequestProcessor.deleteObserver(this);
     }
 
     @Override
