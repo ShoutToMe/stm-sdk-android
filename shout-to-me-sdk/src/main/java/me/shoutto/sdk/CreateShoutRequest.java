@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.io.File;
@@ -23,10 +24,6 @@ public class CreateShoutRequest implements StmEntityActionRequest {
     private List<String> tags;
     private String text;
     private String topic;
-
-    public CreateShoutRequest() {
-        tags = new ArrayList<>();
-    }
 
     /**
      * Gets the user defined description of the shout
@@ -142,5 +139,30 @@ public class CreateShoutRequest implements StmEntityActionRequest {
      */
     public boolean isValid() {
         return file != null && file.length() > 0;
+    }
+
+    @Override
+    public StmBaseEntity adaptToBaseEntity() {
+
+        Shout shout = new Shout();
+
+        if (description != null) {
+            shout.setDescription(description);
+        }
+
+        if (tags != null) {
+            String tagString = TextUtils.join(",", tags);
+            shout.setTags(tagString);
+        }
+
+        if (text != null) {
+            shout.setText(text);
+        }
+
+        if (topic != null) {
+            shout.setTopic(topic);
+        }
+
+        return shout;
     }
 }

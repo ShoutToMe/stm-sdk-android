@@ -14,6 +14,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
@@ -40,11 +41,15 @@ public class User extends StmBaseEntity {
     public static final String SERIALIZATION_KEY = "user";
 
     private String authToken;
+    private List<String> channelSubscriptions;
+    private String email;
     private Date lastReadMessagesDate;
     private String handle;
+    private String phone;
     private String platformEndpointArn;
+    private List<String> topicPreferences;
 
-    private boolean isInitialized = false;
+    private transient boolean isInitialized = false;
 
     /**
      * A constructor that allows setting <code>StmService</code> which is used for context and other
@@ -54,6 +59,8 @@ public class User extends StmBaseEntity {
     public User(StmService stmService) {
         super(stmService, SERIALIZATION_KEY, BASE_ENDPOINT);
     }
+
+    public User() { super(SERIALIZATION_KEY, BASE_ENDPOINT); }
 
     boolean isInitialized() {
         return isInitialized;
@@ -73,6 +80,30 @@ public class User extends StmBaseEntity {
      */
     public void setAuthToken(String authToken) {
         this.authToken = authToken;
+    }
+
+    public List<String> getChannelSubscriptions() {
+        return channelSubscriptions;
+    }
+
+    public void setChannelSubscriptions(List<String> channelSubscriptions) {
+        this.channelSubscriptions = channelSubscriptions;
+    }
+
+    /**
+     * Gets the user's email address
+     * @return The user's email address
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * Sets the user's email address
+     * @param email The user's email address
+     */
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     /**
@@ -117,6 +148,22 @@ public class User extends StmBaseEntity {
     }
 
     /**
+     * Gets the user's phone number
+     * @return The user's phone number
+     */
+    public String getPhone() {
+        return phone;
+    }
+
+    /**
+     * Sets the user's phone number
+     * @param phone The user's phone number
+     */
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    /**
      * Gets the platform endpoint ARN. This is the unique ID that the Shout to Me system uses to
      * send push notifications.
      * @return The platform endpoint ARN.
@@ -150,10 +197,20 @@ public class User extends StmBaseEntity {
         return User.getSerializationType();
     }
 
+    public List<String> getTopicPreferences() {
+        return topicPreferences;
+    }
+
+    public void setTopicPreferences(List<String> topicPreferences) {
+        this.topicPreferences = topicPreferences;
+    }
+
     /**
      * Sends an update request to save the <code>User</code> object to the Shout to Me platform.
+     * @deprecated This method has been moved to {@link StmService#updateUser(UpdateUserRequest, StmCallback)}
      * @param callback The callback to be executed on completion of the request or null.
      */
+    @Deprecated
     public void save(final StmCallback<User> callback) {
 
         if (pendingChanges.size() == 0) {

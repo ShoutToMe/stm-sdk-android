@@ -19,7 +19,7 @@ import java.util.ArrayList;
 import java.util.UUID;
 
 import me.shoutto.sdk.StmService;
-import me.shoutto.sdk.internal.UploadShout.FileUploader;
+import me.shoutto.sdk.internal.usecases.UploadShout.FileUploader;
 
 /**
  * The class used to upload files to S3

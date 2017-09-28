@@ -1,4 +1,4 @@
-package me.shoutto.sdk.internal;
+package me.shoutto.sdk.internal.usecases;
 
 import android.text.TextUtils;
 import android.util.Log;
@@ -7,11 +7,15 @@ import java.io.File;
 
 import me.shoutto.sdk.CreateShoutRequest;
 import me.shoutto.sdk.Shout;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.internal.StmObservable;
+import me.shoutto.sdk.internal.StmObservableResults;
+import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestAsyncProcessor;
+import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 /**
  * Used to upload a Shout to the Shout to Me system.  The two steps of the process are
@@ -25,10 +29,10 @@ public class UploadShout implements StmObserver {
     private CreateShoutRequest createShoutRequest;
     private FileUploader fileUploader;
     private StmCallback<Shout> callback;
-    private StmEntityRequestAsyncProcessor requestProcessor;
+    private StmEntityRequestProcessor requestProcessor;
     private StmService stmService;
 
-    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestAsyncProcessor requestProcessor) {
+    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor requestProcessor) {
         this.fileUploader = fileUploader;
         this.stmService = stmService;
         this.requestProcessor = requestProcessor;
@@ -72,24 +76,10 @@ public class UploadShout implements StmObserver {
     }
 
     private void processFileUploadResult(String fileUrl) {
-        Shout newShout = new Shout(stmService);
-        newShout.setChannelId(stmService.getChannelId());
-        newShout.setMediaFileUrl(fileUrl);
-        if (createShoutRequest.getDescription() != null) {
-            newShout.setDescription(createShoutRequest.getDescription());
-        }
-        if (createShoutRequest.getTags().size() > 0) {
-            String tags = TextUtils.join(",", createShoutRequest.getTags());
-            newShout.setTags(tags);
-        }
-        if (createShoutRequest.getText() != null) {
-            newShout.setText(createShoutRequest.getText());
-        }
-        if (createShoutRequest.getTopic() != null) {
-            newShout.setTopic(createShoutRequest.getTopic());
-        }
-
-        requestProcessor.processRequest(HttpMethod.POST, newShout);
+        Shout shout = (Shout)createShoutRequest.adaptToBaseEntity();
+        shout.setChannelId(stmService.getChannelId());
+        shout.setMediaFileUrl(fileUrl);
+        requestProcessor.processRequest(HttpMethod.POST, shout);
     }
 
     private void processPostShoutResult(Shout shout) {
@@ -102,10 +92,12 @@ public class UploadShout implements StmObserver {
         if (callback != null) {
             StmError stmError = new StmError(errorMessage, false, StmError.SEVERITY_MAJOR);
             callback.onError(stmError);
+        } else {
+            Log.w(TAG, errorMessage);
         }
     }
 
-    interface FileUploader extends StmObservable {
+    public interface FileUploader extends StmObservable {
         void uploadFile(File file);
     }
 }
