@@ -70,7 +70,7 @@ public class UpdateUserTest {
         updateUser.update(updateUserRequest, null, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
-                fail("Should not callback with successful response");
+                fail("Should not call back with successful response");
             }
 
             @Override
@@ -117,6 +117,7 @@ public class UpdateUserTest {
 
         PowerMockito.mockStatic(Log.class);
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+
         UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail(email);

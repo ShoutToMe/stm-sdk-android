@@ -26,6 +26,7 @@ import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
+import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
@@ -507,6 +508,38 @@ public class StmService extends Service implements LocationUpdateListener {
      */
     public void removeAllGeofences() {
         geofenceManager.removeAllGeofences();
+    }
+
+    /**
+     * Removes a topic preference from the user's record.  If additional topics are still in the
+     * user's record, they will no longer receive shouts with the specified topic. If removing the
+     * last topic preference and the user has no more topic preferences, then the user will
+     * receive shouts from all topics.
+     * @param topic The topic to remove
+     * @param callback An optional callback or null
+     */
+    public void removeTopicPreference(String topic, StmCallback<Void> callback) {
+        if (topic == null) {
+            String validationErrorMessage = "topic cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
+        }
+
+        VolleyRequestProcessor<TopicPreference> volleyRequestProcessor = new VolleyRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonNullResponseAdapter<TopicPreference>(),
+                this,
+                new TopicUrlProvider(getServerUrl(), user)
+        );
+
+        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(volleyRequestProcessor);
+        deleteTopicPreference.delete(topic, callback);
     }
 
     /**
