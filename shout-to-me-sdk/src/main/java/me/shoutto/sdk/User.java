@@ -42,8 +42,10 @@ public class User extends StmBaseEntity {
 
     private String authToken;
     private List<String> channelSubscriptions;
+    private String email;
     private Date lastReadMessagesDate;
     private String handle;
+    private String phone;
     private String platformEndpointArn;
     private List<String> topicPreferences;
 
@@ -89,6 +91,22 @@ public class User extends StmBaseEntity {
     }
 
     /**
+     * Gets the user's email address
+     * @return The user's email address
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * Sets the user's email address
+     * @param email The user's email address
+     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    /**
      * Gets the user's handle.
      * @return The user's handle.
      */
@@ -127,6 +145,22 @@ public class User extends StmBaseEntity {
                 new PendingApiObjectChange("last_read_messages_date", lastReadMessagesDateString, null));
 
         this.lastReadMessagesDate = lastReadMessagesDate;
+    }
+
+    /**
+     * Gets the user's phone number
+     * @return The user's phone number
+     */
+    public String getPhone() {
+        return phone;
+    }
+
+    /**
+     * Sets the user's phone number
+     * @param phone The user's phone number
+     */
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     /**
