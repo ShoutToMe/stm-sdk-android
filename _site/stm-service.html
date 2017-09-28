@@ -84,7 +84,7 @@
           </ul>
         </li>
         <li><a href="stm-service">StmService</a></li>
-        <li><a href="creating-a-shout">Recording</a></li>
+        <li><a href="create-shout">Create a Shout</a></li>
         <li><a href="notifications">Messages and Notifications</a></li>
         <li><a href="reference">Reference</a></li>
 
@@ -149,7 +149,7 @@ future retrievals and across app sessions.</p>
 <h2 id="hand-wave-gesture-initiated-shout-recording">Hand Wave Gesture Initiated Shout Recording</h2>
 <p>The Shout to Me SDK includes a usability feature design to help make an app safe for driving.  When
 enabled, a driver need only wave their hand in front of the phone to launch the
-<a href="creating-a-shout">Recording Overlay</a>.</p>
+<a href="create-shout">Recording Overlay</a>.</p>
 
 <p>The hand wave gesture functionality utilizes the phone’s proximity sensor.  Therefore, if a phone
 does not have a proximity sensor, or the user has revoked proximity sensor permission, this
@@ -254,14 +254,15 @@ it is convenient for certain write-only scenarios such as wanting to change the 
 </code></pre>
 </div>
 
-<p>Retrieving and updating the user’s handle.  Calling <code class="highlighter-rouge">save(Callback&lt;User&gt;)</code> is required to persist the new handle
-to the Shout to Me service.</p>
+<p>To update a user, instantiate a <code class="highlighter-rouge">UpdateUserRequest</code> object, complete the desired update fields, and then submit the
+object to the <code class="highlighter-rouge">stmService.updateUser()</code> method with an optional callback.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">String</span> <span class="n">handle</span> <span class="o">=</span> <span class="n">user</span><span class="o">.</span><span class="na">getHandle</span><span class="o">();</span>
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">UpdateUserRequest</span> <span class="n">updateUserRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UpdateUserRequest</span><span class="o">();</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setEmail</span><span class="o">(</span><span class="s">"user@example.com"</span><span class="o">);</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setHandle</span><span class="o">(</span><span class="s">"BobSmith"</span><span class="o">);</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setPhone</span><span class="o">(</span><span class="s">"8885551212"</span><span class="o">);</span>
 
-<span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="n">stmService</span><span class="o">.</span><span class="na">getUser</span><span class="o">();</span>
-<span class="n">user</span><span class="o">.</span><span class="na">setHandle</span><span class="o">(</span><span class="s">"BobSmith"</span><span class="o">);</span>
-<span class="n">user</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
+<span class="n">stmService</span><span class="o">.</span><span class="na">updateUser</span><span class="o">(</span><span class="n">updateUserRequest</span><span class="o">,</span> <span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">StmResponse</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">stmResponse</span><span class="o">)</span> <span class="o">{</span>
         <span class="n">User</span> <span class="n">updatedUser</span> <span class="o">=</span> <span class="n">stmResponse</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>

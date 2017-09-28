@@ -165,15 +165,16 @@ stmService.getUser(new Callback<User>() {
 });
 ```
 
-Retrieving and updating the user’s handle.  Calling `save(Callback<User>)` is required to persist the new handle
-to the Shout to Me service.
+To update a user, instantiate a `UpdateUserRequest` object, complete the desired update fields, and then submit the
+object to the `stmService.updateUser()` method with an optional callback.
 
 ```java
-String handle = user.getHandle();
+UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+updateUserRequest.setEmail("user@example.com");
+updateUserRequest.setHandle("BobSmith");
+updateUserRequest.setPhone("8885551212");
 
-User user = stmService.getUser();
-user.setHandle("BobSmith");
-user.save(new Callback<User>() {
+stmService.updateUser(updateUserRequest, new Callback<User>() {
     @Override
     public void onSuccess(final StmResponse<User> stmResponse) {
         User updatedUser = stmResponse.get();
