@@ -26,8 +26,15 @@ public class UpdateUser extends BaseUseCase {
 
     public void update(UpdateUserRequest updateUserRequest, String userId, StmCallback<User> callback) {
 
+        String errorMessage = "";
+
         if (!updateUserRequest.isValid()) {
-            String errorMessage = "UpdateUserRequest object is invalid";
+            errorMessage = "UpdateUserRequest object is invalid";
+        } else if (userId == null || "".equals(userId)) {
+            errorMessage = "Invalid user ID. Cannot update user";
+        }
+
+        if (!"".equals(errorMessage)) {
             if (callback != null) {
                 StmError error = new StmError(errorMessage, false, StmError.SEVERITY_MAJOR);
                 callback.onError(error);

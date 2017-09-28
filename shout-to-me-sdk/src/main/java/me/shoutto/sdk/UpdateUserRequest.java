@@ -9,7 +9,9 @@ import java.util.List;
 public class UpdateUserRequest implements StmEntityActionRequest {
 
     private List<String> channelSubscriptions;
+    private String email;
     private String handle;
+    private String phone;
     private List<String> topicPreferences;
 
     /**
@@ -29,6 +31,22 @@ public class UpdateUserRequest implements StmEntityActionRequest {
     }
 
     /**
+     * Gets the user's email address
+     * @return The user's email address
+     */
+    public String getEmail() {
+        return email;
+    }
+
+    /**
+     * Sets the user's email address
+     * @param email The user's email address
+     */
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    /**
      * Gets the user's handle
      * @return The user's handle
      */
@@ -42,6 +60,22 @@ public class UpdateUserRequest implements StmEntityActionRequest {
      */
     public void setHandle(String handle) {
         this.handle = handle;
+    }
+
+    /**
+     * Gets the user's phone number
+     * @return The user's phone number
+     */
+    public String getPhone() {
+        return phone;
+    }
+
+    /**
+     * Sets the user's phone number
+     * @param phone The user's phone number
+     */
+    public void setPhone(String phone) {
+        this.phone = phone;
     }
 
     /**
@@ -69,7 +103,12 @@ public class UpdateUserRequest implements StmEntityActionRequest {
      */
     @Override
     public boolean isValid() {
-        return true;
+
+        return !(channelSubscriptions == null
+                && email == null
+                && handle == null
+                && phone == null
+                && topicPreferences == null);
     }
 
     /**
@@ -84,8 +123,16 @@ public class UpdateUserRequest implements StmEntityActionRequest {
             user.setChannelSubscriptions(channelSubscriptions);
         }
 
+        if (email != null) {
+            user.setEmail(email);
+        }
+
         if (handle != null) {
             user.setHandle(handle);
+        }
+
+        if (phone != null) {
+            user.setPhone(phone);
         }
 
         if (topicPreferences != null) {
