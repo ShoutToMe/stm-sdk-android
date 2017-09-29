@@ -16,6 +16,7 @@ import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.TopicPreference;
+import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
@@ -36,8 +37,14 @@ public class DeleteTopicPreferenceTest {
     @Mock
     StmEntityRequestProcessor mockStmEntityRequestProcessor;
 
+    @Mock
+    StmCallback<Void> mockCallback;
+
     @Captor
     ArgumentCaptor<TopicPreference> topicPreferenceArgumentCaptor;
+
+    @Captor
+    ArgumentCaptor<StmError> stmErrorArgumentCaptor;
 
     @Test
     public void delete_WithNullTopic_ShouldCallBackWithError() {
@@ -96,23 +103,26 @@ public class DeleteTopicPreferenceTest {
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
 
         String topic = "topic";
-        TopicPreference topicPreference = new TopicPreference();
-        topicPreference.setTopic(topic);
 
-        StmCallback<Void> callback = new Callback<Void>() {
-            @Override
-            public void onSuccess(StmResponse<Void> stmResponse) {
-
-            }
-
-            @Override
-            public void onFailure(StmError stmError) {
-
-            }
-        };
         DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(mockStmEntityRequestProcessor);
-        deleteTopicPreference.delete(topic, callback);
+        deleteTopicPreference.delete(topic, mockCallback);
+        deleteTopicPreference.processCallback(new StmObservableResults());
 
-        verify(callback, times(1)).onResponse(null);
+        verify(mockCallback, times(1)).onResponse(null);
+    }
+
+    @Test
+    public void delete_WithValidInput_ShouldCallBackErrorOnProcessingError() {
+        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+
+        String topic = "topic";
+
+        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(mockStmEntityRequestProcessor);
+        deleteTopicPreference.delete(topic, mockCallback);
+        deleteTopicPreference.processCallbackError(new StmObservableResults());
+
+        verify(mockCallback, times(1)).onError(stmErrorArgumentCaptor.capture());
+        assertNotNull(stmErrorArgumentCaptor.getValue());
+        assertEquals(StmError.SEVERITY_MINOR, stmErrorArgumentCaptor.getValue().getSeverity());
     }
 }

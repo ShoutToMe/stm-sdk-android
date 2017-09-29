@@ -17,7 +17,8 @@ public class DefaultUrlProvider implements StmUrlProvider {
     @Override
     public String getUrl(StmBaseEntity entity, HttpMethod httpMethod) {
         String url = String.format("%s%s", baseApiUrl, entity.getBaseEndpoint());
-        if (httpMethod.equals(HttpMethod.DELETE) || httpMethod.equals(HttpMethod.PUT)) {
+        if (httpMethod.equals(HttpMethod.DELETE) || httpMethod.equals(HttpMethod.PUT)
+                || httpMethod.equals(HttpMethod.GET)) {
             url = url.concat(String.format("/%s", entity.getId()));
         }
         return url;

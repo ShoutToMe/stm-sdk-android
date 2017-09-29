@@ -27,6 +27,7 @@ import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
+import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
@@ -34,7 +35,7 @@ import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
-import me.shoutto.sdk.internal.http.VolleyRequestProcessor;
+import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
 import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
@@ -136,7 +137,7 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        VolleyRequestProcessor<TopicPreference> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<TopicPreference> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonNullResponseAdapter<TopicPreference>(),
@@ -144,7 +145,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
-        CreateTopicPreference createTopicPreference = new CreateTopicPreference(volleyRequestProcessor);
+        CreateTopicPreference createTopicPreference = new CreateTopicPreference(defaultAsyncEntityRequestProcessor);
         createTopicPreference.create(topic, callback);
     }
 
@@ -155,14 +156,14 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback An optional callback or null
      */
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
-        VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<Shout> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<Shout>(),
                 this,
                 new DefaultUrlProvider(this.getServerUrl())
         );
-        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), volleyRequestProcessor);
+        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), defaultAsyncEntityRequestProcessor);
         shoutUploader.upload(createShoutRequest, callback);
     }
 
@@ -359,12 +360,26 @@ public class StmService extends Service implements LocationUpdateListener {
     public void isSubscribedToChannel(String channelId, final StmCallback<Boolean> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.isSubscribed(callback);
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<User>(),
+                this,
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(defaultAsyncEntityRequestProcessor);
+        getChannelSubscription.get(channelId, user.getId(), callback);
     }
 
     /**
@@ -530,7 +545,7 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        VolleyRequestProcessor<TopicPreference> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<TopicPreference> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonNullResponseAdapter<TopicPreference>(),
@@ -538,7 +553,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
-        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(volleyRequestProcessor);
+        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(defaultAsyncEntityRequestProcessor);
         deleteTopicPreference.delete(topic, callback);
     }
 
@@ -598,7 +613,7 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<ChannelSubscription> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonNullResponseAdapter<ChannelSubscription>(),
@@ -607,7 +622,7 @@ public class StmService extends Service implements LocationUpdateListener {
         );
 
         CreateChannelSubscription createChannelSubscription =
-                new CreateChannelSubscription(volleyRequestProcessor);
+                new CreateChannelSubscription(defaultAsyncEntityRequestProcessor);
         createChannelSubscription.create(channelId, callback);
     }
 
@@ -656,7 +671,7 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        VolleyRequestProcessor<ChannelSubscription> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<ChannelSubscription> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonNullResponseAdapter<ChannelSubscription>(),
@@ -664,7 +679,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
 
-        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(volleyRequestProcessor);
+        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(defaultAsyncEntityRequestProcessor);
         deleteChannelSubscription.delete(channelId, callback);
     }
 
@@ -686,7 +701,7 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        VolleyRequestProcessor<User> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(),
@@ -694,7 +709,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new DefaultUrlProvider(this.getServerUrl())
         );
 
-        UpdateUser updateUser = new UpdateUser(volleyRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(defaultAsyncEntityRequestProcessor);
         updateUser.update(updateUserRequest, user.getId(), callback);
     }
 }

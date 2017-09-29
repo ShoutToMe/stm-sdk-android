@@ -20,7 +20,7 @@ public class ChannelSubscriptionUrlProvider implements StmUrlProvider {
     @Override
     public String getUrl(StmBaseEntity entity, HttpMethod httpMethod) {
         String url = String.format("%s%s/%s%s", baseApiUrl, user.getBaseEndpoint(), user.getId(), entity.getBaseEndpoint());
-        if (httpMethod.equals(HttpMethod.DELETE) || httpMethod.equals(HttpMethod.PUT)) {
+        if (httpMethod.equals(HttpMethod.DELETE) || httpMethod.equals(HttpMethod.PUT) || httpMethod.equals(HttpMethod.GET)) {
             url = url.concat(String.format("/%s", ((ChannelSubscription)entity).getChannelId()));
         }
         return url;

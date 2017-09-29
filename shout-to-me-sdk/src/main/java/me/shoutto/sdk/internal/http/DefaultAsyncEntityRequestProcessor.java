@@ -22,12 +22,12 @@ import me.shoutto.sdk.internal.StmObservableType;
 import me.shoutto.sdk.internal.StmObserver;
 
 /**
- * Volley based HTTP request processor
+ * Volley based async HTTP request processor
  */
 
-public class VolleyRequestProcessor<T extends StmBaseEntity> implements StmEntityRequestProcessor {
+public class DefaultAsyncEntityRequestProcessor<T extends StmBaseEntity> implements StmEntityRequestProcessor {
 
-    private static final String TAG = VolleyRequestProcessor.class.getSimpleName();
+    private static final String TAG = DefaultAsyncEntityRequestProcessor.class.getSimpleName();
     private ArrayList<StmObserver> observers;
     private StmHttpRequestAdapter requestAdapter;
     private StmRequestQueue requestQueue;
@@ -35,11 +35,11 @@ public class VolleyRequestProcessor<T extends StmBaseEntity> implements StmEntit
     private StmService stmService;
     private StmUrlProvider urlProvider;
 
-    public VolleyRequestProcessor(StmHttpRequestAdapter stmHttpRequestAdapter,
-                                  StmRequestQueue stmRequestQueue,
-                                  StmHttpResponseAdapter<T> stmHttpResponseAdapter,
-                                  StmService stmService,
-                                  StmUrlProvider stmUrlProvider) {
+    public DefaultAsyncEntityRequestProcessor(StmHttpRequestAdapter stmHttpRequestAdapter,
+                                              StmRequestQueue stmRequestQueue,
+                                              StmHttpResponseAdapter<T> stmHttpResponseAdapter,
+                                              StmService stmService,
+                                              StmUrlProvider stmUrlProvider) {
         observers = new ArrayList<>();
         requestAdapter = stmHttpRequestAdapter;
         requestQueue = stmRequestQueue;
@@ -76,11 +76,19 @@ public class VolleyRequestProcessor<T extends StmBaseEntity> implements StmEntit
         Response.ErrorListener errorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                Log.w(TAG, "An error occurred calling Shout to Me service. " + error.getMessage());
-                StmObservableResults stmObservableResults = new StmObservableResults();
-                stmObservableResults.setError(true);
-                stmObservableResults.setErrorMessage("An error occurred calling Shout to Me service. " + error.getMessage());
-                notifyObservers(stmObservableResults);
+                if (error.networkResponse.statusCode == 404) {
+                    StmObservableResults<T> stmObservableResults = new StmObservableResults<>();
+                    stmObservableResults.setError(false);
+                    stmObservableResults.setResult(null);
+                    stmObservableResults.setStmObservableType(StmObservableType.STM_SERVICE_RESPONSE);
+                    notifyObservers(stmObservableResults);
+                } else {
+                    Log.w(TAG, "An error occurred calling Shout to Me service. " + error.getMessage());
+                    StmObservableResults stmObservableResults = new StmObservableResults();
+                    stmObservableResults.setError(true);
+                    stmObservableResults.setErrorMessage("An error occurred calling Shout to Me service. " + error.getMessage());
+                    notifyObservers(stmObservableResults);
+                }
             }
         };
 
