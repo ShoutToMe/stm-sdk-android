@@ -22,6 +22,7 @@ import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
 import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
 import me.shoutto.sdk.internal.http.CountResponseAdapter;
+import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
@@ -30,7 +31,8 @@ import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
 import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
-import me.shoutto.sdk.internal.usecases.GetUnreadMessageCount;
+import me.shoutto.sdk.internal.usecases.GetMessageCount;
+import me.shoutto.sdk.internal.usecases.GetMessages;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
@@ -235,15 +237,22 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback The callback to execute or null.
      */
     public void getMessages(final StmCallback<List<Message>> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getMessages(callback);
-            }
-        }).start();
+        DefaultAsyncEntityRequestProcessor<List<Message>> defaultAsyncEntityRequestProcessor
+                = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new GsonListResponseAdapter<List<Message>, Message>(
+                        Message.LIST_SERIALIZATION_KEY,
+                        Message.SERIALIZATION_KEY,
+                        Message.getSerializationListType(),
+                        Message.class
+                ),
+                this,
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetMessages getMessages = new GetMessages(defaultAsyncEntityRequestProcessor);
+        getMessages.get(callback);
     }
 
     /**
@@ -275,7 +284,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new MessageCountUrlProvider(getServerUrl(), true)
         );
 
-        GetUnreadMessageCount getUnreadMessageCount = new GetUnreadMessageCount(defaultAsyncEntityRequestProcessor);
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(defaultAsyncEntityRequestProcessor);
         getUnreadMessageCount.get(callback);
     }
 

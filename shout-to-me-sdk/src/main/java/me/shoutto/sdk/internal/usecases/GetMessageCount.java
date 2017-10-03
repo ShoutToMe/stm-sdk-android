@@ -8,14 +8,14 @@ import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 
 /**
- * Gets the number of unread messages for the user
+ * Gets the count of number of messages for the user
  */
 
-public class GetUnreadMessageCount extends BaseUseCase {
+public class GetMessageCount extends BaseUseCase {
 
     private StmCallback<Integer> callback;
 
-    public GetUnreadMessageCount(StmEntityRequestProcessor stmEntityRequestProcessor) {
+    public GetMessageCount(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
     }
 
