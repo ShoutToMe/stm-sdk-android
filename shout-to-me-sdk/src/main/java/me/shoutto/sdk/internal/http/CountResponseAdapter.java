@@ -5,7 +5,6 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 
 /**
  * Parse a response from the Shout to Me service that contains a "count" integer in the "data" JSON node
@@ -20,7 +19,7 @@ public class CountResponseAdapter implements StmHttpResponseAdapter<Integer> {
     private static final String COUNT = "count";
 
     @Override
-    public Integer adapt(JSONObject jsonObject, String serializationKey, Type typeOfT) {
+    public Integer adapt(JSONObject jsonObject) {
         Integer count = null;
 
         try {

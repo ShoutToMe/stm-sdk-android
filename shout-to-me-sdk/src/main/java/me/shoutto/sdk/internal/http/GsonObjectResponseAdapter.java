@@ -22,9 +22,16 @@ public class GsonObjectResponseAdapter<T extends StmBaseEntity> implements StmHt
 
     private static final String TAG = GsonObjectResponseAdapter.class.getSimpleName();
     private static final String SUCCESS = "success";
+    private String serializationKey;
+    private Type typeOfT;
+
+    public GsonObjectResponseAdapter(String serializationKey, Type typeOfT) {
+        this.serializationKey = serializationKey;
+        this.typeOfT = typeOfT;
+    }
 
     @Override
-    public T adapt(JSONObject jsonObject, String serializationKey, Type typeOfT) {
+    public T adapt(JSONObject jsonObject) {
 
         T obj = null;
         try {

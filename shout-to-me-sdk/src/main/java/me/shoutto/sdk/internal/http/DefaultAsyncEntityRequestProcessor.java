@@ -62,11 +62,7 @@ public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestPr
         Response.Listener<JSONObject> responseListener = new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
-                T entity = responseAdapter.adapt(
-                        response,
-                        stmBaseEntity.getSerializationKey(),
-                        stmBaseEntity.getEntitySerializationType()
-                );
+                T entity = responseAdapter.adapt(response);
                 StmObservableResults<T> stmObservableResults = new StmObservableResults<>();
                 stmObservableResults.setError(false);
                 stmObservableResults.setResult(entity);

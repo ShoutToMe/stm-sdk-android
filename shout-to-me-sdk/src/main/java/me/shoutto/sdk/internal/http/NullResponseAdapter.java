@@ -5,19 +5,18 @@ import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Type;
 
 /**
  * Response adapter that only returns null
  */
 
-public class GsonNullResponseAdapter<T> implements StmHttpResponseAdapter<T> {
+public class NullResponseAdapter implements StmHttpResponseAdapter<Void> {
 
-    private static final String TAG = GsonNullResponseAdapter.class.getSimpleName();
+    private static final String TAG = NullResponseAdapter.class.getSimpleName();
     private static final String SUCCESS = "success";
 
     @Override
-    public T adapt(JSONObject jsonObject, String serializationKey, Type typeOfT) {
+    public Void adapt(JSONObject jsonObject) {
 
         try {
             String status = jsonObject.getString("status");
@@ -26,7 +25,7 @@ public class GsonNullResponseAdapter<T> implements StmHttpResponseAdapter<T> {
                 Log.e(TAG, errorMessage);
             }
         } catch (JSONException ex) {
-            String errorMessage = String.format("Error occurred parsing JSONObject of type %s. %s", serializationKey, ex.getMessage());
+            String errorMessage = String.format("Error occurred parsing JSONObject: %s", jsonObject.toString());
             Log.e(TAG, errorMessage, ex);
         }
 

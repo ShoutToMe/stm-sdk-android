@@ -12,5 +12,5 @@ import me.shoutto.sdk.StmBaseEntity;
 
 interface StmHttpResponseAdapter<T> {
 
-    T adapt(JSONObject jsonObject, String serializationKey, Type typeOfT);
+    T adapt(JSONObject jsonObject);
 }

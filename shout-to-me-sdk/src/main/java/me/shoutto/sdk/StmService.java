@@ -22,7 +22,7 @@ import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
 import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
 import me.shoutto.sdk.internal.http.CountResponseAdapter;
-import me.shoutto.sdk.internal.http.GsonNullResponseAdapter;
+import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
@@ -140,10 +140,10 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<TopicPreference> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonNullResponseAdapter<TopicPreference>(),
+                new NullResponseAdapter(),
                 this,
                 new TopicUrlProvider(getServerUrl(), user)
         );
@@ -162,7 +162,7 @@ public class StmService extends Service implements LocationUpdateListener {
         DefaultAsyncEntityRequestProcessor<Shout> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<Shout>(),
+                new GsonObjectResponseAdapter<Shout>(Shout.SERIALIZATION_KEY, Shout.getSerializationType()),
                 this,
                 new DefaultUrlProvider(this.getServerUrl())
         );
@@ -377,7 +377,7 @@ public class StmService extends Service implements LocationUpdateListener {
         DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<User>(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 this,
                 new DefaultUrlProvider(getServerUrl())
         );
@@ -549,10 +549,10 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<TopicPreference> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonNullResponseAdapter<TopicPreference>(),
+                new NullResponseAdapter(),
                 this,
                 new TopicUrlProvider(getServerUrl(), user)
         );
@@ -617,10 +617,10 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<ChannelSubscription> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonNullResponseAdapter<ChannelSubscription>(),
+                new NullResponseAdapter(),
                 this,
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
@@ -675,10 +675,10 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<ChannelSubscription> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonNullResponseAdapter<ChannelSubscription>(),
+                new NullResponseAdapter(),
                 this,
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
@@ -708,7 +708,7 @@ public class StmService extends Service implements LocationUpdateListener {
         DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<User>(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 this,
                 new DefaultUrlProvider(this.getServerUrl())
         );

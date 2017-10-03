@@ -46,7 +46,7 @@ public class CountResponseAdapterTest {
         }
 
         CountResponseAdapter countResponseAdapter = new CountResponseAdapter();
-        Integer response = countResponseAdapter.adapt(jsonObjectSpy, null, null);
+        Integer response = countResponseAdapter.adapt(jsonObjectSpy);
 
         verifyStatic(times(1));
         Log.e(anyString(), anyString());
@@ -69,7 +69,7 @@ public class CountResponseAdapterTest {
         }
 
         CountResponseAdapter countResponseAdapter = new CountResponseAdapter();
-        Integer response = countResponseAdapter.adapt(jsonObjectSpy, null, null);
+        Integer response = countResponseAdapter.adapt(jsonObjectSpy);
 
         verifyStatic(times(1));
         Log.e(anyString(), anyString(), any(JSONException.class));
@@ -96,7 +96,7 @@ public class CountResponseAdapterTest {
         }
 
         CountResponseAdapter countResponseAdapter = new CountResponseAdapter();
-        Integer response = countResponseAdapter.adapt(jsonObjectSpy, null, null);
+        Integer response = countResponseAdapter.adapt(jsonObjectSpy);
 
         verifyStatic(times(1));
         Log.e(anyString(), anyString(), any(JSONException.class));
@@ -124,7 +124,7 @@ public class CountResponseAdapterTest {
         }
 
         CountResponseAdapter countResponseAdapter = new CountResponseAdapter();
-        Integer response = countResponseAdapter.adapt(jsonObjectSpy, null, null);
+        Integer response = countResponseAdapter.adapt(jsonObjectSpy);
 
         assertEquals(response, count);
     }
