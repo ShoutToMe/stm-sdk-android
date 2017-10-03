@@ -25,17 +25,17 @@ import me.shoutto.sdk.internal.StmObserver;
  * Volley based async HTTP request processor
  */
 
-public class DefaultAsyncEntityRequestProcessor<T extends StmBaseEntity> implements StmEntityRequestProcessor {
+public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestProcessor {
 
     private static final String TAG = DefaultAsyncEntityRequestProcessor.class.getSimpleName();
     private ArrayList<StmObserver> observers;
-    private StmHttpRequestAdapter requestAdapter;
+    private StmEntityJsonRequestAdapter requestAdapter;
     private StmRequestQueue requestQueue;
     private StmHttpResponseAdapter<T> responseAdapter;
     private StmService stmService;
     private StmUrlProvider urlProvider;
 
-    public DefaultAsyncEntityRequestProcessor(StmHttpRequestAdapter stmHttpRequestAdapter,
+    public DefaultAsyncEntityRequestProcessor(StmEntityJsonRequestAdapter stmHttpRequestAdapter,
                                               StmRequestQueue stmRequestQueue,
                                               StmHttpResponseAdapter<T> stmHttpResponseAdapter,
                                               StmService stmService,
@@ -52,7 +52,9 @@ public class DefaultAsyncEntityRequestProcessor<T extends StmBaseEntity> impleme
     public void processRequest(final HttpMethod httpMethod, final StmBaseEntity stmBaseEntity) {
         String jsonDataString = "";
         if (httpMethod.equals(HttpMethod.POST) || httpMethod.equals(HttpMethod.PUT)) {
-            jsonDataString = requestAdapter.adapt(stmBaseEntity);
+            if (requestAdapter != null) {
+                jsonDataString = requestAdapter.adapt(stmBaseEntity);
+            }
         }
 
         String url = urlProvider.getUrl(stmBaseEntity, httpMethod);

@@ -4,15 +4,13 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import org.json.JSONObject;
-
 import me.shoutto.sdk.StmBaseEntity;
 
 /**
  * Gson adapter for converting Shout to Me entities to JSON objects
  */
 
-public class GsonRequestAdapter implements StmHttpRequestAdapter {
+public class GsonRequestAdapter implements StmEntityJsonRequestAdapter {
     @Override
     public String adapt(StmBaseEntity entity) {
         Gson gson = new GsonBuilder()

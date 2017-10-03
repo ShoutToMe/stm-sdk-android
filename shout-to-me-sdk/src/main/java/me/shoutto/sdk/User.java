@@ -24,8 +24,7 @@ import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
  * This class represents a Shout to Me user entity. A Shout to Me User entity is generally used
- * by client apps to enable push notifications, get/set a user's handle, get/set the last time the user
- * read messages (to alert the Shout to Me service so Shout to Me can update the unread count value),
+ * by client apps to enable push notifications, get and set various properties and preferences,
  * and to access the user's auth token in the event the client app wants to call the Shout to Me REST API directly.
  */
 public class User extends StmBaseEntity {
@@ -126,8 +125,11 @@ public class User extends StmBaseEntity {
     /**
      * Gets the <code>Date</code> of the last time the user read messages.
      * @return The <code>Date</code> representing the last time the user read their messages.
+     *
+     * @deprecated This property is no longer used
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public Date getLastReadMessagesDate() {
         return lastReadMessagesDate;
     }
@@ -135,7 +137,10 @@ public class User extends StmBaseEntity {
     /**
      * Sets the <code>Date</code> of the last time the user read their messages.
      * @param lastReadMessagesDate The <code>Date</code> representing the last time the user read their messages.
+     *
+     * @deprecated This property is no longer used
      */
+    @Deprecated
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
         TimeZone tz = TimeZone.getTimeZone("UTC");
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
@@ -348,17 +353,6 @@ public class User extends StmBaseEntity {
             handle = json.getString("handle");
         } catch (JSONException ex) {
             Log.i(TAG, "User does not have a handle set");
-        }
-
-        try {
-            String lastReadMessagesDateString = json.getString("last_read_messages_date");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            lastReadMessagesDate = sdf.parse(lastReadMessagesDateString);
-        } catch(ParseException ex) {
-            Log.e(TAG, "Could not parse last read messages date", ex);
-        } catch(JSONException ex) {
-            // Ignore. It just may occur if message page was never viewed.
         }
 
         try {

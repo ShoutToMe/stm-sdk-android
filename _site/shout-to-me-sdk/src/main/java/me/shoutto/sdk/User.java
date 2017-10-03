@@ -97,6 +97,7 @@ public class User extends StmBaseEntity {
      * @return The <code>Date</code> representing the last time the user read their messages.
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public Date getLastReadMessagesDate() {
         return lastReadMessagesDate;
     }

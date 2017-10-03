@@ -21,13 +21,16 @@ import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
 import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
+import me.shoutto.sdk.internal.http.CountResponseAdapter;
 import me.shoutto.sdk.internal.http.GsonNullResponseAdapter;
+import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
 import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
+import me.shoutto.sdk.internal.usecases.GetUnreadMessageCount;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.NotificationManager;
@@ -264,15 +267,16 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback The callback to execute or null.
      */
     public void getUnreadMessageCount(final StmCallback<Integer> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getUnreadMessageCount(callback);
-            }
-        }).start();
+        DefaultAsyncEntityRequestProcessor<Integer> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new CountResponseAdapter(),
+                this,
+                new MessageCountUrlProvider(getServerUrl(), true)
+        );
+
+        GetUnreadMessageCount getUnreadMessageCount = new GetUnreadMessageCount(defaultAsyncEntityRequestProcessor);
+        getUnreadMessageCount.get(callback);
     }
 
     /**

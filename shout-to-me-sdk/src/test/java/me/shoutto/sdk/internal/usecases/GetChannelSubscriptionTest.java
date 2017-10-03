@@ -15,7 +15,6 @@ import java.util.List;
 
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
-import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;

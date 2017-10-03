@@ -141,7 +141,7 @@ class MessageManager {
             }
         };
 
-        String url = stmService.getServerUrl() + Message.BASE_ENDPOINT + "?count_only=true&unread=true";
+        String url = stmService.getServerUrl() + Message.BASE_ENDPOINT + "?count_only=true&unread_only=true";
         final String authToken = stmService.getUserAuthToken();
         JsonObjectRequest request = new JsonObjectRequest(Request.Method.GET, url, null,
                 responseListener, errorListener) {
