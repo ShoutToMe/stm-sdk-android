@@ -109,7 +109,6 @@ public class StmService extends Service implements LocationUpdateListener {
     private ChannelManager channelManager;
     private GeofenceDbHelper geofenceDbHelper;
     private GeofenceManager geofenceManager;
-    private MessageManager messageManager;
 
     public StmService() {
     }
