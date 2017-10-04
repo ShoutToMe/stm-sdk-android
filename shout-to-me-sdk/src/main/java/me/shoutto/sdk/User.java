@@ -42,7 +42,6 @@ public class User extends StmBaseEntity {
     private String authToken;
     private List<String> channelSubscriptions;
     private String email;
-    private Date lastReadMessagesDate;
     private String handle;
     private String phone;
     private String platformEndpointArn;
@@ -131,7 +130,7 @@ public class User extends StmBaseEntity {
     @SuppressWarnings("unused")
     @Deprecated
     public Date getLastReadMessagesDate() {
-        return lastReadMessagesDate;
+        return null;
     }
 
     /**
@@ -142,14 +141,7 @@ public class User extends StmBaseEntity {
      */
     @Deprecated
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        df.setTimeZone(tz);
-        String lastReadMessagesDateString = df.format(lastReadMessagesDate);
-        pendingChanges.put("last_read_messages_date",
-                new PendingApiObjectChange("last_read_messages_date", lastReadMessagesDateString, null));
-
-        this.lastReadMessagesDate = lastReadMessagesDate;
+        // Stubbed for backwards compatibility but does not do anything
     }
 
     /**
