@@ -14,10 +14,9 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Gets a channel subscription for the user. The callback returns true if subscribed or false if not.
  */
 
-public class GetChannelSubscription extends BaseUseCase {
+public class GetChannelSubscription extends BaseUseCase<Boolean> {
 
     private static final String TAG = GetChannelSubscription.class.getSimpleName();
-    private StmCallback<Boolean> callback;
     private String channelId;
 
     public GetChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
@@ -52,7 +51,7 @@ public class GetChannelSubscription extends BaseUseCase {
     }
 
     @Override
-    void processCallback(StmObservableResults stmObservableResults) {
+    public void processCallback(StmObservableResults stmObservableResults) {
         if (callback != null) {
             User user = (User)stmObservableResults.getResult();
 
@@ -69,14 +68,6 @@ public class GetChannelSubscription extends BaseUseCase {
             }
 
             callback.onResponse(false);
-        }
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
         }
     }
 }

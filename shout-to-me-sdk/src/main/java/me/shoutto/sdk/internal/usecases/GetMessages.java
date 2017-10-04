@@ -13,9 +13,7 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Gets messages for the user
  */
 
-public class GetMessages extends BaseUseCase {
-
-    private StmCallback<List<Message>> callback;
+public class GetMessages extends BaseUseCase<List<Message>> {
 
     public GetMessages(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -24,20 +22,5 @@ public class GetMessages extends BaseUseCase {
     public void get(StmCallback<List<Message>> callback) {
         this.callback = callback;
         stmEntityRequestProcessor.processRequest(HttpMethod.GET, new Message());
-    }
-
-    @Override
-    void processCallback(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            callback.onResponse((List<Message>)stmObservableResults.getResult());
-        }
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MAJOR);
-            callback.onError(error);
-        }
     }
 }

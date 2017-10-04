@@ -13,10 +13,9 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Adds a topic preference to the user's record
  */
 
-public class CreateTopicPreference extends BaseUseCase {
+public class CreateTopicPreference extends BaseUseCase<Void> {
 
     private static final String TAG = CreateTopicPreference.class.getSimpleName();
-    private StmCallback<Void> callback;
 
     public CreateTopicPreference(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -42,20 +41,5 @@ public class CreateTopicPreference extends BaseUseCase {
         topicPreference.setTopic(topic);
 
         stmEntityRequestProcessor.processRequest(HttpMethod.POST, topicPreference);
-    }
-
-    @Override
-    void processCallback(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            callback.onResponse(null);
-        }
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
-        }
     }
 }

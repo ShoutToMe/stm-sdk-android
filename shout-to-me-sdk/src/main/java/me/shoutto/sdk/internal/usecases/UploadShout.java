@@ -21,12 +21,11 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  *      2) post data to the Shout to Me REST API.
  */
 
-public class UploadShout extends BaseUseCase {
+public class UploadShout extends BaseUseCase<Shout> {
 
     private static final String TAG = UploadShout.class.getSimpleName();
     private CreateShoutRequest createShoutRequest;
     private FileUploader fileUploader;
-    private StmCallback<Shout> callback;
     private StmService stmService;
 
     public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor stmEntityRequestProcessor) {
@@ -44,7 +43,14 @@ public class UploadShout extends BaseUseCase {
             fileUploader.addObserver(this);
             fileUploader.uploadFile(createShoutRequest.getFile());
         } else {
-            processCallbackError("CreateShoutRequest object not valid. Aborting upload.");
+            if (callback != null) {
+                StmError error = new StmError("CreateShoutRequest object not valid. Aborting upload.",
+                        false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+            } else {
+                Log.w(TAG, "CreateShoutRequest object not valid. Aborting upload.");
+            }
+
         }
     }
 
@@ -52,19 +58,11 @@ public class UploadShout extends BaseUseCase {
     public void processCallback(StmObservableResults stmObservableResults) {
         switch (stmObservableResults.getStmObservableType()) {
             case STM_SERVICE_RESPONSE:
-                if (stmObservableResults.isError()) {
-                    processCallbackError("Error calling Shout to Me service. " + stmObservableResults.getErrorMessage());
-                } else {
-                    processPostShoutResult((Shout)stmObservableResults.getResult());
-                }
+                processPostShoutResult((Shout)stmObservableResults.getResult());
                 break;
 
             case UPLOAD_FILE:
-                if (stmObservableResults.isError()) {
-                    processCallbackError("Error calling Shout to Me service. " + stmObservableResults.getErrorMessage());
-                } else {
-                    processFileUploadResult(stmObservableResults.getResult().toString());
-                }
+                processFileUploadResult(stmObservableResults.getResult().toString());
                 break;
 
             default:
@@ -85,19 +83,14 @@ public class UploadShout extends BaseUseCase {
         }
     }
 
-    private void processCallbackError(String errorMessage) {
+    @Override
+    public void processCallbackError(StmObservableResults stmObservableResults) {
         if (callback != null) {
-            StmError stmError = new StmError(errorMessage, false, StmError.SEVERITY_MAJOR);
+            StmError stmError = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MAJOR);
             callback.onError(stmError);
         } else {
-            Log.w(TAG, errorMessage);
+            Log.w(TAG, stmObservableResults.getErrorMessage());
         }
-        stmEntityRequestProcessor.deleteObserver(this);
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        processCallbackError(stmObservableResults.getErrorMessage());
     }
 
     public interface FileUploader extends StmObservable {

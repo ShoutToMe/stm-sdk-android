@@ -13,10 +13,9 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Deletes a topic preference from the user's record
  */
 
-public class DeleteTopicPreference extends BaseUseCase {
+public class DeleteTopicPreference extends BaseUseCase<Void> {
 
     private static final String TAG = DeleteTopicPreference.class.getSimpleName();
-    private StmCallback<Void> callback;
 
     public DeleteTopicPreference(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -41,20 +40,5 @@ public class DeleteTopicPreference extends BaseUseCase {
         topicPreference.setTopic(topic);
 
         stmEntityRequestProcessor.processRequest(HttpMethod.DELETE, topicPreference);
-    }
-
-    @Override
-    void processCallback(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            callback.onResponse(null);
-        }
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
-        }
     }
 }

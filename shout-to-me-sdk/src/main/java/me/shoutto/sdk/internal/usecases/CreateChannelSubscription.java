@@ -13,10 +13,9 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Subscribes the user to the specified channel
  */
 
-public class CreateChannelSubscription extends BaseUseCase {
+public class CreateChannelSubscription extends BaseUseCase<Void> {
 
     private static final String TAG = CreateChannelSubscription.class.getSimpleName();
-    private StmCallback<Void> callback;
 
     public CreateChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -42,19 +41,5 @@ public class CreateChannelSubscription extends BaseUseCase {
         channelSubscription.setChannelId(channelId);
 
         stmEntityRequestProcessor.processRequest(HttpMethod.POST, channelSubscription);
-    }
-
-    @Override
-    void processCallback(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            callback.onResponse(null);
-        }
-    }
-
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
-        }
     }
 }

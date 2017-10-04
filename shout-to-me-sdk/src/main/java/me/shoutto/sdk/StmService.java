@@ -31,6 +31,7 @@ import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
 import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
+import me.shoutto.sdk.internal.usecases.GetMessage;
 import me.shoutto.sdk.internal.usecases.GetMessageCount;
 import me.shoutto.sdk.internal.usecases.GetMessages;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
@@ -228,6 +229,24 @@ public class StmService extends Service implements LocationUpdateListener {
      */
     public LocationServicesClient getLocationServicesClient() {
         return locationServicesClient;
+    }
+
+    /**
+     * Gets a single message from the Shout to Me service
+     * @param messageId The message ID
+     * @param callback An optional callback or null
+     */
+    public void getMessage(String messageId, StmCallback<Message> callback) {
+        DefaultAsyncEntityRequestProcessor<Message> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<Message>(Message.SERIALIZATION_KEY, Message.getSerializationType()),
+                this,
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetMessage getMessage = new GetMessage(defaultAsyncEntityRequestProcessor);
+        getMessage.get(messageId, callback);
     }
 
     /**

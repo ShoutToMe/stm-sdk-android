@@ -13,10 +13,9 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Unsubscribes the user from a channel
  */
 
-public class DeleteChannelSubscription extends BaseUseCase {
+public class DeleteChannelSubscription extends BaseUseCase<Void> {
 
     private static final String TAG = DeleteChannelSubscription.class.getSimpleName();
-    private StmCallback<Void> callback;
 
     public DeleteChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -41,20 +40,5 @@ public class DeleteChannelSubscription extends BaseUseCase {
         channelSubscription.setChannelId(channelId);
 
         stmEntityRequestProcessor.processRequest(HttpMethod.DELETE, channelSubscription);
-    }
-
-    @Override
-    void processCallback(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            callback.onResponse(null);
-        }
-    }
-
-    @Override
-    void processCallbackError(StmObservableResults stmObservableResults) {
-        if (callback != null) {
-            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MINOR);
-            callback.onError(error);
-        }
     }
 }
