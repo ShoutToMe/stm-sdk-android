@@ -24,8 +24,7 @@ import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 /**
  * This class represents a Shout to Me user entity. A Shout to Me User entity is generally used
- * by client apps to enable push notifications, get/set a user's handle, get/set the last time the user
- * read messages (to alert the Shout to Me service so Shout to Me can update the unread count value),
+ * by client apps to enable push notifications, get and set various properties and preferences,
  * and to access the user's auth token in the event the client app wants to call the Shout to Me REST API directly.
  */
 public class User extends StmBaseEntity {
@@ -43,10 +42,10 @@ public class User extends StmBaseEntity {
     private String authToken;
     private List<String> channelSubscriptions;
     private String email;
-    private Date lastReadMessagesDate;
     private String handle;
     private String phone;
     private String platformEndpointArn;
+    private Boolean platformEndpointEnabled;
     private List<String> topicPreferences;
 
     private transient boolean isInitialized = false;
@@ -62,7 +61,7 @@ public class User extends StmBaseEntity {
 
     public User() { super(SERIALIZATION_KEY, BASE_ENDPOINT); }
 
-    boolean isInitialized() {
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -126,25 +125,24 @@ public class User extends StmBaseEntity {
     /**
      * Gets the <code>Date</code> of the last time the user read messages.
      * @return The <code>Date</code> representing the last time the user read their messages.
+     *
+     * @deprecated This property is no longer used
      */
     @SuppressWarnings("unused")
+    @Deprecated
     public Date getLastReadMessagesDate() {
-        return lastReadMessagesDate;
+        return null;
     }
 
     /**
      * Sets the <code>Date</code> of the last time the user read their messages.
      * @param lastReadMessagesDate The <code>Date</code> representing the last time the user read their messages.
+     *
+     * @deprecated This property is no longer used
      */
+    @Deprecated
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
-        TimeZone tz = TimeZone.getTimeZone("UTC");
-        DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-        df.setTimeZone(tz);
-        String lastReadMessagesDateString = df.format(lastReadMessagesDate);
-        pendingChanges.put("last_read_messages_date",
-                new PendingApiObjectChange("last_read_messages_date", lastReadMessagesDateString, null));
-
-        this.lastReadMessagesDate = lastReadMessagesDate;
+        // Stubbed for backwards compatibility but does not do anything
     }
 
     /**
@@ -176,6 +174,14 @@ public class User extends StmBaseEntity {
         pendingChanges.put("platform_endpoint_arn",
                 new PendingApiObjectChange("platform_endpoing_arn", platformEndpointArn, this.platformEndpointArn));
         this.platformEndpointArn = platformEndpointArn;
+    }
+
+    public Boolean getPlatformEndpointEnabled() {
+        return platformEndpointEnabled;
+    }
+
+    public void setPlatformEndpointEnabled(Boolean platformEndpointEnabled) {
+        this.platformEndpointEnabled = platformEndpointEnabled;
     }
 
     @Override
@@ -348,17 +354,6 @@ public class User extends StmBaseEntity {
             handle = json.getString("handle");
         } catch (JSONException ex) {
             Log.i(TAG, "User does not have a handle set");
-        }
-
-        try {
-            String lastReadMessagesDateString = json.getString("last_read_messages_date");
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US);
-            sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-            lastReadMessagesDate = sdf.parse(lastReadMessagesDateString);
-        } catch(ParseException ex) {
-            Log.e(TAG, "Could not parse last read messages date", ex);
-        } catch(JSONException ex) {
-            // Ignore. It just may occur if message page was never viewed.
         }
 
         try {

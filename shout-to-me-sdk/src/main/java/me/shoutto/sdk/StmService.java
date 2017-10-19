@@ -20,17 +20,32 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
+import me.shoutto.sdk.internal.http.CountResponseAdapter;
+import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
+import me.shoutto.sdk.internal.http.NullResponseAdapter;
+import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
+import me.shoutto.sdk.internal.http.TopicUrlProvider;
+import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
+import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
+import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
+import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
+import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
+import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
+import me.shoutto.sdk.internal.usecases.GetMessage;
+import me.shoutto.sdk.internal.usecases.GetMessageCount;
+import me.shoutto.sdk.internal.usecases.GetMessages;
+import me.shoutto.sdk.internal.usecases.GetUser;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
+import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 import me.shoutto.sdk.internal.usecases.UploadShout;
-import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
-import me.shoutto.sdk.internal.http.GsonResponseAdapter;
-import me.shoutto.sdk.internal.http.VolleyRequestProcessor;
+import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
+import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
 import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
-import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 import me.shoutto.sdk.internal.http.StmHttpSender;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
@@ -94,9 +109,6 @@ public class StmService extends Service implements LocationUpdateListener {
     private StmPreferenceManager stmPreferenceManager;
     private HandWaveGestureListener overlay;
     private ChannelManager channelManager;
-    private GeofenceDbHelper geofenceDbHelper;
-    private GeofenceManager geofenceManager;
-    private MessageManager messageManager;
 
     public StmService() {
     }
@@ -111,20 +123,53 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
+     * Adds a topic preference to the user's record. This will result in a user only receiving
+     * notifications for the specified topics.
+     * @param topic The topic
+     * @param callback An optional callback or null
+     */
+    public void addTopicPreference(String topic, StmCallback<Void> callback) {
+
+        if (topic == null) {
+            String validationErrorMessage = "topic cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
+        }
+
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new NullResponseAdapter(),
+                getUserAuthToken(),
+                new TopicUrlProvider(getServerUrl(), user)
+        );
+
+        CreateTopicPreference createTopicPreference = new CreateTopicPreference(defaultAsyncEntityRequestProcessor);
+        createTopicPreference.create(topic, callback);
+    }
+
+    /**
      * The method to create a new shout programmatically, as opposed to through the Shout to Me
      * Recording Overlay
      * @param createShoutRequest A CreateShoutRequest object with all required fields
      * @param callback An optional callback or null
      */
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
-        VolleyRequestProcessor<Shout> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        refreshUserLocation();
+
+        DefaultAsyncEntityRequestProcessor<Shout> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonResponseAdapter<Shout>(),
-                this,
+                new GsonObjectResponseAdapter<Shout>(Shout.SERIALIZATION_KEY, Shout.getSerializationType()),
+                getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
-        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), volleyRequestProcessor);
+        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), defaultAsyncEntityRequestProcessor);
         shoutUploader.upload(createShoutRequest, callback);
     }
 
@@ -188,20 +233,45 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
+     * Gets a single message from the Shout to Me service
+     * @param messageId The message ID
+     * @param callback An optional callback or null
+     */
+    public void getMessage(String messageId, StmCallback<Message> callback) {
+        DefaultAsyncEntityRequestProcessor<Message> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<Message>(Message.SERIALIZATION_KEY, Message.getSerializationType()),
+                getUserAuthToken(),
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetMessage getMessage = new GetMessage(defaultAsyncEntityRequestProcessor);
+        getMessage.get(messageId, callback);
+    }
+
+    /**
      * Calls the service to get the list of user's messages and returns the list in the callback.
      * Currently only returns 1000 records.
      * @param callback The callback to execute or null.
      */
     public void getMessages(final StmCallback<List<Message>> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getMessages(callback);
-            }
-        }).start();
+        DefaultAsyncEntityRequestProcessor<List<Message>> defaultAsyncEntityRequestProcessor
+                = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new GsonListResponseAdapter<List<Message>, Message>(
+                        Message.LIST_SERIALIZATION_KEY,
+                        Message.SERIALIZATION_KEY,
+                        Message.getSerializationListType(),
+                        Message.class
+                ),
+                getUserAuthToken(),
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetMessages getMessages = new GetMessages(defaultAsyncEntityRequestProcessor);
+        getMessages.get(callback);
     }
 
     /**
@@ -225,15 +295,16 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback The callback to execute or null.
      */
     public void getUnreadMessageCount(final StmCallback<Integer> callback) {
-        if (messageManager == null) {
-            messageManager = new MessageManager(this);
-        }
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                messageManager.getUnreadMessageCount(callback);
-            }
-        }).start();
+        DefaultAsyncEntityRequestProcessor<Integer> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                null,
+                StmRequestQueue.getInstance(),
+                new CountResponseAdapter(),
+                getUserAuthToken(),
+                new MessageCountUrlProvider(getServerUrl(), true)
+        );
+
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(defaultAsyncEntityRequestProcessor);
+        getUnreadMessageCount.get(callback);
     }
 
     /**
@@ -250,31 +321,38 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback The Callback to be executed or null.
      */
     public void getUser(final StmCallback<User> callback) {
-        synchronized (this) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!user.isInitialized()) {
-                        initializeUserSession();
-                    }
-                    user.get(callback);
-                }
-            }).start();
+
+        if (user.getId() == null) {
+            StmError stmError = new StmError("User has not been initialized", true, StmError.SEVERITY_MINOR);
+            callback.onError(stmError);
+            return;
         }
+
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                getUserAuthToken(),
+                new DefaultUrlProvider(getServerUrl())
+        );
+        GetUser getUser = new GetUser(defaultAsyncEntityRequestProcessor);
+        getUser.get(user.getId(), callback);
     }
 
     private void initializeUserSession() {
-        String userId = stmPreferenceManager.getUserId();
-        String authToken = stmPreferenceManager.getAuthToken();
-        if (userId == null || authToken == null) {
-            createOrGetUserAccount();
-            authToken = stmPreferenceManager.getAuthToken();
-            userId = stmPreferenceManager.getUserId();
+        if (!user.isInitialized()) {
+            String userId = stmPreferenceManager.getUserId();
+            String authToken = stmPreferenceManager.getAuthToken();
+            if (userId == null || authToken == null) {
+                createOrGetUserAccount();
+                authToken = stmPreferenceManager.getAuthToken();
+                userId = stmPreferenceManager.getUserId();
+            }
+            user.setId(userId);
+            user.setAuthToken(authToken);
+            user.setIsInitialized(true);
+            Log.d(TAG, "User has been initialized");
         }
-        user.setId(userId);
-        user.setAuthToken(authToken);
-        user.setIsInitialized(true);
-        Log.d(TAG, "User has been initialized");
     }
 
     private void createOrGetUserAccount() {
@@ -321,12 +399,26 @@ public class StmService extends Service implements LocationUpdateListener {
     public void isSubscribedToChannel(String channelId, final StmCallback<Boolean> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.isSubscribed(callback);
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                getUserAuthToken(),
+                new DefaultUrlProvider(getServerUrl())
+        );
+
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(defaultAsyncEntityRequestProcessor);
+        getChannelSubscription.get(channelId, user.getId(), callback);
     }
 
     /**
@@ -365,20 +457,24 @@ public class StmService extends Service implements LocationUpdateListener {
         // Initialize the RequestQueue
         StmRequestQueue.setInstance(this);
 
-        // Create or get user
-        this.user = new User(this);
-
         this.stmHttpSender = new StmHttpSender(this);
 
-        geofenceDbHelper = new GeofenceDbHelper(this);
-        geofenceManager = new GeofenceManager(this, geofenceDbHelper, new StmPreferenceManager(this));
-
-        locationServicesClient = LocationServicesClient.getInstance(this);
+        locationServicesClient = LocationServicesClient.getInstance();
         locationServicesClient.registerLocationUpdateListener(this);
+        locationServicesClient.connectToService(this);
+        locationServicesClient.refreshLocation(this);
+
+        // Create or get user
+        this.user = new User(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initializeUserSession();
+            }
+        }).start();
 
         executorService = Executors.newFixedThreadPool(10);
 
-        locationServicesClient.connectToService();
         proximitySensorClient = new ProximitySensorClient(this);
 
         return stmBinder;
@@ -386,16 +482,24 @@ public class StmService extends Service implements LocationUpdateListener {
 
     /**
      * Handles location updates.
-     * @param location The updated Location object.
+     * @param newLocation The updated Location object.
      */
     @Override
-    public void onLocationUpdate(final Location location) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                geofenceManager.rebuildGeofencesInPlayServices(location);
-            }
-        }).start();
+    public void onLocationUpdate(final Location newLocation) {
+
+        if (user.isInitialized()) {
+            DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                    new GsonRequestAdapter(),
+                    StmRequestQueue.getInstance(),
+                    new NullResponseAdapter(),
+                    getUserAuthToken(),
+                    new UserLocationUrlProvider(getServerUrl(), user)
+            );
+
+            UpdateUserLocation updateUserLocation = new UpdateUserLocation(
+                    defaultAsyncEntityRequestProcessor, new GeofenceManager(this), this);
+            updateUserLocation.update(newLocation);
+        }
     }
 
     /**
@@ -436,6 +540,10 @@ public class StmService extends Service implements LocationUpdateListener {
         }
     }
 
+    public void refreshUserLocation() {
+        locationServicesClient.refreshLocation(this);
+    }
+
     /**
      * Registers a listener for hand wave gestures and starts listening if the first registration.
      * @param handWaveGestureListener The listener for hand wave gestures.
@@ -465,11 +573,35 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
-     * Removes all geofences from the Android geofencing API and local storage. Not for general use.
-     * Contact Shout to Me for more information.
+     * Removes a topic preference from the user's record.  If additional topics are still in the
+     * user's record, they will no longer receive shouts with the specified topic. If removing the
+     * last topic preference and the user has no more topic preferences, then the user will
+     * receive shouts from all topics.
+     * @param topic The topic to remove
+     * @param callback An optional callback or null
      */
-    public void removeAllGeofences() {
-        geofenceManager.removeAllGeofences();
+    public void removeTopicPreference(String topic, StmCallback<Void> callback) {
+        if (topic == null) {
+            String validationErrorMessage = "topic cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
+        }
+
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new NullResponseAdapter(),
+                getUserAuthToken(),
+                new TopicUrlProvider(getServerUrl(), user)
+        );
+
+        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(defaultAsyncEntityRequestProcessor);
+        deleteTopicPreference.delete(topic, callback);
     }
 
     /**
@@ -478,15 +610,6 @@ public class StmService extends Service implements LocationUpdateListener {
      */
     public void setChannelId(String channelId) {
         stmPreferenceManager.setChannelId(channelId);
-    }
-
-    /**
-     * Sets the maximum number of geofences to override the Android default in Shout to Me
-     * processing.  Not for general use. Contact Shout to Me for more information.
-     * @param maxGeofences The maximum number of geofences to create.
-     */
-    public void setMaxGeofences(Integer maxGeofences) {
-        stmPreferenceManager.setMaxGeofences(maxGeofences);
     }
 
     void setOverlay(HandWaveGestureListener overlay) {
@@ -518,27 +641,27 @@ public class StmService extends Service implements LocationUpdateListener {
     public void subscribeToChannel(final String channelId, final StmCallback<Void> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.subscribe(callback);
-    }
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new NullResponseAdapter(),
+                getUserAuthToken(),
+                new ChannelSubscriptionUrlProvider(getServerUrl(), user)
+        );
 
-    /**
-     * Synchronizes Shout to Me user notifications.  For each channel that the user is subscribed to,
-     * this method will retrieve active messages from the service and either display them to the
-     * user or create geofences.
-     */
-    public void synchronizeNotifications() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                NotificationManager notificationManager = new NotificationManager(StmService.this);
-                notificationManager.syncNotifications();
-            }
-        }).start();
+        CreateChannelSubscription createChannelSubscription =
+                new CreateChannelSubscription(defaultAsyncEntityRequestProcessor);
+        createChannelSubscription.create(channelId, callback);
     }
 
 
@@ -561,12 +684,26 @@ public class StmService extends Service implements LocationUpdateListener {
     public void unsubscribeFromChannel(final String channelId, final StmCallback<Void> callback) {
 
         if (channelId == null) {
-            throw new IllegalArgumentException("channelId cannot be null");
+            String validationErrorMessage = "channelId cannot be null";
+            if (callback != null) {
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MINOR);
+                callback.onError(error);
+                return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
+            }
         }
 
-        Channel channel = new Channel(this);
-        channel.setId(channelId);
-        channel.unsubscribe(callback);
+        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new NullResponseAdapter(),
+                getUserAuthToken(),
+                new ChannelSubscriptionUrlProvider(getServerUrl(), user)
+        );
+
+        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(defaultAsyncEntityRequestProcessor);
+        deleteChannelSubscription.delete(channelId, callback);
     }
 
     /**
@@ -577,22 +714,25 @@ public class StmService extends Service implements LocationUpdateListener {
     public void updateUser(UpdateUserRequest updateUserRequest, StmCallback<User> callback) {
 
         if (user.getId() == null) {
+            String validationErrorMessage = "Shout to Me user not initialized";
             if (callback != null) {
-                StmError error = new StmError("Shout to Me user not initialized", false, StmError.SEVERITY_MAJOR);
+                StmError error = new StmError(validationErrorMessage, false, StmError.SEVERITY_MAJOR);
                 callback.onError(error);
                 return;
+            } else {
+                throw new IllegalArgumentException(validationErrorMessage);
             }
         }
 
-        VolleyRequestProcessor<User> volleyRequestProcessor = new VolleyRequestProcessor<>(
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
-                new GsonResponseAdapter<User>(),
-                this,
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
 
-        UpdateUser updateUser = new UpdateUser(volleyRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(defaultAsyncEntityRequestProcessor, this);
         updateUser.update(updateUserRequest, user.getId(), callback);
     }
 }

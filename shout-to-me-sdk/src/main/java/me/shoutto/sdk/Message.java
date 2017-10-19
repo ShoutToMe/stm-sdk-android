@@ -57,7 +57,7 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
      * The default constructor.
      */
     public Message() {
-        super(SERIALIZATION_KEY);
+        super(SERIALIZATION_KEY, BASE_ENDPOINT);
     }
 
     /**

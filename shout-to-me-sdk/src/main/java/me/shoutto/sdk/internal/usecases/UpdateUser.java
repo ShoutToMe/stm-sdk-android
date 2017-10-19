@@ -4,6 +4,7 @@ import android.util.Log;
 
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.StmService;
 import me.shoutto.sdk.UpdateUserRequest;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
@@ -15,15 +16,14 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  * Updates a Shout to Me user object.
  */
 
-public class UpdateUser implements StmObserver {
+public class UpdateUser extends BaseUseCase<User> {
 
     private static final String TAG = UpdateUser.class.getSimpleName();
-    private StmEntityRequestProcessor stmEntityRequestProcessor;
-    private StmCallback<User> callback;
+    private StmService stmService;
 
-    public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        this.stmEntityRequestProcessor = stmEntityRequestProcessor;
-        stmEntityRequestProcessor.addObserver(this);
+    public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor, StmService stmService) {
+        super(stmEntityRequestProcessor);
+        this.stmService = stmService;
     }
 
     public void update(UpdateUserRequest updateUserRequest, String userId, StmCallback<User> callback) {
@@ -43,6 +43,7 @@ public class UpdateUser implements StmObserver {
             } else {
                 Log.w(TAG, errorMessage);
             }
+            stmEntityRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -55,9 +56,28 @@ public class UpdateUser implements StmObserver {
     }
 
     @Override
-    public void update(StmObservableResults stmObservableResults) {
+    public void processCallback(StmObservableResults stmObservableResults) {
+        User user = (User)stmObservableResults.getResult();
+
+        if (user != null && stmService != null) {
+            stmService.getUser().setChannelSubscriptions(user.getChannelSubscriptions());
+            stmService.getUser().setEmail(user.getEmail());
+            stmService.getUser().setHandle(user.getHandle());
+            stmService.getUser().setPlatformEndpointEnabled(user.getPlatformEndpointEnabled());
+            stmService.getUser().setPhone(user.getPhone());
+            stmService.getUser().setTopicPreferences(user.getTopicPreferences());
+        }
+
         if (callback != null) {
-            callback.onResponse((User)stmObservableResults.getResult());
+            callback.onResponse(user);
+        }
+    }
+
+    @Override
+    public void processCallbackError(StmObservableResults stmObservableResults) {
+        if (callback != null) {
+            StmError error = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MAJOR);
+            callback.onError(error);
         }
     }
 }

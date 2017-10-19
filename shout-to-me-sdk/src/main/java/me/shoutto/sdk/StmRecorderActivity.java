@@ -91,10 +91,11 @@ public class StmRecorderActivity extends Activity implements HandWaveGestureList
                 intent.putExtra(ACTIVITY_REASON, RECORD_AUDIO_PERMISSION_DENIED);
                 setResult(RESULT_OK, intent);
                 finish();
-                return;
-            }
+            } else {
+                stmService.refreshUserLocation();
 
-            finalizeRecordingDetailsAndStartRecording();
+                finalizeRecordingDetailsAndStartRecording();
+            }
         }
 
         @Override

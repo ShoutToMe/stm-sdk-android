@@ -46,7 +46,7 @@ public class UpdateUserTest {
     @Test
     public void update_InvalidInput_ShouldCallBackWithError() {
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUser.update(updateUserRequest, "userId", new Callback<User>() {
             @Override
@@ -64,13 +64,13 @@ public class UpdateUserTest {
     @Test
     public void update_NullUserId_ShouldCallBackWithError() {
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
         updateUser.update(updateUserRequest, null, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
-                fail("Should not callback with successful response");
+                fail("Should not call back with successful response");
             }
 
             @Override
@@ -85,7 +85,7 @@ public class UpdateUserTest {
     @Test
     public void update_EmptyStringUserId_ShouldCallBackWithError() {
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
         updateUser.update(updateUserRequest, "", new Callback<User>() {
@@ -117,7 +117,8 @@ public class UpdateUserTest {
 
         PowerMockito.mockStatic(Log.class);
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
+
+        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail(email);
         updateUserRequest.setHandle(handle);
@@ -141,7 +142,7 @@ public class UpdateUserTest {
         userResult.setId("userResult");
 
         doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setHandle("handle");
         updateUser.update(updateUserRequest, "userId", new Callback<User>() {

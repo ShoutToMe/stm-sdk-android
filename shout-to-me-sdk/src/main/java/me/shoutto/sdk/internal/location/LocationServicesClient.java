@@ -4,16 +4,16 @@ import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
-import android.os.Bundle;
-import android.support.annotation.NonNull;
+import android.os.Handler;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,76 +21,45 @@ import java.util.List;
 /**
  * Wrapper class for LocationServices.
  */
-public class LocationServicesClient implements GoogleApiClient.ConnectionCallbacks,
-        GoogleApiClient.OnConnectionFailedListener, LocationListener {
+public class LocationServicesClient {
 
     private static final String TAG = LocationServicesClient.class.getSimpleName();
+    private static final int LOCATION_UPDATE_DELAY_MILLIS = 2000;
     private static LocationServicesClient instance;
 
-    private Context context;
-    private GoogleApiClient googleApiClient;
+    // Location updates intervals in sec
+    private static final int LONG_DELAY_UPDATE_INTERVAL = 120000; // 2 min
+    private static final int LONG_DELAY_FASTEST_INTERVAL = 60000; // 1 min
+    private static final int LONG_DELAY_DISPLACEMENT = 1610; // 1 mile
+    private static final int SHORT_DELAY_INTERVAL = 100; // 100 ms
+
     private Location lastLocation;
-    private LocationRequest locationRequest;
     private double latitude;
     private double longitude;
     private List<LocationUpdateListener> locationUpdateListeners;
+    private FusedLocationProviderClient mFusedLocationClient;
+    private boolean isListeningForLocation = false;
 
-    // Location updates intervals in sec
-    private static final int UPDATE_INTERVAL = 20000; // 20 sec
-    private static final int FASTEST_INTERVAL = 60000; // 1 min
-    private static final int DISPLACEMENT = 500; // 500 meters
+    private LocationCallback locationCallback = new LocationCallback() {
+        @Override
+        public void onLocationResult(LocationResult locationResult) {
+            if (isListeningForLocation) {
+                processShortDelayLocationUpdate(locationResult.getLastLocation());
+            } else {
+                processLongDelayLocationUpdate(locationResult.getLastLocation());
+            }
+        };
+    };
 
-    private LocationServicesClient(Context context) {
-        this.context = context;
+    private LocationServicesClient() {
         locationUpdateListeners = new ArrayList<>();
-        buildGoogleApiClient();
-        createLocationRequest();
     }
 
-    public static LocationServicesClient getInstance(Context context) {
+    public static LocationServicesClient getInstance() {
         if (instance == null) {
-            instance = new LocationServicesClient(context.getApplicationContext());
+            instance = new LocationServicesClient();
         }
         return instance;
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            lastLocation = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (lastLocation != null) {
-                latitude = lastLocation.getLatitude();
-                longitude = lastLocation.getLongitude();
-            }
-        }
-
-        startLocationUpdates();
-    }
-
-    @Override
-    public void onConnectionSuspended(int cause) {
-        Log.w(TAG, "Google location services was suspended. Cause: " + cause);
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult result) {
-        Integer errorCode = result.getErrorCode();
-        Log.e(TAG, "Google play location services failed. Check the ConnectionResult error code: "
-                + errorCode);
-    }
-
-    @Override
-    public void onLocationChanged(Location location) {
-        lastLocation = location;
-        if (lastLocation != null) {
-            latitude = lastLocation.getLatitude();
-            longitude = lastLocation.getLongitude();
-        }
-
-        for (LocationUpdateListener locationUpdateListener : locationUpdateListeners) {
-            locationUpdateListener.onLocationUpdate(location);
-        }
     }
 
     public double getLatitude() {
@@ -101,12 +70,113 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
         return longitude;
     }
 
-    public void connectToService() {
-        googleApiClient.connect();
+    public void connectToService(Context context) {
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    processLongDelayLocationUpdate(location);
+                }
+            });
+        }
+
+        startLongDelayLocationUpdates(context);
     }
 
     public void disconnectFromService() {
         stopLocationUpdates();
+        mFusedLocationClient = null;
+    }
+
+    public void refreshLocation(final Context context) {
+        if (!isListeningForLocation) {
+            processTimerStart(context);
+
+            Handler handler = new Handler();
+            Runnable r = new Runnable() {
+                @Override
+                public void run() {
+                    processTimerEnd(context);
+                }
+            };
+            handler.postDelayed(r, LOCATION_UPDATE_DELAY_MILLIS);
+        }
+    }
+
+    private void processTimerStart(Context context) {
+        if (!isListeningForLocation) {
+            isListeningForLocation = true;
+            startShortDelayLocationUpdates(context);
+        }
+    }
+
+    private void processTimerEnd(Context context) {
+        startLongDelayLocationUpdates(context);
+        processLongDelayLocationUpdate(lastLocation);
+        isListeningForLocation = false;
+    }
+
+    private void startLongDelayLocationUpdates(Context context) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mFusedLocationClient.requestLocationUpdates(createLongDelayLocationRequest(), locationCallback, null);
+        }
+    }
+
+    private void startShortDelayLocationUpdates(Context context) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            mFusedLocationClient.requestLocationUpdates(createShortDelayLocationRequest(), locationCallback, null);
+        }
+    }
+
+    private LocationRequest createLongDelayLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(LONG_DELAY_UPDATE_INTERVAL);
+        locationRequest.setFastestInterval(LONG_DELAY_FASTEST_INTERVAL);
+        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
+        locationRequest.setSmallestDisplacement(LONG_DELAY_DISPLACEMENT);
+        return locationRequest;
+    }
+
+    private LocationRequest createShortDelayLocationRequest() {
+        LocationRequest locationRequest = new LocationRequest();
+        locationRequest.setInterval(SHORT_DELAY_INTERVAL);
+        locationRequest.setFastestInterval(SHORT_DELAY_INTERVAL);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        return locationRequest;
+    }
+
+    private void processLongDelayLocationUpdate(Location location) {
+        if (location != null) {
+            long timeSinceLastUpdate = -1;
+            if (lastLocation != null) {
+                timeSinceLastUpdate = location.getTime() - lastLocation.getTime();
+            }
+            Log.d(TAG, "timeSinceLastUpdate " + String.valueOf(timeSinceLastUpdate));
+            if (timeSinceLastUpdate == -1 || timeSinceLastUpdate > 15000) {
+                lastLocation = location;
+                latitude = lastLocation.getLatitude();
+                longitude = lastLocation.getLongitude();
+
+                Log.d(TAG, "Long delay location update " + String.valueOf(latitude) + "," + String.valueOf(longitude));
+
+                for (LocationUpdateListener locationUpdateListener : locationUpdateListeners) {
+                    locationUpdateListener.onLocationUpdate(lastLocation);
+                }
+            }
+        }
+    }
+
+    private void processShortDelayLocationUpdate(Location location) {
+        lastLocation = location;
+    }
+
+    private void stopLocationUpdates() {
+        mFusedLocationClient.removeLocationUpdates(locationCallback);
     }
 
     public void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
@@ -118,36 +188,6 @@ public class LocationServicesClient implements GoogleApiClient.ConnectionCallbac
     public void unregisterLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
         if (locationUpdateListener != null) {
             locationUpdateListeners.remove(locationUpdateListener);
-        }
-    }
-
-    protected synchronized void buildGoogleApiClient() {
-        googleApiClient = new GoogleApiClient.Builder(context)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-    }
-
-    protected void createLocationRequest() {
-        locationRequest = new LocationRequest();
-        locationRequest.setInterval(UPDATE_INTERVAL);
-        locationRequest.setFastestInterval(FASTEST_INTERVAL);
-        locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
-        locationRequest.setSmallestDisplacement(DISPLACEMENT);
-    }
-
-    protected void startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, locationRequest, this);
-        }
-    }
-
-    protected void stopLocationUpdates() {
-        if (googleApiClient.isConnected()) {
-            LocationServices.FusedLocationApi.removeLocationUpdates(googleApiClient, this);
-            googleApiClient.disconnect();
         }
     }
 }
