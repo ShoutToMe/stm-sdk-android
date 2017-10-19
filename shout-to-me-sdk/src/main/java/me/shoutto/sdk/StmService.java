@@ -26,6 +26,7 @@ import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
+import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
@@ -34,9 +35,10 @@ import me.shoutto.sdk.internal.usecases.GetChannelSubscription;
 import me.shoutto.sdk.internal.usecases.GetMessage;
 import me.shoutto.sdk.internal.usecases.GetMessageCount;
 import me.shoutto.sdk.internal.usecases.GetMessages;
+import me.shoutto.sdk.internal.usecases.GetUser;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
+import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 import me.shoutto.sdk.internal.usecases.UploadShout;
-import me.shoutto.sdk.internal.NotificationManager;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
@@ -44,7 +46,6 @@ import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
 import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
 import me.shoutto.sdk.internal.location.LocationUpdateListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
-import me.shoutto.sdk.internal.location.geofence.database.GeofenceDbHelper;
 import me.shoutto.sdk.internal.http.StmHttpSender;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
@@ -108,8 +109,6 @@ public class StmService extends Service implements LocationUpdateListener {
     private StmPreferenceManager stmPreferenceManager;
     private HandWaveGestureListener overlay;
     private ChannelManager channelManager;
-    private GeofenceDbHelper geofenceDbHelper;
-    private GeofenceManager geofenceManager;
 
     public StmService() {
     }
@@ -146,7 +145,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
-                this,
+                getUserAuthToken(),
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
@@ -161,11 +160,13 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback An optional callback or null
      */
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
+        refreshUserLocation();
+
         DefaultAsyncEntityRequestProcessor<Shout> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<Shout>(Shout.SERIALIZATION_KEY, Shout.getSerializationType()),
-                this,
+                getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
         UploadShout shoutUploader = new UploadShout(this, new S3Client(this), defaultAsyncEntityRequestProcessor);
@@ -241,7 +242,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 null,
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<Message>(Message.SERIALIZATION_KEY, Message.getSerializationType()),
-                this,
+                getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
 
@@ -265,7 +266,7 @@ public class StmService extends Service implements LocationUpdateListener {
                         Message.getSerializationListType(),
                         Message.class
                 ),
-                this,
+                getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
 
@@ -298,7 +299,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 null,
                 StmRequestQueue.getInstance(),
                 new CountResponseAdapter(),
-                this,
+                getUserAuthToken(),
                 new MessageCountUrlProvider(getServerUrl(), true)
         );
 
@@ -320,31 +321,38 @@ public class StmService extends Service implements LocationUpdateListener {
      * @param callback The Callback to be executed or null.
      */
     public void getUser(final StmCallback<User> callback) {
-        synchronized (this) {
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    if (!user.isInitialized()) {
-                        initializeUserSession();
-                    }
-                    user.get(callback);
-                }
-            }).start();
+
+        if (user.getId() == null) {
+            StmError stmError = new StmError("User has not been initialized", true, StmError.SEVERITY_MINOR);
+            callback.onError(stmError);
+            return;
         }
+
+        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                StmRequestQueue.getInstance(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                getUserAuthToken(),
+                new DefaultUrlProvider(getServerUrl())
+        );
+        GetUser getUser = new GetUser(defaultAsyncEntityRequestProcessor);
+        getUser.get(user.getId(), callback);
     }
 
     private void initializeUserSession() {
-        String userId = stmPreferenceManager.getUserId();
-        String authToken = stmPreferenceManager.getAuthToken();
-        if (userId == null || authToken == null) {
-            createOrGetUserAccount();
-            authToken = stmPreferenceManager.getAuthToken();
-            userId = stmPreferenceManager.getUserId();
+        if (!user.isInitialized()) {
+            String userId = stmPreferenceManager.getUserId();
+            String authToken = stmPreferenceManager.getAuthToken();
+            if (userId == null || authToken == null) {
+                createOrGetUserAccount();
+                authToken = stmPreferenceManager.getAuthToken();
+                userId = stmPreferenceManager.getUserId();
+            }
+            user.setId(userId);
+            user.setAuthToken(authToken);
+            user.setIsInitialized(true);
+            Log.d(TAG, "User has been initialized");
         }
-        user.setId(userId);
-        user.setAuthToken(authToken);
-        user.setIsInitialized(true);
-        Log.d(TAG, "User has been initialized");
     }
 
     private void createOrGetUserAccount() {
@@ -405,7 +413,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
-                this,
+                getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
 
@@ -449,20 +457,24 @@ public class StmService extends Service implements LocationUpdateListener {
         // Initialize the RequestQueue
         StmRequestQueue.setInstance(this);
 
-        // Create or get user
-        this.user = new User(this);
-
         this.stmHttpSender = new StmHttpSender(this);
 
-        geofenceDbHelper = new GeofenceDbHelper(this);
-        geofenceManager = new GeofenceManager(this, geofenceDbHelper, new StmPreferenceManager(this));
-
-        locationServicesClient = LocationServicesClient.getInstance(this);
+        locationServicesClient = LocationServicesClient.getInstance();
         locationServicesClient.registerLocationUpdateListener(this);
+        locationServicesClient.connectToService(this);
+        locationServicesClient.refreshLocation(this);
+
+        // Create or get user
+        this.user = new User(this);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                initializeUserSession();
+            }
+        }).start();
 
         executorService = Executors.newFixedThreadPool(10);
 
-        locationServicesClient.connectToService();
         proximitySensorClient = new ProximitySensorClient(this);
 
         return stmBinder;
@@ -470,16 +482,24 @@ public class StmService extends Service implements LocationUpdateListener {
 
     /**
      * Handles location updates.
-     * @param location The updated Location object.
+     * @param newLocation The updated Location object.
      */
     @Override
-    public void onLocationUpdate(final Location location) {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                geofenceManager.rebuildGeofencesInPlayServices(location);
-            }
-        }).start();
+    public void onLocationUpdate(final Location newLocation) {
+
+        if (user.isInitialized()) {
+            DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+                    new GsonRequestAdapter(),
+                    StmRequestQueue.getInstance(),
+                    new NullResponseAdapter(),
+                    getUserAuthToken(),
+                    new UserLocationUrlProvider(getServerUrl(), user)
+            );
+
+            UpdateUserLocation updateUserLocation = new UpdateUserLocation(
+                    defaultAsyncEntityRequestProcessor, new GeofenceManager(this), this);
+            updateUserLocation.update(newLocation);
+        }
     }
 
     /**
@@ -520,6 +540,10 @@ public class StmService extends Service implements LocationUpdateListener {
         }
     }
 
+    public void refreshUserLocation() {
+        locationServicesClient.refreshLocation(this);
+    }
+
     /**
      * Registers a listener for hand wave gestures and starts listening if the first registration.
      * @param handWaveGestureListener The listener for hand wave gestures.
@@ -549,14 +573,6 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
-     * Removes all geofences from the Android geofencing API and local storage. Not for general use.
-     * Contact Shout to Me for more information.
-     */
-    public void removeAllGeofences() {
-        geofenceManager.removeAllGeofences();
-    }
-
-    /**
      * Removes a topic preference from the user's record.  If additional topics are still in the
      * user's record, they will no longer receive shouts with the specified topic. If removing the
      * last topic preference and the user has no more topic preferences, then the user will
@@ -580,7 +596,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
-                this,
+                getUserAuthToken(),
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
@@ -594,15 +610,6 @@ public class StmService extends Service implements LocationUpdateListener {
      */
     public void setChannelId(String channelId) {
         stmPreferenceManager.setChannelId(channelId);
-    }
-
-    /**
-     * Sets the maximum number of geofences to override the Android default in Shout to Me
-     * processing.  Not for general use. Contact Shout to Me for more information.
-     * @param maxGeofences The maximum number of geofences to create.
-     */
-    public void setMaxGeofences(Integer maxGeofences) {
-        stmPreferenceManager.setMaxGeofences(maxGeofences);
     }
 
     void setOverlay(HandWaveGestureListener overlay) {
@@ -648,28 +655,13 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
-                this,
+                getUserAuthToken(),
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
 
         CreateChannelSubscription createChannelSubscription =
                 new CreateChannelSubscription(defaultAsyncEntityRequestProcessor);
         createChannelSubscription.create(channelId, callback);
-    }
-
-    /**
-     * Synchronizes Shout to Me user notifications.  For each channel that the user is subscribed to,
-     * this method will retrieve active messages from the service and either display them to the
-     * user or create geofences.
-     */
-    public void synchronizeNotifications() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                NotificationManager notificationManager = new NotificationManager(StmService.this);
-                notificationManager.syncNotifications();
-            }
-        }).start();
     }
 
 
@@ -706,7 +698,7 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
-                this,
+                getUserAuthToken(),
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
 
@@ -736,11 +728,11 @@ public class StmService extends Service implements LocationUpdateListener {
                 new GsonRequestAdapter(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
-                this,
+                getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
 
-        UpdateUser updateUser = new UpdateUser(defaultAsyncEntityRequestProcessor);
+        UpdateUser updateUser = new UpdateUser(defaultAsyncEntityRequestProcessor, this);
         updateUser.update(updateUserRequest, user.getId(), callback);
     }
 }

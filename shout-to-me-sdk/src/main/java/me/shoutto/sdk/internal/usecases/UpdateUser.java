@@ -4,6 +4,7 @@ import android.util.Log;
 
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
+import me.shoutto.sdk.StmService;
 import me.shoutto.sdk.UpdateUserRequest;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
@@ -18,9 +19,11 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 public class UpdateUser extends BaseUseCase<User> {
 
     private static final String TAG = UpdateUser.class.getSimpleName();
+    private StmService stmService;
 
-    public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor) {
+    public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor, StmService stmService) {
         super(stmEntityRequestProcessor);
+        this.stmService = stmService;
     }
 
     public void update(UpdateUserRequest updateUserRequest, String userId, StmCallback<User> callback) {
@@ -50,6 +53,24 @@ public class UpdateUser extends BaseUseCase<User> {
         user.setId(userId);
 
         stmEntityRequestProcessor.processRequest(HttpMethod.PUT, user);
+    }
+
+    @Override
+    public void processCallback(StmObservableResults stmObservableResults) {
+        User user = (User)stmObservableResults.getResult();
+
+        if (user != null && stmService != null) {
+            stmService.getUser().setChannelSubscriptions(user.getChannelSubscriptions());
+            stmService.getUser().setEmail(user.getEmail());
+            stmService.getUser().setHandle(user.getHandle());
+            stmService.getUser().setPlatformEndpointEnabled(user.getPlatformEndpointEnabled());
+            stmService.getUser().setPhone(user.getPhone());
+            stmService.getUser().setTopicPreferences(user.getTopicPreferences());
+        }
+
+        if (callback != null) {
+            callback.onResponse(user);
+        }
     }
 
     @Override

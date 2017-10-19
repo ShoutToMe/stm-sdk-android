@@ -45,6 +45,7 @@ public class User extends StmBaseEntity {
     private String handle;
     private String phone;
     private String platformEndpointArn;
+    private Boolean platformEndpointEnabled;
     private List<String> topicPreferences;
 
     private transient boolean isInitialized = false;
@@ -60,7 +61,7 @@ public class User extends StmBaseEntity {
 
     public User() { super(SERIALIZATION_KEY, BASE_ENDPOINT); }
 
-    boolean isInitialized() {
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -173,6 +174,14 @@ public class User extends StmBaseEntity {
         pendingChanges.put("platform_endpoint_arn",
                 new PendingApiObjectChange("platform_endpoing_arn", platformEndpointArn, this.platformEndpointArn));
         this.platformEndpointArn = platformEndpointArn;
+    }
+
+    public Boolean getPlatformEndpointEnabled() {
+        return platformEndpointEnabled;
+    }
+
+    public void setPlatformEndpointEnabled(Boolean platformEndpointEnabled) {
+        this.platformEndpointEnabled = platformEndpointEnabled;
     }
 
     @Override

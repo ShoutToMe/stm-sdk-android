@@ -17,6 +17,7 @@ import java.util.Map;
 
 import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmService;
+import me.shoutto.sdk.internal.StmObservable;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObservableType;
 import me.shoutto.sdk.internal.StmObserver;
@@ -32,19 +33,19 @@ public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestPr
     private StmEntityJsonRequestAdapter requestAdapter;
     private StmRequestQueue requestQueue;
     private StmHttpResponseAdapter<T> responseAdapter;
-    private StmService stmService;
+    private final String authToken;
     private StmUrlProvider urlProvider;
 
     public DefaultAsyncEntityRequestProcessor(StmEntityJsonRequestAdapter stmHttpRequestAdapter,
                                               StmRequestQueue stmRequestQueue,
                                               StmHttpResponseAdapter<T> stmHttpResponseAdapter,
-                                              StmService stmService,
+                                              String authToken,
                                               StmUrlProvider stmUrlProvider) {
         observers = new ArrayList<>();
         requestAdapter = stmHttpRequestAdapter;
         requestQueue = stmRequestQueue;
         responseAdapter = stmHttpResponseAdapter;
-        this.stmService = stmService;
+        this.authToken = authToken;
         urlProvider = stmUrlProvider;
     }
 
@@ -74,7 +75,7 @@ public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestPr
         Response.ErrorListener errorListener = new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError error) {
-                if (error.networkResponse.statusCode == 404) {
+                if (error.networkResponse != null && error.networkResponse.statusCode == 404) {
                     StmObservableResults<T> stmObservableResults = new StmObservableResults<>();
                     stmObservableResults.setError(false);
                     stmObservableResults.setResult(null);
@@ -103,7 +104,6 @@ public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestPr
             return;
         }
 
-        final String authToken = stmService.getUserAuthToken();
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(
                 adaptHttpMethod(httpMethod),
                 url,

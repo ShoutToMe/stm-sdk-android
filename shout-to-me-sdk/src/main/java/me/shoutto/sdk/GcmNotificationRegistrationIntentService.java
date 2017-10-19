@@ -3,11 +3,9 @@ package me.shoutto.sdk;
 import android.app.IntentService;
 import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 
@@ -33,6 +31,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.http.DefaultSyncEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.DefaultUrlProvider;
+import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
+import me.shoutto.sdk.internal.http.GsonRequestAdapter;
+import me.shoutto.sdk.internal.usecases.GetUser;
+import me.shoutto.sdk.internal.usecases.UpdateUser;
 
 /**
  * An <code>IntentService</code> implementation that registers an app to receive push notifications
@@ -51,10 +55,11 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     private static final String PLATFORM_APPLICATION_ARN_PREFIX = "arn:aws:sns:us-west-2:810633828709:app/GCM/";
     private static final String[] TOPICS = {"global"};
     private AmazonSNSClient snsClient;
-    private boolean isStmServiceBound = false;
-    private StmService stmService;
     private String platformApplicationArn;
-    private StmPreferenceManager stmPreferenceManager;
+    private String platformEndpointArn;
+    private String authToken;
+    private String serverUrl;
+    private String userId;
 
     public GcmNotificationRegistrationIntentService() {
         super(TAG);
@@ -66,10 +71,10 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     @Override
     public void onCreate() {
         super.onCreate();
-        Intent intent = new Intent(getApplicationContext(), StmService.class);
-        startService(intent);
-        bindService(intent, stmServiceConnection, BIND_AUTO_CREATE);
-        stmPreferenceManager = new StmPreferenceManager(getApplicationContext());
+        StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(getApplicationContext());
+        authToken = stmPreferenceManager.getAuthToken();
+        serverUrl = stmPreferenceManager.getServerUrl();
+        userId = stmPreferenceManager.getUserId();
     }
 
     /**
@@ -78,10 +83,6 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (isStmServiceBound) {
-            unbindService(stmServiceConnection);
-            isStmServiceBound = false;
-        }
     }
 
     /**
@@ -91,6 +92,10 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
      */
     @Override
     protected void onHandleIntent(Intent intent) {
+        processGcmRegistration();
+    }
+
+    private synchronized void processGcmRegistration() {
 
         try {
             ServiceInfo serviceInfo = getPackageManager().getServiceInfo(new ComponentName(this, this.getClass()), PackageManager.GET_META_DATA);
@@ -101,7 +106,6 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
                 Log.e(TAG, "me.shoutto.sdk.NotificationAppId is null. Please ensure the value is set in AndroidManifest.xml");
             }
 
-            String serverUrl = stmPreferenceManager.getServerUrl();
             if (serverUrl.contains("-test")) {
                 notificationAppId += "-test";
             }
@@ -134,7 +138,6 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             // [END get_token]
             Log.i(TAG, "GCM Registration Token: " + token);
 
-            // TODO: Implement this method to send any registration to your app's servers.
             sendRegistrationToServer(token);
 
             // Subscribe to topic channels
@@ -205,6 +208,8 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
                             .withEndpointArn(endpointArn)
                             .withAttributes(attribs);
             snsClient.setEndpointAttributes(saeReq);
+
+            updateUserProperties(endpointArn);
         }
     }
 
@@ -257,7 +262,9 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             }
         }
         Log.d(TAG, "Created ARN = " + endpointArn);
-        storeEndpointArn(endpointArn);
+
+        updateUserProperties(endpointArn);
+
         return endpointArn;
     }
 
@@ -268,42 +275,72 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
     private String retrieveEndpointArn() {
         // Retrieve the platform endpoint ARN from permanent storage,
         // or return null if null is stored.
-        String platformEndpointArn = stmService.getUser().getPlatformEndpointArn();
-        if (platformEndpointArn != null) {
-            Log.d(TAG, "Retrieved ARN = " + platformEndpointArn);
+
+        if (authToken == null || userId == null) {
+            Log.w(TAG, "Cannot retrieve endpoint ARN. Invalid authToken or userId");
+            return null;
         }
+
+        DefaultSyncEntityRequestProcessor<User> defaultSyncEntityRequestProcessor = new DefaultSyncEntityRequestProcessor<>(
+                null,
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                authToken,
+                new DefaultUrlProvider(serverUrl)
+        );
+        GetUser getUser = new GetUser(defaultSyncEntityRequestProcessor);
+        getUser.get(userId, new Callback<User>() {
+            @Override
+            public void onSuccess(StmResponse<User> stmResponse) {
+                User user = stmResponse.get();
+                if (user != null) {
+                    platformEndpointArn = user.getPlatformEndpointArn();
+                }
+            }
+
+            @Override
+            public void onFailure(StmError stmError) {
+                Log.w(TAG, "Could not get user with ID " + userId);
+            }
+        });
+
         return platformEndpointArn;
     }
 
     /**
-     * Stores the platform endpoint ARN in permanent storage for lookup next time.
+     * Stores the platform endpoint ARN and enabled flag in permanent storage for lookup next time.
      * */
-    private void storeEndpointArn(String endpointArn) {
-        // Write the platform endpoint ARN to permanent storage.
-        stmService.getUser().setPlatformEndpointArn(endpointArn);
-        StmError stmError = stmService.getUser().save();
-        if (stmError != null) {
-            Log.w(TAG, "An error occurred trying to save the user platform endpoint arn. Message" + stmError.getMessage());
+    private void updateUserProperties(String platformEndpointArn) {
+
+        if (authToken == null || userId == null) {
+            Log.w(TAG, "Cannot update user properties. User ID and/or Auth Token are null");
+            return;
         }
+
+        UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+        updateUserRequest.setPlatformEndpointEnabled(true);
+        updateUserRequest.setPlatformEndpointArn(platformEndpointArn);
+
+        DefaultSyncEntityRequestProcessor<User> defaultSyncEntityRequestProcessor = new DefaultSyncEntityRequestProcessor<>(
+                new GsonRequestAdapter(),
+                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                authToken,
+                new DefaultUrlProvider(serverUrl)
+        );
+        UpdateUser updateUser = new UpdateUser(defaultSyncEntityRequestProcessor, null);
+        updateUser.update(updateUserRequest, userId, new Callback<User>() {
+            @Override
+            public void onSuccess(StmResponse<User> stmResponse) {
+                Log.d(TAG, "Successfully updated platform endpoint properties");
+            }
+
+            @Override
+            public void onFailure(StmError stmError) {
+                Log.w(TAG, "Failed to update platform endpoint properties. " + stmError.getMessage());
+            }
+        });
     }
 
     private String buildUserDataAttributes() {
-        String userId = (stmPreferenceManager.getUserId() != null ? stmPreferenceManager.getUserId() : "");
-        return "{ \"user_id\": \"" + userId + "\" }";
+        return "{ \"user_id\": \"" + (userId != null ? userId : "") + "\" }";
     }
-
-    private ServiceConnection stmServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceConnected(ComponentName className,
-                                       IBinder service) {
-            stmService = ((StmService.StmBinder) service).getService();
-            isStmServiceBound = true;
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName arg0) {
-            isStmServiceBound = false;
-        }
-    };
 }

@@ -12,6 +12,8 @@ public class UpdateUserRequest implements StmEntityActionRequest {
     private String email;
     private String handle;
     private String phone;
+    private String platformEndpointArn;
+    private Boolean platformEndpointEnabled;
     private List<String> topicPreferences;
 
     /**
@@ -78,6 +80,22 @@ public class UpdateUserRequest implements StmEntityActionRequest {
         this.phone = phone;
     }
 
+    public String getPlatformEndpointArn() {
+        return platformEndpointArn;
+    }
+
+    public void setPlatformEndpointArn(String platformEndpointArn) {
+        this.platformEndpointArn = platformEndpointArn;
+    }
+
+    public Boolean getPlatformEndpointEnabled() {
+        return platformEndpointEnabled;
+    }
+
+    public void setPlatformEndpointEnabled(Boolean platformEndpointEnabled) {
+        this.platformEndpointEnabled = platformEndpointEnabled;
+    }
+
     /**
      * Gets the list of topics that the user is following. If a user is following topics, they will
      * only receive notifications for topics in the list.
@@ -108,6 +126,8 @@ public class UpdateUserRequest implements StmEntityActionRequest {
                 && email == null
                 && handle == null
                 && phone == null
+                && platformEndpointArn == null
+                && platformEndpointEnabled == null
                 && topicPreferences == null);
     }
 
@@ -133,6 +153,14 @@ public class UpdateUserRequest implements StmEntityActionRequest {
 
         if (phone != null) {
             user.setPhone(phone);
+        }
+
+        if (platformEndpointArn != null) {
+            user.setPlatformEndpointArn(platformEndpointArn);
+        }
+
+        if (platformEndpointEnabled != null) {
+            user.setPlatformEndpointEnabled(platformEndpointEnabled);
         }
 
         if (topicPreferences != null) {

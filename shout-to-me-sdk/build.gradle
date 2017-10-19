@@ -2,13 +2,13 @@ apply plugin: 'com.android.library'
 apply plugin: 'jacoco'
 
 android {
-    compileSdkVersion 25
+    compileSdkVersion 26
     buildToolsVersion '25.0.2'
 
     defaultConfig {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         minSdkVersion 15
-        targetSdkVersion 25
+        targetSdkVersion 26
         versionCode 16
         versionName "1.0.14"
     }

@@ -33,11 +33,9 @@ public class StmGcmListenerService extends GcmListenerService {
         Bundle notificationData = new Bundle();
         notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, data.getString("body"));
         notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, data.getString("channel_id"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_IMAGE_URL, data.getString("channel_image_url"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, data.getString("conversation_id"));
         notificationData.putString(MessageNotificationIntentWrapper.EXTRA_MESSAGE_ID, data.getString("message_id"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TITLE, data.getString("title"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, data.getString("type"));
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_CATEGORY, data.getString("category"));
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, data.getString("message_type"));
 
         StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
         NotificationManager notificationManager = new NotificationManager(this);

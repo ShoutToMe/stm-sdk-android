@@ -2,6 +2,7 @@ package me.shoutto.sdk.internal;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import me.shoutto.sdk.StmService;
 
@@ -10,13 +11,15 @@ import me.shoutto.sdk.StmService;
  */
 public class StmPreferenceManager {
 
+    private static final String TAG = StmPreferenceManager.class.getSimpleName();
     private static final String STM_PREFERENCES = "me.shoutto.sdk.STM_PREFERENCES";
     private static final String PREF_AUTH_TOKEN = "me.shoutto.sdk.PREF_AUTH_TOKEN";
     private static final String PREF_CHANNEL_ID = "me.shoutto.sdk.PREF_CHANNEL_ID";
     private static final String PREF_INSTALLATION_ID = "me.shoutto.sdk.PREF_INSTALLATION_ID";
-    private static final String PREF_MAX_GEOFENCES = "me.shoutto.sdk.PREF_MAX_GEOFENCES";
     private static final String PREF_SERVER_URL = "me.shoutto.sdk.PREF_SERVER_URL";
     private static final String PREF_USER_ID = "me.shoutto.sdk.USER_ID";
+    private static final String PREF_USER_LOCATION_LAT = "me.shoutto.sdk.USER_LOCATION_LAT";
+    private static final String PREF_USER_LOCATION_LON = "me.shoutto.sdk.USER_LOCATION_LON";
     private SharedPreferences sharedPreferences;
 
     public StmPreferenceManager(Context context) {
@@ -47,10 +50,6 @@ public class StmPreferenceManager {
         setPreferenceString(PREF_INSTALLATION_ID, installationId);
     }
 
-    public int getMaxGeofences() { return sharedPreferences.getInt(PREF_MAX_GEOFENCES, -1); }
-
-    public void setMaxGeofences(Integer maxGeofences) { setPreferenceInt(PREF_MAX_GEOFENCES, maxGeofences); }
-
     public String getServerUrl() {
         String serverUrl = sharedPreferences.getString(PREF_SERVER_URL, null);
         if (serverUrl == null) {
@@ -72,19 +71,45 @@ public class StmPreferenceManager {
         setPreferenceString(PREF_USER_ID, userId);
     }
 
+    public Double getUserLocationLat() {
+        Double lat = null;
+        String latString = sharedPreferences.getString(PREF_USER_LOCATION_LAT, null);
+        if (latString != null) {
+            try {
+                lat = Double.parseDouble(latString);
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Could not parse user lat: " + latString);
+            }
+        }
+        return lat;
+    }
+
+    public void setUserLocationLat(Double lat) {
+        setPreferenceString(PREF_USER_LOCATION_LAT, Double.toString(lat));
+    }
+
+    public Double getUserLocationLon() {
+        Double lon = null;
+        String lonString = sharedPreferences.getString(PREF_USER_LOCATION_LON, null);
+        if (lonString != null) {
+            try {
+                lon = Double.parseDouble(lonString);
+            } catch (NumberFormatException e) {
+                Log.w(TAG, "Could not parse user lon: " + lonString);
+            }
+        }
+        return lon;
+    }
+
+    public void setUserLocationLon(Double lon) {
+        setPreferenceString(PREF_USER_LOCATION_LON, Double.toString(lon));
+    }
+
     private void setPreferenceString(String key, String value) {
         if (value == null) {
             sharedPreferences.edit().remove(key).apply();
         } else {
             sharedPreferences.edit().putString(key, value).apply();
-        }
-    }
-
-    private void setPreferenceInt(String key, Integer value) {
-        if (value == null) {
-            sharedPreferences.edit().remove(key).apply();
-        } else {
-            sharedPreferences.edit().putInt(key, value).apply();
         }
     }
 }

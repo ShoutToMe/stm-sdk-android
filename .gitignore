@@ -6,3 +6,5 @@
 local.properties
 build
 shout-to-me-sdk/build
+
+_site/*
