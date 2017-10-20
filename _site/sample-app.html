@@ -280,7 +280,6 @@ This page will walk you through that process.</p>
             <span class="c1">// Get a reference to the UI text box</span>
             <span class="kd">final</span> <span class="n">EditText</span> <span class="n">handleEditText</span> <span class="o">=</span> <span class="o">(</span><span class="n">EditText</span><span class="o">)</span> <span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">editTextUserHandle</span><span class="o">);</span>
 
-            <span class="c1">// Calling getUser() with a Callback will ensure you get an instantiated user object from the server</span>
             <span class="n">stmService</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
                 <span class="nd">@Override</span>
                 <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">StmResponse</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">stmResponse</span><span class="o">)</span> <span class="o">{</span>
