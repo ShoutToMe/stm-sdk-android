@@ -140,6 +140,22 @@ audio associated with them. When they do, you can use the conversation ID to get
 </code></pre>
 </div>
 
+<h3 id="retrieve-a-single-message">Retrieve a single message</h3>
+
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">stmService</span><span class="o">.</span><span class="na">getMessage</span><span class="o">(</span><span class="n">String</span> <span class="n">messageId</span><span class="o">,</span> <span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">Message</span><span class="o">&gt;()</span> <span class="o">{</span>
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="n">StmResponse</span><span class="o">&lt;</span><span class="n">Message</span><span class="o">&gt;</span> <span class="n">messageResponse</span><span class="o">)</span> <span class="o">{</span>
+        <span class="n">Message</span> <span class="n">message</span> <span class="o">=</span> <span class="n">messageResponse</span><span class="o">.</span><span class="na">get</span><span class="o">();</span>
+    <span class="o">}</span>
+
+    <span class="nd">@Override</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onFailure</span><span class="o">(</span><span class="n">StmError</span> <span class="n">stmError</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">// Could not retrieve message</span>
+    <span class="o">}</span>
+<span class="o">});</span>
+</code></pre>
+</div>
+
 <h2 id="notifications">Notifications</h2>
 <p>The Shout to Me SDK supports receiving push notifications from the Shout to Me platform.  The SDK will only handle
   notifications sent from the Shout to Me system.  There are a number of technologies used in receiving notifications,
@@ -200,13 +216,6 @@ audio associated with them. When they do, you can use the conversation ID to get
 </code></pre>
 </div>
 
-<h3 id="geofencing">Geofencing</h3>
-<p>Location based notifications will be created as <a href="https://developers.google.com/android/reference/com/google/android/gms/location/Geofence">geofences</a> in the Shout to Me SDK.  Add this to your AndroidManifest.xml to allow the SDK to listen for geofence events:</p>
-
-<div class="language-xml highlighter-rouge"><pre class="highlight"><code><span class="nt">&lt;service</span> <span class="na">android:name=</span><span class="s">"me.shoutto.sdk.GeofenceTransitionsIntentService"</span> <span class="nt">/&gt;</span>
-</code></pre>
-</div>
-
 <p><strong>Note:</strong> Please contact Shout to Me support if you are already using geofences within your application.</p>
 
 <h3 id="shout-to-me-broadcasts">Shout to Me Broadcasts</h3>
@@ -230,9 +239,8 @@ audio associated with them. When they do, you can use the conversation ID to get
 <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onReceive</span><span class="o">(</span><span class="n">Context</span> <span class="n">context</span><span class="o">,</span> <span class="n">Intent</span> <span class="n">intent</span><span class="o">)</span> <span class="o">{</span>
     <span class="n">Bundle</span> <span class="n">data</span> <span class="o">=</span> <span class="n">intent</span><span class="o">.</span><span class="na">getExtras</span><span class="o">();</span>
     <span class="n">body</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_NOTIFICATION_BODY</span><span class="o">);</span>
+    <span class="n">category</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_NOTIFICATION_CATEGORY</span><span class="o">);</span>
     <span class="n">channelId</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_CHANNEL_ID</span><span class="o">);</span>
-    <span class="n">channelImageUrl</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_CHANNEL_IMAGE_URL</span><span class="o">);</span>
-    <span class="n">title</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_NOTIFICATION_TITLE</span><span class="o">);</span>
     <span class="n">type</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="na">getString</span><span class="o">(</span><span class="n">MessageNotificationIntentWrapper</span><span class="o">.</span><span class="na">EXTRA_NOTIFICATION_TYPE</span><span class="o">);</span>
 <span class="o">}</span>
 </code></pre>
