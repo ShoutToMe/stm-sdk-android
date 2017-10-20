@@ -51,6 +51,22 @@ stmService.getMessages(new Callback<List<Message>>() {
 });
 ```
 
+### Retrieve a single message
+
+```java
+stmService.getMessage(String messageId, new Callback<Message>() {
+    @Override
+    public void onSuccess(StmResponse<Message> messageResponse) {
+        Message message = messageResponse.get();
+    }
+
+    @Override
+    public void onFailure(StmError stmError) {
+        // Could not retrieve message
+    }
+});
+```
+
 ## Notifications
 The Shout to Me SDK supports receiving push notifications from the Shout to Me platform.  The SDK will only handle
   notifications sent from the Shout to Me system.  There are a number of technologies used in receiving notifications,
@@ -109,13 +125,6 @@ The Shout to Me system uses [Google Cloud Messaging (GCM)](https://developers.go
 <!-- [END instanceId_listener] -->
 ```
 
-### Geofencing
-Location based notifications will be created as [geofences](https://developers.google.com/android/reference/com/google/android/gms/location/Geofence) in the Shout to Me SDK.  Add this to your AndroidManifest.xml to allow the SDK to listen for geofence events:
-
-```xml
-<service android:name="me.shoutto.sdk.GeofenceTransitionsIntentService" />
-```
-
 **Note:** Please contact Shout to Me support if you are already using geofences within your application.
 
 ### Shout to Me Broadcasts
@@ -140,9 +149,8 @@ The broadcast receiver class should include something similar to the following t
 public void onReceive(Context context, Intent intent) {
     Bundle data = intent.getExtras();
     body = data.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY);
+    category = data.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_CATEGORY);
     channelId = data.getString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID);
-    channelImageUrl = data.getString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_IMAGE_URL);
-    title = data.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TITLE);
     type = data.getString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE);
 }
 ```

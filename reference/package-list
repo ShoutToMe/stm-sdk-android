@@ -6,4 +6,4 @@ me.shoutto.sdk.internal.audio
 me.shoutto.sdk.internal.http
 me.shoutto.sdk.internal.location
 me.shoutto.sdk.internal.location.geofence
-me.shoutto.sdk.internal.location.geofence.database
+me.shoutto.sdk.internal.usecases
