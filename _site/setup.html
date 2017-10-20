@@ -157,9 +157,9 @@ Here is a list of dependencies that the Shout to Me SDK uses.</p>
 the following functionality.</p>
 
 <ul>
-  <li>Determining the user’s location</li>
+  <li>Determining the user’s location when they send a message</li>
+  <li>Keeping track of the user’s location in order to send geo-targeted notifications</li>
   <li>Registering the user for Google Cloud Messaging</li>
-  <li>Managing geotargeted notifications with geofences</li>
 </ul>
 
 <p>If Google Play Services is not installed on a user’s phone, certain functionality may not work correctly.
@@ -183,7 +183,7 @@ user sees it after installing your app and the app can immediately be registered
 <p>The Shout to Me SDK utilizes Volley to optimize asynchronous communication with the API service. For more information about volley, see the <a href="https://developer.android.com/training/volley/index.html">Android Volley documentation</a>.</p>
 
 <h3 id="amazon-web-services">Amazon Web Services</h3>
-<p>The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. For more information about the Amazon Android AWS SDK, see the <a href="https://aws.amazon.com/mobile/sdk/">Amazon mobile SDK documentation</a>.</p>
+<p>The Shout to Me SDK utilizes AWS to send push notifications to mobile devices and transmit media files to cloud storage. For more information about the Amazon Android AWS SDK, see the <a href="https://aws.amazon.com/mobile/sdk/">Amazon mobile SDK documentation</a>.</p>
 
 <h2 id="permissions">Permissions</h2>
 
@@ -198,7 +198,7 @@ user sees it after installing your app and the app can immediately be registered
 </code></pre>
 </div>
 
-<p>Beginning with API level 23 (6.0), <a href="https://developer.android.com/training/permissions/requesting.html">Android requires that certain permissions be requested at run time</a>. The Shout to Me SDK uses two permissions that fall into this category:</p>
+<p>Beginning with API level 23 (6.0), <a href="https://developer.android.com/training/permissions/requesting.html">Android requires that certain permissions be requested at run time</a>. The Shout to Me SDK uses three permissions that fall into this category:</p>
 
 <ol>
   <li>Mic/record audio (Optional)</li>
@@ -219,7 +219,7 @@ audio permission is denied.</p>
 </div>
 
 <h3 id="read-external-storage">Read External Storage</h3>
-<p>If you plan to upload media files to create new shouts, then the read external storage permission is required.  With
+<p>If you plan to upload media files to create new shouts, then the read external storage permission is required.  Without
 permission to read external storage, you may not have access to certain media files.</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">READ_EXTERNAL_STORAGE</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span><span class="o">)</span> <span class="o">{</span>
@@ -230,7 +230,8 @@ permission to read external storage, you may not have access to certain media fi
 </div>
 
 <h3 id="location">Location</h3>
-<p>Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, the coordinates (lat/lon) of the person shouting are included with the Shout creation request and broadcasters will be able to see the geographical coordinates of where the user created the shout.</p>
+<p>Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, shouts
+will contain location information and the user will be able to receive geo-targeted notifications.</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="k">if</span> <span class="o">(</span><span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_COARSE_LOCATION</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span>
         <span class="o">||</span> <span class="n">ContextCompat</span><span class="o">.</span><span class="na">checkSelfPermission</span><span class="o">(</span><span class="k">this</span><span class="o">,</span> <span class="n">Manifest</span><span class="o">.</span><span class="na">permission</span><span class="o">.</span><span class="na">ACCESS_FINE_LOCATION</span><span class="o">)</span> <span class="o">!=</span> <span class="n">PackageManager</span><span class="o">.</span><span class="na">PERMISSION_GRANTED</span><span class="o">)</span> <span class="o">{</span>
