@@ -232,14 +232,10 @@ one for each app.  Much of the generic code around creating and authenticating t
 to make your life easier.  However, there are a few items that do need to be exposed, such as setting a user handle
 to match the handle in your system.</p>
 
-<p>Retrieving the user object from StmService can be done with or without a Callback. Retrieving the user
-object without a Callback does not guarantee that the user object will have been initialized by the service, however,
-it is convenient for certain write-only scenarios such as wanting to change the user’s handle.</p>
+<p>To get or update the user object, simply call the appropriate StmService method and pass a callback (update requires an UpdateUserRequest object.)
+  The callback can be <code class="highlighter-rouge">null</code> if you are not interested in the results.</p>
 
-<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// Without a callback</span>
-<span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="n">stmService</span><span class="o">.</span><span class="na">getUser</span><span class="o">()</span>
-
-<span class="c1">// With a callback</span>
+<div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="c1">// Get the user object</span>
 <span class="n">stmService</span><span class="o">.</span><span class="na">getUser</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
     <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">StmResponse</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">stmResponse</span><span class="o">)</span> <span class="o">{</span>
@@ -254,7 +250,7 @@ it is convenient for certain write-only scenarios such as wanting to change the 
 </code></pre>
 </div>
 
-<p>To update a user, instantiate a <code class="highlighter-rouge">UpdateUserRequest</code> object, complete the desired update fields, and then submit the
+<p>To update a user, instantiate an <code class="highlighter-rouge">UpdateUserRequest</code> object, complete the desired update fields, and then submit the
 object to the <code class="highlighter-rouge">stmService.updateUser()</code> method with an optional callback.</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">UpdateUserRequest</span> <span class="n">updateUserRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UpdateUserRequest</span><span class="o">();</span>

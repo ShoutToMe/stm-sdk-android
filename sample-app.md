@@ -189,9 +189,8 @@ public class MainActivity extends AppCompatActivity {
             // You can also set the channel programmatically if you have access to more than one channel
             // stmService.setChannelId("[channel ID]");
 
-            // Get a reference to the UI text box
+            // Get a reference to the UI text box and update it with data from the server
             final EditText handleEditText = (EditText) findViewById(R.id.editTextUserHandle);
-
             stmService.getUser(new Callback<User>() {
                 @Override
                 public void onSuccess(final StmResponse<User> stmResponse) {

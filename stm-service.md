@@ -143,15 +143,11 @@ one for each app.  Much of the generic code around creating and authenticating t
 to make your life easier.  However, there are a few items that do need to be exposed, such as setting a user handle
 to match the handle in your system.
 
-Retrieving the user object from StmService can be done with or without a Callback. Retrieving the user
-object without a Callback does not guarantee that the user object will have been initialized by the service, however,
-it is convenient for certain write-only scenarios such as wanting to change the user's handle.
+To get or update the user object, simply call the appropriate StmService method and pass a callback (update requires an UpdateUserRequest object.)
+  The callback can be `null` if you are not interested in the results.
 
 ```java
-// Without a callback
-User user = stmService.getUser()
-
-// With a callback
+// Get the user object
 stmService.getUser(new Callback<User>() {
     @Override
     public void onSuccess(final StmResponse<User> stmResponse) {
@@ -165,7 +161,7 @@ stmService.getUser(new Callback<User>() {
 });
 ```
 
-To update a user, instantiate a `UpdateUserRequest` object, complete the desired update fields, and then submit the
+To update a user, instantiate an `UpdateUserRequest` object, complete the desired update fields, and then submit the
 object to the `stmService.updateUser()` method with an optional callback.
 
 ```java
