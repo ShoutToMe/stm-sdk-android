@@ -192,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
             // Get a reference to the UI text box
             final EditText handleEditText = (EditText) findViewById(R.id.editTextUserHandle);
 
-            // Calling getUser() with a Callback will ensure you get an instantiated user object from the server
             stmService.getUser(new Callback<User>() {
                 @Override
                 public void onSuccess(final StmResponse<User> stmResponse) {
