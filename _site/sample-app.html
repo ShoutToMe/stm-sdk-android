@@ -217,11 +217,10 @@ This page will walk you through that process.</p>
             <span class="kd">final</span> <span class="n">EditText</span> <span class="n">editText</span> <span class="o">=</span> <span class="o">(</span><span class="n">EditText</span><span class="o">)</span><span class="n">findViewById</span><span class="o">(</span><span class="n">R</span><span class="o">.</span><span class="na">id</span><span class="o">.</span><span class="na">editTextUserHandle</span><span class="o">);</span>
             <span class="n">String</span> <span class="n">newHandle</span> <span class="o">=</span> <span class="n">editText</span><span class="o">.</span><span class="na">getText</span><span class="o">().</span><span class="na">toString</span><span class="o">();</span>
 
-            <span class="c1">// Calling getUser() without a Callback does not guarantee that the object will be</span>
-            <span class="c1">// instantiated from the server, but is useful for update-only functions.</span>
-            <span class="n">User</span> <span class="n">user</span> <span class="o">=</span> <span class="n">stmService</span><span class="o">.</span><span class="na">getUser</span><span class="o">();</span>
-            <span class="n">user</span><span class="o">.</span><span class="na">setHandle</span><span class="o">(</span><span class="n">newHandle</span><span class="o">);</span>
-            <span class="n">user</span><span class="o">.</span><span class="na">save</span><span class="o">(</span><span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
+            <span class="n">UpdateUserRequest</span> <span class="n">updateUserRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UpdateUserRequest</span><span class="o">();</span>
+            <span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setHandle</span><span class="o">(</span><span class="n">newHandle</span><span class="o">);</span>
+
+            <span class="n">stmService</span><span class="o">.</span><span class="na">updateUser</span><span class="o">(</span><span class="n">updateUserRequest</span><span class="o">,</span> <span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
                 <span class="nd">@Override</span>
                 <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onSuccess</span><span class="o">(</span><span class="kd">final</span> <span class="n">StmResponse</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;</span> <span class="n">stmResponse</span><span class="o">)</span> <span class="o">{</span>
                     <span class="n">editText</span><span class="o">.</span><span class="na">setError</span><span class="o">(</span><span class="kc">null</span><span class="o">);</span>

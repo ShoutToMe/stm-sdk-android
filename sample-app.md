@@ -129,11 +129,10 @@ public class MainActivity extends AppCompatActivity {
             final EditText editText = (EditText)findViewById(R.id.editTextUserHandle);
             String newHandle = editText.getText().toString();
 
-            // Calling getUser() without a Callback does not guarantee that the object will be
-            // instantiated from the server, but is useful for update-only functions.
-            User user = stmService.getUser();
-            user.setHandle(newHandle);
-            user.save(new Callback<User>() {
+            UpdateUserRequest updateUserRequest = new UpdateUserRequest();
+            updateUserRequest.setHandle(newHandle);
+
+            stmService.updateUser(updateUserRequest, new Callback<User>() {
                 @Override
                 public void onSuccess(final StmResponse<User> stmResponse) {
                     editText.setError(null);
