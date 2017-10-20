@@ -65,9 +65,9 @@ Here is a list of dependencies that the Shout to Me SDK uses.
 The Shout to Me SDK Android SDK uses [Google Play Services](https://developers.google.com/android/guides/overview) for
 the following functionality.
 
-* Determining the user's location
+* Determining the user's location when they send a message
+* Keeping track of the user's location in order to send geo-targeted notifications
 * Registering the user for Google Cloud Messaging
-* Managing geotargeted notifications with geofences
 
 
 If Google Play Services is not installed on a user's phone, certain functionality may not work correctly.
@@ -92,7 +92,7 @@ The Shout to Me SDK utilizes Volley to optimize asynchronous communication with 
 
 
 ### Amazon Web Services
-The Shout to Me SDK utilizes AWS to send push notifications to mobile devices. For more information about the Amazon Android AWS SDK, see the [Amazon mobile SDK documentation](https://aws.amazon.com/mobile/sdk/).
+The Shout to Me SDK utilizes AWS to send push notifications to mobile devices and transmit media files to cloud storage. For more information about the Amazon Android AWS SDK, see the [Amazon mobile SDK documentation](https://aws.amazon.com/mobile/sdk/).
 
 
 ## Permissions
@@ -108,7 +108,7 @@ The Shout to Me SDK requests the following permissions in the manifest:
 <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 ```
 
-Beginning with API level 23 (6.0), [Android requires that certain permissions be requested at run time](https://developer.android.com/training/permissions/requesting.html). The Shout to Me SDK uses two permissions that fall into this category:
+Beginning with API level 23 (6.0), [Android requires that certain permissions be requested at run time](https://developer.android.com/training/permissions/requesting.html). The Shout to Me SDK uses three permissions that fall into this category:
 
 1. Mic/record audio (Optional)
 2. Read external storage (Optional)
@@ -127,7 +127,7 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) !=
 ```
 
 ### Read External Storage
-If you plan to upload media files to create new shouts, then the read external storage permission is required.  With
+If you plan to upload media files to create new shouts, then the read external storage permission is required.  Without
 permission to read external storage, you may not have access to certain media files.
 
 ```java
@@ -138,7 +138,8 @@ if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_ST
 ```
 
 ### Location
-Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, the coordinates (lat/lon) of the person shouting are included with the Shout creation request and broadcasters will be able to see the geographical coordinates of where the user created the shout.
+Use of location functionality is optional in the Shout to Me platform. However, if location permission is enabled, shouts
+will contain location information and the user will be able to receive geo-targeted notifications.
 
 ```java
 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
