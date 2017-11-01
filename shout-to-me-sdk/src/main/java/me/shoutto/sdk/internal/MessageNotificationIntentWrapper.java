@@ -10,7 +10,6 @@ public class MessageNotificationIntentWrapper {
 
     public static final String EVENT_MESSAGE_NOTIFICATION_RECEIVED = "me.shoutto.sdk.EVENT_MESSAGE_NOTIFICATION_RECEIVED";
     public static final String EXTRA_CHANNEL_ID = "me.shoutto.sdk.EXTRA_CHANNEL_ID";
-    public static final String EXTRA_CHANNEL_IMAGE_URL = "me.shoutto.sdk.EXTRA_CHANNEL_IMAGE_URL";
     public static final String EXTRA_CONVERSATION_ID = "me.shoutto.sdk.EXTRA_CONVERSATION_ID";
     public static final String EXTRA_MESSAGE_ID = "me.shoutto.sdk.EXTRA_MESSAGE_ID";
     public static final String EXTRA_NOTIFICATION_BODY = "me.shoutto.sdk.EXTRA_NOTIFICATION_BODY";

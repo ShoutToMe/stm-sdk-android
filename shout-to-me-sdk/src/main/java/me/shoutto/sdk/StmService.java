@@ -514,18 +514,11 @@ public class StmService extends Service implements LocationUpdateListener {
         return START_REDELIVER_INTENT;
     }
 
-    /**
-     * Handles the Android unbind lifecycle event.  Performs some clean up tasks.
-     * @param   intent The Intent that was used to bind to this service.
-     * @return  Return true if you would like to have the service's <code>onRebind(Intent)</code>
-     *          method later called when new clients bind to it.
-     */
     @Override
-    public boolean onUnbind(Intent intent) {
+    public void onDestroy() {
         locationServicesClient.unregisterLocationUpdateListener(this);
         locationServicesClient.disconnectFromService();
         proximitySensorClient.stopListening();
-        return super.onUnbind(intent);
     }
 
     /**
