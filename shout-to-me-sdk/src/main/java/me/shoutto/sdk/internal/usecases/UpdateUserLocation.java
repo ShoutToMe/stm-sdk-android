@@ -21,18 +21,42 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
 
     private static final String TAG = UpdateUserLocation.class.getSimpleName();
     private GeofenceManager geofenceManager;
-    private Context context;
     private Location newLocation;
+    private StmPreferenceManager stmPreferenceManager;
+    private Double lastUserLocationLat;
+    private Double lastUserLocationLon;
+    private float distanceSinceLastUpdate;
 
     public UpdateUserLocation(StmEntityRequestProcessor stmEntityRequestProcessor,
                               GeofenceManager geofenceManager,
                               Context context) {
         super(stmEntityRequestProcessor);
         this.geofenceManager = geofenceManager;
-        this.context = context;
+
+        stmPreferenceManager = new StmPreferenceManager(context);
+        lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
+        lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
     }
 
     public void update(Location newLocation) {
+        if (newLocation == null) {
+            Log.w(TAG, "Cannot process location update. Location is null");
+            return;
+        }
+
+        if (lastUserLocationLat != null && lastUserLocationLon != null) {
+            Location lastUserLocation = new Location("");
+            lastUserLocation.setLatitude(lastUserLocationLat);
+            lastUserLocation.setLongitude(lastUserLocationLon);
+
+            distanceSinceLastUpdate = lastUserLocation.distanceTo(newLocation);
+
+            if (distanceSinceLastUpdate < GeofenceManager.GEOFENCE_RADIUS_IN_METERS) {
+                Log.d(TAG, "User is still in Geofence. Ignore location update");
+                return;
+            }
+        }
+
         this.newLocation = newLocation;
 
         updateGeofence();
@@ -53,14 +77,8 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
         userLocation.setLocation(new UserLocation.Location(coordinates));
         userLocation.setDate(new Date());
 
-        StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(context);
-        Double oldLat = stmPreferenceManager.getUserLocationLat();
-        Double oldLon = stmPreferenceManager.getUserLocationLon();
-        if (oldLat != null && oldLon != null) {
-            Location oldLocation = new Location("");
-            oldLocation.setLatitude(oldLat);
-            oldLocation.setLongitude(oldLon);
-            userLocation.setMetersSinceLastUpdate(oldLocation.distanceTo(newLocation));
+        if (lastUserLocationLat != null && lastUserLocationLon != null) {
+            userLocation.setMetersSinceLastUpdate(distanceSinceLastUpdate);
         }
 
         stmPreferenceManager.setUserLocationLat(newLocation.getLatitude());

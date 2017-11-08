@@ -7,10 +7,15 @@ import android.net.Uri;
 import android.provider.MediaStore;
 import android.text.TextUtils;
 import android.util.Log;
+import android.webkit.MimeTypeMap;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * The data object that contains information about a new shout to be created.
@@ -19,11 +24,14 @@ import java.util.List;
 public class CreateShoutRequest implements StmEntityActionRequest {
 
     private static final String TAG = CreateShoutRequest.class.getSimpleName();
+    private Context context;
     private String description;
     private File file;
     private List<String> tags;
+    private boolean temporaryFile = false;
     private String text;
     private String topic;
+    private Uri uri;
 
     /**
      * Gets the user defined description of the shout
@@ -46,6 +54,9 @@ public class CreateShoutRequest implements StmEntityActionRequest {
      * @return The shout media File object
      */
     public File getFile() {
+        if (file == null && uri != null) {
+            processUri();
+        }
         return file;
     }
 
@@ -55,6 +66,10 @@ public class CreateShoutRequest implements StmEntityActionRequest {
      */
     public void setFile(File file) {
         this.file = file;
+    }
+
+    public boolean isTemporaryFile() {
+        return temporaryFile;
     }
 
     /**
@@ -107,29 +122,85 @@ public class CreateShoutRequest implements StmEntityActionRequest {
     }
 
     /**
-     * Helper function only for files in media storage.  For files in other storage, use setFile
+     * Helper function that will attempt to create a File from a Uri.  Not guaranteed to work for all
+     * types of files. If files in question don't work, use setFile()
      * @param uri the Uri of a media file
      * @param context the Context
      */
     public void setFileFromMediaUri(Uri uri, Context context) {
-        String[] filePathColumn = {MediaStore.MediaColumns.DATA};
-        ContentResolver contentResolver = context.getContentResolver();
+        this.context = context;
+        this.uri = uri;
+    }
 
-        Cursor cursor = contentResolver.query(uri, filePathColumn, null, null, null);
-        if (cursor != null) {
-            cursor.moveToFirst();
+    private void processUri() {
 
-            int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
-            String filePath = cursor.getString(columnIndex);
-            if (filePath != null) {
-                file = new File(filePath);
-            } else {
-                Log.w(TAG, String.format("File path from Uri is null. Uri: %s", uri));
-            }
-            cursor.close();
-        } else {
-            Log.w(TAG, "Could not inspect file Uri. Please verify you are passing in a valid media Uri.");
+        if (context == null || uri == null) {
+            Log.w(TAG, "Cannot process Uri to File because either Uri or Context is null");
+            return;
         }
+
+        ContentResolver contentResolver = context.getContentResolver();
+        try {
+            // Attempt 1: Try to query Uri data field
+            String[] filePathColumn = {MediaStore.MediaColumns.DATA};
+            Cursor cursor = contentResolver.query(uri, filePathColumn, null, null, null);
+            if (cursor != null) {
+                cursor.moveToFirst();
+
+                int columnIndex = cursor.getColumnIndex(filePathColumn[0]);
+                String filePath = cursor.getString(columnIndex);
+                if (filePath != null) {
+                    file = new File(filePath);
+                    return;
+                } else {
+                    Log.w(TAG, String.format("File path from Uri is null. Uri: %s", uri));
+                }
+                cursor.close();
+            } else {
+                Log.w(TAG, "Could not inspect file Uri. Please verify you are passing in a valid media Uri.");
+            }
+        } catch (Exception ex) {
+            Log.e(TAG, ex.getLocalizedMessage(), ex);
+        }
+
+        // Attempt 2: Try to use InputStream to make a copy of the file
+        try {
+            InputStream is = contentResolver.openInputStream(uri);
+            String fileExtension = "";
+            String fileType = contentResolver.getType(uri);
+            if (fileType != null) {
+                MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();
+                fileExtension = mimeTypeMap.getExtensionFromMimeType(fileType);
+            }
+
+            UUID uuid = UUID.randomUUID();
+            String filePath = context.getFilesDir() + "/" + uuid + ("".equals(fileExtension) ? "" : "." + fileExtension);
+
+            FileOutputStream os = new FileOutputStream(filePath);
+            byte[] buffer = new byte[1024];
+            int bytesRead;
+            //read from is to buffer
+            while((bytesRead = is.read(buffer)) !=-1){
+                os.write(buffer, 0, bytesRead);
+            }
+            is.close();
+            //flush OutputStream to write any buffered data to file
+            os.flush();
+            os.close();
+
+            file = new File(filePath);
+            temporaryFile = true;
+        } catch (FileNotFoundException ex) {
+            Log.w(TAG, "Could not get input stream from Uri");
+        } catch (IOException ex) {
+            Log.e(TAG, "Error writing file");
+        } catch (Exception ex) {
+            Log.e(TAG, "Unknown error trying to upload file from InputStream", ex);
+        }
+    }
+
+    public boolean deleteTemporaryFile() {
+        return file != null && file.delete();
     }
 
     /**
@@ -138,7 +209,7 @@ public class CreateShoutRequest implements StmEntityActionRequest {
      * @return true if CreateShoutRequest object is ready to be processed by the Shout to Me SDK
      */
     public boolean isValid() {
-        return file != null && file.length() > 0;
+        return (file != null && file.length() > 0) || uri != null;
     }
 
     @Override
