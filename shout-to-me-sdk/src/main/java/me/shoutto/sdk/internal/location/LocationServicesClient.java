@@ -122,14 +122,18 @@ public class LocationServicesClient {
     private void startLongDelayLocationUpdates(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mFusedLocationClient.requestLocationUpdates(createLongDelayLocationRequest(), locationCallback, null);
+            if (mFusedLocationClient != null) {
+                mFusedLocationClient.requestLocationUpdates(createLongDelayLocationRequest(), locationCallback, null);
+            }
         }
     }
 
     private void startShortDelayLocationUpdates(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mFusedLocationClient.requestLocationUpdates(createShortDelayLocationRequest(), locationCallback, null);
+            if (mFusedLocationClient != null) {
+                mFusedLocationClient.requestLocationUpdates(createShortDelayLocationRequest(), locationCallback, null);
+            }
         }
     }
 
