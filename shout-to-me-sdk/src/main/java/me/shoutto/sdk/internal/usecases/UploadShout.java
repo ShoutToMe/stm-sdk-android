@@ -24,9 +24,12 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
 public class UploadShout extends BaseUseCase<Shout> {
 
     private static final String TAG = UploadShout.class.getSimpleName();
+    private static final String FILE_NULL_MESSAGE = "CreateShoutRequest did not return a File object. If you used a Uri, ensure that it can be converted to a File. Aborting upload.";
+    private static final String INVALID_REQUEST_OBJECT_MESSAGE = "CreateShoutRequest object not valid. Aborting upload.";
     private CreateShoutRequest createShoutRequest;
     private FileUploader fileUploader;
     private StmService stmService;
+    private boolean shoutPostedToApi = false;
 
     public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor stmEntityRequestProcessor) {
         super(stmEntityRequestProcessor);
@@ -39,18 +42,26 @@ public class UploadShout extends BaseUseCase<Shout> {
         this.createShoutRequest = createShoutRequest;
 
         if (createShoutRequest.isValid()) {
-            stmEntityRequestProcessor.addObserver(this);
-            fileUploader.addObserver(this);
-            fileUploader.uploadFile(createShoutRequest.getFile());
+            File file = createShoutRequest.getFile();
+            if (file == null) {
+                if (callback == null) {
+                    Log.w(TAG, FILE_NULL_MESSAGE);
+                } else {
+                    StmError error = new StmError(FILE_NULL_MESSAGE, false, StmError.SEVERITY_MINOR);
+                    callback.onError(error);
+                }
+            } else {
+                stmEntityRequestProcessor.addObserver(this);
+                fileUploader.addObserver(this);
+                fileUploader.uploadFile(file);
+            }
         } else {
             if (callback != null) {
-                StmError error = new StmError("CreateShoutRequest object not valid. Aborting upload.",
-                        false, StmError.SEVERITY_MINOR);
+                StmError error = new StmError(INVALID_REQUEST_OBJECT_MESSAGE, false, StmError.SEVERITY_MINOR);
                 callback.onError(error);
             } else {
-                Log.w(TAG, "CreateShoutRequest object not valid. Aborting upload.");
+                Log.w(TAG, INVALID_REQUEST_OBJECT_MESSAGE);
             }
-
         }
     }
 
@@ -70,11 +81,18 @@ public class UploadShout extends BaseUseCase<Shout> {
         }
     }
 
-    private void processFileUploadResult(String fileUrl) {
-        Shout shout = (Shout)createShoutRequest.adaptToBaseEntity();
-        shout.setChannelId(stmService.getChannelId());
-        shout.setMediaFileUrl(fileUrl);
-        stmEntityRequestProcessor.processRequest(HttpMethod.POST, shout);
+    private synchronized void processFileUploadResult(String fileUrl) {
+        if (createShoutRequest.isTemporaryFile()) {
+            createShoutRequest.deleteTemporaryFile();
+        }
+
+        if (!shoutPostedToApi) {
+            shoutPostedToApi = true;
+            Shout shout = (Shout)createShoutRequest.adaptToBaseEntity();
+            shout.setChannelId(stmService.getChannelId());
+            shout.setMediaFileUrl(fileUrl);
+            stmEntityRequestProcessor.processRequest(HttpMethod.POST, shout);
+        }
     }
 
     private void processPostShoutResult(Shout shout) {
@@ -85,6 +103,10 @@ public class UploadShout extends BaseUseCase<Shout> {
 
     @Override
     public void processCallbackError(StmObservableResults stmObservableResults) {
+        if (createShoutRequest.isTemporaryFile()) {
+            createShoutRequest.deleteTemporaryFile();
+        }
+
         if (callback != null) {
             StmError stmError = new StmError(stmObservableResults.getErrorMessage(), false, StmError.SEVERITY_MAJOR);
             callback.onError(stmError);
