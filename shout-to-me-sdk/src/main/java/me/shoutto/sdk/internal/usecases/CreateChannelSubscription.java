@@ -40,6 +40,6 @@ public class CreateChannelSubscription extends BaseUseCase<Void> {
         ChannelSubscription channelSubscription = new ChannelSubscription();
         channelSubscription.setChannelId(channelId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.POST, channelSubscription);
+        stmEntityRequestProcessor.processRequest(HttpMethod.PUT, channelSubscription);
     }
 }

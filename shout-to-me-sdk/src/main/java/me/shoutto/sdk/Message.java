@@ -40,6 +40,8 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     @SuppressWarnings("unused")
     private String conversationId;
 
+    private String idType;
+
     @SuppressWarnings("unused")
     private String message;
 
@@ -75,6 +77,13 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     public String getConversationId() {
         return conversationId;
     }
+
+    /**
+     * Gets the id type. For direct user messages this field will be null. For channel messages
+     * this field will be 'conversation'
+     * @return The id type
+     */
+    public String getIdType() { return idType; }
 
     /**
      * Gets the message body.

@@ -17,6 +17,12 @@ import me.shoutto.sdk.internal.StmPreferenceManager;
 public class StmGcmListenerService extends GcmListenerService {
 
     private static final String TAG = StmGcmListenerService.class.getSimpleName();
+    private static final String CONVERSATION_MESSAGE_TYPE = "conversation";
+    private static final String BODY_KEY = "body";
+    private static final String CATEGORY_KEY = "category";
+    private static final String CHANNEL_ID_KEY = "channel_id";
+    private static final String MESSAGE_ID_KEY = "stm_message_id";
+    private static final String MESSAGE_TYPE_KEY = "stm_message_type";
 
     /**
      * Called when a notification is received from the Shout to Me platform.
@@ -31,11 +37,18 @@ public class StmGcmListenerService extends GcmListenerService {
         Log.d(TAG, "Message received.");
 
         Bundle notificationData = new Bundle();
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, data.getString("body"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, data.getString("channel_id"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_MESSAGE_ID, data.getString("message_id"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_CATEGORY, data.getString("category"));
-        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, data.getString("message_type"));
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_BODY, data.getString(BODY_KEY));
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CHANNEL_ID, data.getString(CHANNEL_ID_KEY));
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_CATEGORY, data.getString(CATEGORY_KEY));
+
+        String messageId = data.getString(MESSAGE_ID_KEY);
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_MESSAGE_ID, messageId);
+
+        String messageType = data.getString(MESSAGE_TYPE_KEY);
+        notificationData.putString(MessageNotificationIntentWrapper.EXTRA_NOTIFICATION_TYPE, messageType);
+        if (CONVERSATION_MESSAGE_TYPE.equals(messageType)) {
+            notificationData.putString(MessageNotificationIntentWrapper.EXTRA_CONVERSATION_ID, messageId);
+        }
 
         StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
         NotificationManager notificationManager = new NotificationManager(this);

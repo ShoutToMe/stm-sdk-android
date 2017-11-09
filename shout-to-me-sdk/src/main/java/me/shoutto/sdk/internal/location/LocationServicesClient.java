@@ -16,6 +16,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -34,6 +35,7 @@ public class LocationServicesClient {
     private static final int SHORT_DELAY_INTERVAL = 100; // 100 ms
 
     private Location lastLocation;
+    private Location pendingLocation;
     private double latitude;
     private double longitude;
     private List<LocationUpdateListener> locationUpdateListeners;
@@ -48,7 +50,7 @@ public class LocationServicesClient {
             } else {
                 processLongDelayLocationUpdate(locationResult.getLastLocation());
             }
-        };
+        }
     };
 
     private LocationServicesClient() {
@@ -71,11 +73,9 @@ public class LocationServicesClient {
     }
 
     public void connectToService(Context context) {
-        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
-
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            mFusedLocationClient.getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
+            getFusedLocationClient(context).getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
                 @Override
                 public void onSuccess(Location location) {
                     processLongDelayLocationUpdate(location);
@@ -106,6 +106,13 @@ public class LocationServicesClient {
         }
     }
 
+    private FusedLocationProviderClient getFusedLocationClient(Context context) {
+        if (mFusedLocationClient == null) {
+            mFusedLocationClient = LocationServices.getFusedLocationProviderClient(context);
+        }
+        return  mFusedLocationClient;
+    }
+
     private void processTimerStart(Context context) {
         if (!isListeningForLocation) {
             isListeningForLocation = true;
@@ -114,26 +121,23 @@ public class LocationServicesClient {
     }
 
     private void processTimerEnd(Context context) {
-        startLongDelayLocationUpdates(context);
-        processLongDelayLocationUpdate(lastLocation);
+        processLongDelayLocationUpdate(pendingLocation);
         isListeningForLocation = false;
+        pendingLocation = null;
+        startLongDelayLocationUpdates(context);
     }
 
     private void startLongDelayLocationUpdates(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            if (mFusedLocationClient != null) {
-                mFusedLocationClient.requestLocationUpdates(createLongDelayLocationRequest(), locationCallback, null);
-            }
+            getFusedLocationClient(context).requestLocationUpdates(createLongDelayLocationRequest(), locationCallback, null);
         }
     }
 
     private void startShortDelayLocationUpdates(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
-            if (mFusedLocationClient != null) {
-                mFusedLocationClient.requestLocationUpdates(createShortDelayLocationRequest(), locationCallback, null);
-            }
+            getFusedLocationClient(context).requestLocationUpdates(createShortDelayLocationRequest(), locationCallback, null);
         }
     }
 
@@ -157,10 +161,13 @@ public class LocationServicesClient {
     private void processLongDelayLocationUpdate(Location location) {
         if (location != null) {
             long timeSinceLastUpdate = -1;
+
+
+
             if (lastLocation != null) {
-                timeSinceLastUpdate = location.getTime() - lastLocation.getTime();
+                timeSinceLastUpdate = new Date().getTime() - lastLocation.getTime();
             }
-            Log.d(TAG, "timeSinceLastUpdate " + String.valueOf(timeSinceLastUpdate));
+
             if (timeSinceLastUpdate == -1 || timeSinceLastUpdate > 15000) {
                 lastLocation = location;
                 latitude = lastLocation.getLatitude();
@@ -176,11 +183,13 @@ public class LocationServicesClient {
     }
 
     private void processShortDelayLocationUpdate(Location location) {
-        lastLocation = location;
+        pendingLocation = location;
     }
 
     private void stopLocationUpdates() {
-        mFusedLocationClient.removeLocationUpdates(locationCallback);
+        if (mFusedLocationClient != null) {
+            mFusedLocationClient.removeLocationUpdates(locationCallback);
+        }
     }
 
     public void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
