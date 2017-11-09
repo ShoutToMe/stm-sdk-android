@@ -125,8 +125,11 @@ stmService.createShout(createShoutRequest, new Callback<Shout>() {
 For media files, there is a helper function in CreateShoutRequest that you can use to pass in a
 <a href="https://developer.android.com/reference/android/net/Uri.html" target="_blank">Uri</a>
 instead of a <a href="https://developer.android.com/reference/java/io/File.html" target="_blank">File</a>.
-It requires a context in order to search the
-<a href="https://developer.android.com/reference/android/provider/MediaStore.html" target="_blank">MediaStore</a>.
+It requires a Context.
+
+NOTE: This helper function will do its best to build the File from the provider Uri, however
+due to the nature of differences in Android device implmentations and file storage areas, it is not guaranteed to work.
+Sufficient testing should be done on your supported devices and Android versions.
 
 ```java
 createShoutRequest.setFileFromMediaUri(mediaFileUri, context);
