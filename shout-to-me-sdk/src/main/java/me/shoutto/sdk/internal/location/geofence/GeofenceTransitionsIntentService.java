@@ -12,10 +12,9 @@ import com.google.android.gms.location.sample.geofencing.GeofenceErrorMessages;
 
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.DefaultSyncEntityRequestProcessor;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
-import me.shoutto.sdk.internal.http.StmRequestQueue;
 import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
 import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 
@@ -53,6 +52,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 return;
             }
 
+            Log.i(TAG,String.format("Geofence exit detected %f, %f", location.getLatitude(), location.getLongitude()));
+
             StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
             String userId = stmPreferenceManager.getUserId();
             String authToken = stmPreferenceManager.getAuthToken();
@@ -61,16 +62,15 @@ public class GeofenceTransitionsIntentService extends IntentService {
             User user = new User();
             user.setId(userId);
 
-            DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+            DefaultSyncEntityRequestProcessor<Void> defaultSyncEntityRequestProcessor = new DefaultSyncEntityRequestProcessor<>(
                     new GsonRequestAdapter(),
-                    StmRequestQueue.getInstance(),
                     new NullResponseAdapter(),
                     authToken,
                     new UserLocationUrlProvider(serverUrl, user)
             );
 
             UpdateUserLocation updateUserLocation
-                    = new UpdateUserLocation(defaultAsyncEntityRequestProcessor, new GeofenceManager(this), this);
+                    = new UpdateUserLocation(defaultSyncEntityRequestProcessor, new GeofenceManager(this), this);
             updateUserLocation.update(location);
         }
     }

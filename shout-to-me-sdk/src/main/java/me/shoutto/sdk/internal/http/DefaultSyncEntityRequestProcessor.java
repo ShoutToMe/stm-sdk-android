@@ -22,7 +22,7 @@ import me.shoutto.sdk.internal.StmObserver;
  * The default HTTP request process for synchronous entity calls
  */
 
-public class DefaultSyncEntityRequestProcessor<T extends StmBaseEntity>
+public class DefaultSyncEntityRequestProcessor<T>
         extends StmHttpRequestBase implements StmEntityRequestProcessor {
 
     private static final String TAG = DefaultSyncEntityRequestProcessor.class.getSimpleName();
