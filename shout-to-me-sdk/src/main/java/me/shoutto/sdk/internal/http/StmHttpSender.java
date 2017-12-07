@@ -263,9 +263,9 @@ public class StmHttpSender {
             requestJson.put("device_id", stmService.getInstallationId());
             if (ContextCompat.checkSelfPermission(stmService, Manifest.permission.ACCESS_FINE_LOCATION)
                     == PackageManager.PERMISSION_GRANTED) {
-                if (stmService.getLocationServicesClient() != null) {
-                    requestJson.put("lat", stmService.getLocationServicesClient().getLatitude());
-                    requestJson.put("lon", stmService.getLocationServicesClient().getLongitude());
+                if (stmService.getUpdateUserLocationController() != null) {
+                    requestJson.put("lat", stmService.getUpdateUserLocationController().getLatitude());
+                    requestJson.put("lon", stmService.getUpdateUserLocationController().getLongitude());
                 }
             }
             if (params != null) {

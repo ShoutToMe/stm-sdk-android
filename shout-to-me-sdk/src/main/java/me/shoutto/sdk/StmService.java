@@ -5,7 +5,6 @@ import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
-import android.location.Location;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -26,7 +25,7 @@ import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
-import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
+import me.shoutto.sdk.internal.location.UpdateUserLocationController;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
@@ -37,18 +36,14 @@ import me.shoutto.sdk.internal.usecases.GetMessageCount;
 import me.shoutto.sdk.internal.usecases.GetMessages;
 import me.shoutto.sdk.internal.usecases.GetUser;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
-import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 import me.shoutto.sdk.internal.usecases.UploadShout;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
 import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
-import me.shoutto.sdk.internal.location.LocationUpdateListener;
-import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 import me.shoutto.sdk.internal.http.StmHttpSender;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
-import me.shoutto.sdk.internal.location.LocationServicesClient;
 
 /**
  * The main entry point to interact with the Shout to Me platform.  <code>StmService</code> is implemented as
@@ -58,7 +53,7 @@ import me.shoutto.sdk.internal.location.LocationServicesClient;
  *
  * @see <a href="https://developer.android.com/guide/components/services.html" target="_blank">Android Services</a>
  */
-public class StmService extends Service implements LocationUpdateListener {
+public class StmService extends Service {
 
     /**
      * The shared preferences key that <code>StmService</code> uses.
@@ -103,12 +98,12 @@ public class StmService extends Service implements LocationUpdateListener {
     private StmHttpSender stmHttpSender;
     private StmCallback<Shout> shoutCreationCallback;
     private ExecutorService executorService;
-    private LocationServicesClient locationServicesClient;
     private ProximitySensorClient proximitySensorClient;
     private List<HandWaveGestureListener> handWaveGestureListenerList = new ArrayList<>();
     private StmPreferenceManager stmPreferenceManager;
     private HandWaveGestureListener overlay;
     private ChannelManager channelManager;
+    private UpdateUserLocationController updateUserLocationController;
 
     public StmService() {
     }
@@ -225,11 +220,11 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     /**
-     * Returns the <code>LocationServicesClient</code>.
-     * @return The LocationServicesClient.
+     * Returns the <code>UpdateUserLocationController</code>.
+     * @return The UpdateUserLocationController.
      */
-    public LocationServicesClient getLocationServicesClient() {
-        return locationServicesClient;
+    public UpdateUserLocationController getUpdateUserLocationController() {
+        return updateUserLocationController;
     }
 
     /**
@@ -459,11 +454,6 @@ public class StmService extends Service implements LocationUpdateListener {
 
         this.stmHttpSender = new StmHttpSender(this);
 
-        locationServicesClient = LocationServicesClient.getInstance();
-        locationServicesClient.registerLocationUpdateListener(this);
-        locationServicesClient.connectToService(this);
-        locationServicesClient.refreshLocation(this);
-
         // Create or get user
         this.user = new User(this);
         new Thread(new Runnable() {
@@ -473,33 +463,15 @@ public class StmService extends Service implements LocationUpdateListener {
             }
         }).start();
 
+        updateUserLocationController = UpdateUserLocationController.getInstance(this);
+        updateUserLocationController.startTrackingUserLocation(this);
+        updateUserLocationController.updateUserLocation(this);
+
         executorService = Executors.newFixedThreadPool(10);
 
         proximitySensorClient = new ProximitySensorClient(this);
 
         return stmBinder;
-    }
-
-    /**
-     * Handles location updates.
-     * @param newLocation The updated Location object.
-     */
-    @Override
-    public void onLocationUpdate(final Location newLocation) {
-
-        if (user.isInitialized()) {
-            DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                    new GsonRequestAdapter(),
-                    StmRequestQueue.getInstance(),
-                    new NullResponseAdapter(),
-                    getUserAuthToken(),
-                    new UserLocationUrlProvider(getServerUrl(), user)
-            );
-
-            UpdateUserLocation updateUserLocation = new UpdateUserLocation(
-                    defaultAsyncEntityRequestProcessor, new GeofenceManager(this), this);
-            updateUserLocation.update(newLocation);
-        }
     }
 
     /**
@@ -516,8 +488,6 @@ public class StmService extends Service implements LocationUpdateListener {
 
     @Override
     public void onDestroy() {
-        locationServicesClient.unregisterLocationUpdateListener(this);
-        locationServicesClient.disconnectFromService();
         proximitySensorClient.stopListening();
     }
 
@@ -534,7 +504,7 @@ public class StmService extends Service implements LocationUpdateListener {
     }
 
     public void refreshUserLocation() {
-        locationServicesClient.refreshLocation(this);
+        updateUserLocationController.updateUserLocation(this);
     }
 
     /**
