@@ -30,7 +30,6 @@ import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 public class UpdateUserLocationController implements LocationUpdateListener, StmObservable {
 
     private static final String TAG = UpdateUserLocationController.class.getSimpleName();
-    private static UpdateUserLocationController instance;
     private GeofenceManager geofenceManager;
     private LocationServicesClient locationServicesClient;
     private StmPreferenceManager stmPreferenceManager;
@@ -40,7 +39,7 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
     private List<StmObserver> observers;
     private Context context;
 
-    private UpdateUserLocationController(LocationServicesClient locationServicesClient,
+    public UpdateUserLocationController(LocationServicesClient locationServicesClient,
                                          Context context) {
         geofenceManager = new GeofenceManager(context);
         this.context = context;
@@ -53,14 +52,6 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
         this.locationServicesClient = locationServicesClient;
         this.locationServicesClient.registerLocationUpdateListener(this);
         observers = new ArrayList<>();
-    }
-
-    public static UpdateUserLocationController getInstance(Context context) {
-        if (instance == null) {
-            instance = new UpdateUserLocationController(LocationServicesClient.getInstance(),
-                    context);
-        }
-        return instance;
     }
 
     public double getLatitude() {

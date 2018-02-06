@@ -25,6 +25,7 @@ import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
+import me.shoutto.sdk.internal.location.LocationServicesClient;
 import me.shoutto.sdk.internal.location.UpdateUserLocationController;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
@@ -463,7 +464,7 @@ public class StmService extends Service {
             }
         }).start();
 
-        updateUserLocationController = UpdateUserLocationController.getInstance(this);
+        updateUserLocationController = new UpdateUserLocationController(LocationServicesClient.getInstance(), this);
         updateUserLocationController.startTrackingUserLocation(this);
         updateUserLocationController.updateUserLocation(this);
 
