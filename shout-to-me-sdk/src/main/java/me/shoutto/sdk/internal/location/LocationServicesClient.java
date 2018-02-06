@@ -64,15 +64,15 @@ public class LocationServicesClient {
         return instance;
     }
 
-    public double getLatitude() {
+    double getLatitude() {
         return latitude;
     }
 
-    public double getLongitude() {
+    double getLongitude() {
         return longitude;
     }
 
-    public void connectToService(Context context) {
+    void connectToService(Context context) {
         if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             getFusedLocationClient(context).getLastLocation().addOnSuccessListener(new OnSuccessListener<Location>() {
@@ -91,7 +91,7 @@ public class LocationServicesClient {
         mFusedLocationClient = null;
     }
 
-    public void refreshLocation(final Context context) {
+    void refreshLocation(final Context context) {
         if (!isListeningForLocation) {
             processTimerStart(context);
 
@@ -192,7 +192,7 @@ public class LocationServicesClient {
         }
     }
 
-    public void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
+    void registerLocationUpdateListener(LocationUpdateListener locationUpdateListener) {
         if (locationUpdateListener != null) {
             locationUpdateListeners.add(locationUpdateListener);
         }

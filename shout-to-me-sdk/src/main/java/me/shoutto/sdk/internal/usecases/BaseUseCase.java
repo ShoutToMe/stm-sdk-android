@@ -29,6 +29,8 @@ abstract class BaseUseCase<T> implements StmObserver {
         }
 
         processCallback(stmObservableResults);
+
+        stmEntityRequestProcessor.deleteObserver(this);
     }
 
     /**

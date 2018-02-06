@@ -84,7 +84,7 @@ public class GeofenceManager {
             return pendingIntent;
         }
 
-        Intent intent = new Intent(context, GeofenceTransitionsIntentService.class);
+        Intent intent = new Intent(context, GeofenceTransitionsService.class);
         pendingIntent = PendingIntent.getService(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
         return pendingIntent;
     }

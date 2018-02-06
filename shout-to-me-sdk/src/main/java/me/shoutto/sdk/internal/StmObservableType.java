@@ -6,5 +6,6 @@ package me.shoutto.sdk.internal;
 
 public enum StmObservableType {
     STM_SERVICE_RESPONSE,
+    UPDATE_USER_LOCATION,
     UPLOAD_FILE
 }

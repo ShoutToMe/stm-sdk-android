@@ -67,7 +67,6 @@ public class DefaultSyncEntityRequestProcessor<T>
             } else {
                 connection = (HttpURLConnection) url.openConnection();
             }
-
             connection.setRequestMethod(httpMethod.toString());
             connection.addRequestProperty("Authorization", "Bearer " + authToken);
             connection.addRequestProperty("Content-Type", "application/json");
@@ -130,9 +129,10 @@ public class DefaultSyncEntityRequestProcessor<T>
             }
 
         } catch (Exception ex) {
+            Log.e(TAG, "Error.", ex);
             StmObservableResults stmObservableResults = new StmObservableResults();
             stmObservableResults.setError(true);
-            stmObservableResults.setErrorMessage("An error occurred calling the Shout to Me service" + ex.getMessage());
+            stmObservableResults.setErrorMessage("An error occurred calling the Shout to Me service. " + ex.getMessage());
             notifyObservers(stmObservableResults);
         }
     }

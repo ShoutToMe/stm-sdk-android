@@ -1,11 +1,12 @@
 package me.shoutto.sdk.internal.usecases;
 
-import android.content.Context;
 import android.location.Location;
 import android.util.Log;
 
 import java.util.Date;
 
+import me.shoutto.sdk.StmCallback;
+import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.UserLocation;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.HttpMethod;
@@ -29,20 +30,26 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
 
     public UpdateUserLocation(StmEntityRequestProcessor stmEntityRequestProcessor,
                               GeofenceManager geofenceManager,
-                              Context context) {
+                              StmPreferenceManager stmPreferenceManager) {
         super(stmEntityRequestProcessor);
         this.geofenceManager = geofenceManager;
 
-        stmPreferenceManager = new StmPreferenceManager(context);
+        this.stmPreferenceManager = stmPreferenceManager;
         lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
         lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
     }
 
-    public void update(Location newLocation) {
+    public void update(Location newLocation, StmCallback<Void> callback, boolean forceUpdate) {
         if (newLocation == null) {
             Log.w(TAG, "Cannot process location update. Location is null");
+            if (callback != null) {
+                StmError stmError = new StmError("Cannot process location update. Location is null", false, StmError.SEVERITY_MAJOR);
+                callback.onError(stmError);
+            }
             return;
         }
+
+        this.callback = callback;
 
         if (lastUserLocationLat != null && lastUserLocationLon != null) {
             Location lastUserLocation = new Location("");
@@ -51,8 +58,11 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
 
             distanceSinceLastUpdate = lastUserLocation.distanceTo(newLocation);
 
-            if (distanceSinceLastUpdate < GeofenceManager.GEOFENCE_RADIUS_IN_METERS) {
+            if (!forceUpdate && distanceSinceLastUpdate < GeofenceManager.GEOFENCE_RADIUS_IN_METERS) {
                 Log.d(TAG, "User is still in Geofence. Ignore location update");
+                if (callback != null) {
+                    callback.onResponse(null);
+                }
                 return;
             }
         }
