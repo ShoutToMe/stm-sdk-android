@@ -34,15 +34,16 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
     private GeofenceManager geofenceManager;
     private LocationServicesClient locationServicesClient;
     private StmPreferenceManager stmPreferenceManager;
-    private boolean isRefreshingUserLocation = false;
     private String serverUrl;
     private String userAuthToken;
     private String userId;
     private List<StmObserver> observers;
+    private Context context;
 
     private UpdateUserLocationController(LocationServicesClient locationServicesClient,
                                          Context context) {
         geofenceManager = new GeofenceManager(context);
+        this.context = context;
 
         stmPreferenceManager = new StmPreferenceManager(context);
         serverUrl = stmPreferenceManager.getServerUrl();
@@ -75,19 +76,11 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
     }
 
     public void updateUserLocation(Context context) {
-        isRefreshingUserLocation = true;
         locationServicesClient.refreshLocation(context);
     }
 
     @Override
     public void onLocationUpdate(final Location location) {
-        final boolean forceUpdate;
-        if (isRefreshingUserLocation) {
-            forceUpdate = true;
-            isRefreshingUserLocation = false;
-        } else {
-            forceUpdate = false;
-        }
 
         new Thread(new Runnable() {
             @Override
@@ -102,7 +95,7 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
                 );
 
                 UpdateUserLocation updateUserLocation = new UpdateUserLocation(
-                        defaultSyncEntityRequestProcessor, geofenceManager, stmPreferenceManager);
+                        defaultSyncEntityRequestProcessor, geofenceManager, stmPreferenceManager, context, "LOCATION_SERVICE_UPDATE");
 
                 updateUserLocation.update(location, new Callback<Void>() {
                     @Override
@@ -122,7 +115,7 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
                         stmObservableResults.setErrorMessage(stmError.getMessage());
                         notifyObservers(stmObservableResults);
                     }
-                }, forceUpdate);
+                });
             }
         }).start();
     }

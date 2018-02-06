@@ -1,5 +1,7 @@
 package me.shoutto.sdk.internal.usecases;
 
+import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
 
@@ -21,25 +23,27 @@ import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 public class UpdateUserLocation extends BaseUseCase<Void> {
 
     private static final String TAG = UpdateUserLocation.class.getSimpleName();
+    private static final Object lock = new Object();
+    private static final long MINIMUM_UPDATE_PERIOD = 15000;
+    private static final String BROADCAST_ACTION = "me.shoutto.sdk.action.UpdateUserLocation";
+    private static final String PACKAGE_VOIGO = "me.shoutto.voigo";
     private GeofenceManager geofenceManager;
-    private Location newLocation;
     private StmPreferenceManager stmPreferenceManager;
-    private Double lastUserLocationLat;
-    private Double lastUserLocationLon;
-    private float distanceSinceLastUpdate;
+    private Context context;
+    private String triggeringEvent;
 
     public UpdateUserLocation(StmEntityRequestProcessor stmEntityRequestProcessor,
                               GeofenceManager geofenceManager,
-                              StmPreferenceManager stmPreferenceManager) {
+                              StmPreferenceManager stmPreferenceManager,
+                              Context context, String triggeringEvent) {
         super(stmEntityRequestProcessor);
         this.geofenceManager = geofenceManager;
-
         this.stmPreferenceManager = stmPreferenceManager;
-        lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
-        lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
+        this.context = context;
+        this.triggeringEvent = triggeringEvent;
     }
 
-    public void update(Location newLocation, StmCallback<Void> callback, boolean forceUpdate) {
+    public void update(Location newLocation, StmCallback<Void> callback) {
         if (newLocation == null) {
             Log.w(TAG, "Cannot process location update. Location is null");
             if (callback != null) {
@@ -51,29 +55,48 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
 
         this.callback = callback;
 
-        if (lastUserLocationLat != null && lastUserLocationLon != null) {
-            Location lastUserLocation = new Location("");
-            lastUserLocation.setLatitude(lastUserLocationLat);
-            lastUserLocation.setLongitude(lastUserLocationLon);
+        boolean shouldUpdateUserLocation = true;
+        Float distanceSinceLastUpdate = null;
 
-            distanceSinceLastUpdate = lastUserLocation.distanceTo(newLocation);
+        synchronized (lock) {
+            Double lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
+            Double lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
+            Long lastUserLocationTime = stmPreferenceManager.getUserLocationTime();
 
-            if (!forceUpdate && distanceSinceLastUpdate < GeofenceManager.GEOFENCE_RADIUS_IN_METERS) {
-                Log.d(TAG, "User is still in Geofence. Ignore location update");
+            if (lastUserLocationLat != null && lastUserLocationLon != null) {
+                Location lastUserLocation = new Location("");
+                lastUserLocation.setLatitude(lastUserLocationLat);
+                lastUserLocation.setLongitude(lastUserLocationLon);
+
+                distanceSinceLastUpdate = lastUserLocation.distanceTo(newLocation);
+
+                if (distanceSinceLastUpdate < (GeofenceManager.GEOFENCE_RADIUS_IN_METERS * 0.9)) {
+                    shouldUpdateUserLocation = false;
+                } else if (lastUserLocationTime != null) {
+                    if ((newLocation.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
+                        shouldUpdateUserLocation = false;
+                    }
+                }
+            }
+
+            if (!shouldUpdateUserLocation) {
                 if (callback != null) {
                     callback.onResponse(null);
                 }
                 return;
             }
+
+            stmPreferenceManager.setUserLocationLat(newLocation.getLatitude());
+            stmPreferenceManager.setUserLocationLon(newLocation.getLongitude());
+            stmPreferenceManager.setUserLocationTime(newLocation.getTime());
         }
 
-        this.newLocation = newLocation;
-
-        updateGeofence();
-        processUpdateRequest();
+        sendLocationUpdateBroadcast(newLocation, distanceSinceLastUpdate);
+        updateGeofence(newLocation);
+        processUpdateRequest(newLocation, distanceSinceLastUpdate);
     }
 
-    private void updateGeofence() {
+    private void updateGeofence(Location newLocation) {
         try {
             geofenceManager.addUserLocationGeofence(newLocation);
         } catch (Exception e) {
@@ -81,19 +104,29 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
         }
     }
 
-    private void processUpdateRequest() {
+    private void processUpdateRequest(Location newLocation, Float distanceSinceLastUpdate) {
         Double[] coordinates = { newLocation.getLongitude(), newLocation.getLatitude() };
         UserLocation userLocation = new UserLocation();
         userLocation.setLocation(new UserLocation.Location(coordinates));
         userLocation.setDate(new Date());
 
-        if (lastUserLocationLat != null && lastUserLocationLon != null) {
+        if (distanceSinceLastUpdate != null) {
             userLocation.setMetersSinceLastUpdate(distanceSinceLastUpdate);
         }
 
-        stmPreferenceManager.setUserLocationLat(newLocation.getLatitude());
-        stmPreferenceManager.setUserLocationLon(newLocation.getLongitude());
-
         stmEntityRequestProcessor.processRequest(HttpMethod.PUT, userLocation);
+    }
+
+    private void sendLocationUpdateBroadcast(Location newLocation, Float distanceSinceLastUpdate) {
+        Intent intent = new Intent();
+        intent.setAction(BROADCAST_ACTION);
+        intent.putExtra("timestamp", newLocation.getTime());
+        intent.putExtra("lat",newLocation.getLatitude());
+        intent.putExtra("lon", newLocation.getLongitude());
+        intent.putExtra("accuracy", newLocation.getAccuracy());
+        intent.putExtra("distanceSinceLastUpdate", distanceSinceLastUpdate);
+        intent.putExtra("triggeringEvent", triggeringEvent);
+        intent.setPackage(PACKAGE_VOIGO);
+        context.sendBroadcast(intent);
     }
 }

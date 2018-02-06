@@ -80,7 +80,7 @@ public class GeofenceTransitionsService extends Service {
 
                             UpdateUserLocation updateUserLocation
                                     = new UpdateUserLocation(defaultSyncEntityRequestProcessor,
-                                    new GeofenceManager(GeofenceTransitionsService.this), stmPreferenceManager);
+                                    new GeofenceManager(GeofenceTransitionsService.this), stmPreferenceManager, GeofenceTransitionsService.this, "GEOFENCE_EXIT");
                             updateUserLocation.update(location, new Callback<Void>() {
                                 @Override
                                 public void onSuccess(StmResponse stmResponse) {
@@ -92,7 +92,7 @@ public class GeofenceTransitionsService extends Service {
                                     Log.w(TAG, "Error occured. " + stmError.getMessage());
                                     stopSelf(startId);
                                 }
-                            }, true);
+                            });
                         }
                     }).start();
                 }
