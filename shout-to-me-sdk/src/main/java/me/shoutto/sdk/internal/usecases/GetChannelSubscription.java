@@ -2,25 +2,25 @@ package me.shoutto.sdk.internal.usecases;
 
 import android.util.Log;
 
-import me.shoutto.sdk.ChannelSubscription;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Gets a channel subscription for the user. The callback returns true if subscribed or false if not.
  */
 
-public class GetChannelSubscription extends BaseUseCase<Boolean> {
+public class GetChannelSubscription extends BaseUseCase<StmBaseEntity, Boolean> {
 
     private static final String TAG = GetChannelSubscription.class.getSimpleName();
     private String channelId;
 
-    public GetChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public GetChannelSubscription(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void get(String channelId, String userId, StmCallback<Boolean> callback) {
@@ -37,7 +37,7 @@ public class GetChannelSubscription extends BaseUseCase<Boolean> {
             } else {
                 Log.w(TAG, validationErrorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -47,7 +47,7 @@ public class GetChannelSubscription extends BaseUseCase<Boolean> {
         User user = new User();
         user.setId(userId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.GET, user);
+        stmRequestProcessor.processRequest(HttpMethod.GET, user);
     }
 
     @Override

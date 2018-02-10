@@ -16,8 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import me.shoutto.sdk.StmBaseEntity;
-import me.shoutto.sdk.StmService;
-import me.shoutto.sdk.internal.StmObservable;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObservableType;
 import me.shoutto.sdk.internal.StmObserver;
@@ -26,17 +24,17 @@ import me.shoutto.sdk.internal.StmObserver;
  * Volley based async HTTP request processor
  */
 
-public class DefaultAsyncEntityRequestProcessor<T> implements StmEntityRequestProcessor {
+public class DefaultEntityRequestProcessorAsync<T> implements StmRequestProcessor<StmBaseEntity> {
 
-    private static final String TAG = DefaultAsyncEntityRequestProcessor.class.getSimpleName();
+    private static final String TAG = DefaultEntityRequestProcessorAsync.class.getSimpleName();
     private ArrayList<StmObserver> observers;
-    private StmEntityJsonRequestAdapter requestAdapter;
+    private StmJsonRequestAdapter<StmBaseEntity> requestAdapter;
     private StmRequestQueue requestQueue;
     private StmHttpResponseAdapter<T> responseAdapter;
     private final String authToken;
     private StmUrlProvider urlProvider;
 
-    public DefaultAsyncEntityRequestProcessor(StmEntityJsonRequestAdapter stmHttpRequestAdapter,
+    public DefaultEntityRequestProcessorAsync(StmJsonRequestAdapter<StmBaseEntity> stmHttpRequestAdapter,
                                               StmRequestQueue stmRequestQueue,
                                               StmHttpResponseAdapter<T> stmHttpResponseAdapter,
                                               String authToken,

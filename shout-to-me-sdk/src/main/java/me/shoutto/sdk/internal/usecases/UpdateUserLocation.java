@@ -7,12 +7,17 @@ import android.util.Log;
 
 import java.util.Date;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.UserLocation;
+import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.database.UserLocationDao;
+import me.shoutto.sdk.internal.database.UserLocationDaoImpl;
+import me.shoutto.sdk.internal.database.UserLocationRecord;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 
 /**
@@ -20,7 +25,7 @@ import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
  * update to the Shout to Me service.
  */
 
-public class UpdateUserLocation extends BaseUseCase<Void> {
+public class UpdateUserLocation extends BaseUseCase<StmBaseEntity, Void> {
 
     private static final String TAG = UpdateUserLocation.class.getSimpleName();
     private static final Object lock = new Object();
@@ -31,12 +36,13 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
     private StmPreferenceManager stmPreferenceManager;
     private Context context;
     private String triggeringEvent;
+    private UserLocation userLocation;
 
-    public UpdateUserLocation(StmEntityRequestProcessor stmEntityRequestProcessor,
+    public UpdateUserLocation(StmRequestProcessor<StmBaseEntity> stmRequestProcessor,
                               GeofenceManager geofenceManager,
                               StmPreferenceManager stmPreferenceManager,
                               Context context, String triggeringEvent) {
-        super(stmEntityRequestProcessor);
+        super(stmRequestProcessor);
         this.geofenceManager = geofenceManager;
         this.stmPreferenceManager = stmPreferenceManager;
         this.context = context;
@@ -105,16 +111,21 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
     }
 
     private void processUpdateRequest(Location newLocation, Float distanceSinceLastUpdate) {
+
         Double[] coordinates = { newLocation.getLongitude(), newLocation.getLatitude() };
-        UserLocation userLocation = new UserLocation();
+        userLocation = new UserLocation();
         userLocation.setLocation(new UserLocation.Location(coordinates));
-        userLocation.setDate(new Date());
+        if (newLocation.getTime() > 0) {
+            userLocation.setDate(new Date(newLocation.getTime()));
+        } else {
+            userLocation.setDate(new Date());
+        }
 
         if (distanceSinceLastUpdate != null) {
             userLocation.setMetersSinceLastUpdate(distanceSinceLastUpdate);
         }
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.PUT, userLocation);
+        stmRequestProcessor.processRequest(HttpMethod.PUT, userLocation);
     }
 
     private void sendLocationUpdateBroadcast(Location newLocation, Float distanceSinceLastUpdate) {
@@ -128,5 +139,25 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
         intent.putExtra("triggeringEvent", triggeringEvent);
         intent.setPackage(PACKAGE_VOIGO);
         context.sendBroadcast(intent);
+    }
+
+    @Override
+    public void processCallbackError(StmObservableResults stmObservableResults) {
+
+        // Insert the failed object into the db
+        UserLocationRecord userLocationRecord = new UserLocationRecord();
+        userLocationRecord.setDate(userLocation.getDate());
+        userLocationRecord.setLat(userLocation.getLocation().getCoordinates()[1]);
+        userLocationRecord.setLon(userLocation.getLocation().getCoordinates()[0]);
+        userLocationRecord.setRadius(userLocation.getLocation().getRadius());
+        userLocationRecord.setType(userLocation.getLocation().getType());
+        if (userLocation.getMetersSinceLastUpdate() != null) {
+            userLocationRecord.setMetersSinceLastUpdate(userLocation.getMetersSinceLastUpdate());
+        }
+
+        UserLocationDao userLocationDao = new UserLocationDaoImpl(context);
+        userLocationDao.addUserLocationRecord(userLocationRecord);
+
+        super.processCallbackError(stmObservableResults);
     }
 }

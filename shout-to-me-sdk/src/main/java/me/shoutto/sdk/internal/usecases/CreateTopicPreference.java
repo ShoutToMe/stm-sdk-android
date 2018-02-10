@@ -2,23 +2,23 @@ package me.shoutto.sdk.internal.usecases;
 
 import android.util.Log;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.TopicPreference;
-import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Adds a topic preference to the user's record
  */
 
-public class CreateTopicPreference extends BaseUseCase<Void> {
+public class CreateTopicPreference extends BaseUseCase<StmBaseEntity, Void> {
 
     private static final String TAG = CreateTopicPreference.class.getSimpleName();
 
-    public CreateTopicPreference(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public CreateTopicPreference(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void create(String topic, StmCallback<Void> callback) {
@@ -31,7 +31,7 @@ public class CreateTopicPreference extends BaseUseCase<Void> {
             } else {
                 Log.w(TAG, validationErrorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -40,6 +40,6 @@ public class CreateTopicPreference extends BaseUseCase<Void> {
         TopicPreference topicPreference = new TopicPreference();
         topicPreference.setTopic(topic);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.POST, topicPreference);
+        stmRequestProcessor.processRequest(HttpMethod.POST, topicPreference);
     }
 }

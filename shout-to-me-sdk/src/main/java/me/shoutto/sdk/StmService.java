@@ -42,7 +42,7 @@ import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
-import me.shoutto.sdk.internal.http.DefaultAsyncEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.DefaultEntityRequestProcessorAsync;
 import me.shoutto.sdk.internal.http.StmHttpSender;
 import me.shoutto.sdk.internal.http.StmRequestQueue;
 
@@ -137,15 +137,15 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<Void> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
                 getUserAuthToken(),
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
-        CreateTopicPreference createTopicPreference = new CreateTopicPreference(defaultAsyncEntityRequestProcessor);
+        CreateTopicPreference createTopicPreference = new CreateTopicPreference(defaultEntityRequestProcessorAsync);
         createTopicPreference.create(topic, callback);
     }
 
@@ -158,14 +158,14 @@ public class StmService extends Service {
     public void createShout(CreateShoutRequest createShoutRequest, StmCallback<Shout> callback) {
         refreshUserLocation();
 
-        DefaultAsyncEntityRequestProcessor<Shout> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<Shout> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<Shout>(Shout.SERIALIZATION_KEY, Shout.getSerializationType()),
                 getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
-        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), defaultAsyncEntityRequestProcessor);
+        UploadShout shoutUploader = new UploadShout(this, new S3Client(this), defaultEntityRequestProcessorAsync);
         shoutUploader.upload(createShoutRequest, callback);
     }
 
@@ -234,7 +234,7 @@ public class StmService extends Service {
      * @param callback An optional callback or null
      */
     public void getMessage(String messageId, StmCallback<Message> callback) {
-        DefaultAsyncEntityRequestProcessor<Message> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultEntityRequestProcessorAsync<Message> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
                 null,
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<Message>(Message.SERIALIZATION_KEY, Message.getSerializationType()),
@@ -242,7 +242,7 @@ public class StmService extends Service {
                 new DefaultUrlProvider(getServerUrl())
         );
 
-        GetMessage getMessage = new GetMessage(defaultAsyncEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(defaultEntityRequestProcessorAsync);
         getMessage.get(messageId, callback);
     }
 
@@ -252,8 +252,8 @@ public class StmService extends Service {
      * @param callback The callback to execute or null.
      */
     public void getMessages(final StmCallback<List<Message>> callback) {
-        DefaultAsyncEntityRequestProcessor<List<Message>> defaultAsyncEntityRequestProcessor
-                = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultEntityRequestProcessorAsync<List<Message>> defaultEntityRequestProcessorAsync
+                = new DefaultEntityRequestProcessorAsync<>(
                 null,
                 StmRequestQueue.getInstance(),
                 new GsonListResponseAdapter<List<Message>, Message>(
@@ -266,7 +266,7 @@ public class StmService extends Service {
                 new DefaultUrlProvider(getServerUrl())
         );
 
-        GetMessages getMessages = new GetMessages(defaultAsyncEntityRequestProcessor);
+        GetMessages getMessages = new GetMessages(defaultEntityRequestProcessorAsync);
         getMessages.get(callback);
     }
 
@@ -291,7 +291,7 @@ public class StmService extends Service {
      * @param callback The callback to execute or null.
      */
     public void getUnreadMessageCount(final StmCallback<Integer> callback) {
-        DefaultAsyncEntityRequestProcessor<Integer> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
+        DefaultEntityRequestProcessorAsync<Integer> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
                 null,
                 StmRequestQueue.getInstance(),
                 new CountResponseAdapter(),
@@ -299,7 +299,7 @@ public class StmService extends Service {
                 new MessageCountUrlProvider(getServerUrl(), true)
         );
 
-        GetMessageCount getUnreadMessageCount = new GetMessageCount(defaultAsyncEntityRequestProcessor);
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(defaultEntityRequestProcessorAsync);
         getUnreadMessageCount.get(callback);
     }
 
@@ -324,14 +324,14 @@ public class StmService extends Service {
             return;
         }
 
-        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
-        GetUser getUser = new GetUser(defaultAsyncEntityRequestProcessor);
+        GetUser getUser = new GetUser(defaultEntityRequestProcessorAsync);
         getUser.get(user.getId(), callback);
     }
 
@@ -405,15 +405,15 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(defaultAsyncEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(defaultEntityRequestProcessorAsync);
         getChannelSubscription.get(channelId, user.getId(), callback);
     }
 
@@ -556,15 +556,15 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<Void> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
                 getUserAuthToken(),
                 new TopicUrlProvider(getServerUrl(), user)
         );
 
-        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(defaultAsyncEntityRequestProcessor);
+        DeleteTopicPreference deleteTopicPreference = new DeleteTopicPreference(defaultEntityRequestProcessorAsync);
         deleteTopicPreference.delete(topic, callback);
     }
 
@@ -615,8 +615,8 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<Void> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
                 getUserAuthToken(),
@@ -624,7 +624,7 @@ public class StmService extends Service {
         );
 
         CreateChannelSubscription createChannelSubscription =
-                new CreateChannelSubscription(defaultAsyncEntityRequestProcessor);
+                new CreateChannelSubscription(defaultEntityRequestProcessorAsync);
         createChannelSubscription.create(channelId, callback);
     }
 
@@ -658,15 +658,15 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<Void> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<Void> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new NullResponseAdapter(),
                 getUserAuthToken(),
                 new ChannelSubscriptionUrlProvider(getServerUrl(), user)
         );
 
-        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(defaultAsyncEntityRequestProcessor);
+        DeleteChannelSubscription deleteChannelSubscription = new DeleteChannelSubscription(defaultEntityRequestProcessorAsync);
         deleteChannelSubscription.delete(channelId, callback);
     }
 
@@ -688,15 +688,15 @@ public class StmService extends Service {
             }
         }
 
-        DefaultAsyncEntityRequestProcessor<User> defaultAsyncEntityRequestProcessor = new DefaultAsyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );
 
-        UpdateUser updateUser = new UpdateUser(defaultAsyncEntityRequestProcessor, this);
+        UpdateUser updateUser = new UpdateUser(defaultEntityRequestProcessorAsync, this);
         updateUser.update(updateUserRequest, user.getId(), callback);
     }
 }

@@ -70,5 +70,17 @@ public class UserLocation extends StmBaseEntity {
             type = "circle";
             radius = Float.toString(GeofenceManager.GEOFENCE_RADIUS_IN_METERS);
         }
+
+        public Double[] getCoordinates() {
+            return coordinates;
+        }
+
+        public float getRadius() {
+            return Float.parseFloat(radius);
+        }
+
+        public String getType() {
+            return type;
+        }
     }
 }

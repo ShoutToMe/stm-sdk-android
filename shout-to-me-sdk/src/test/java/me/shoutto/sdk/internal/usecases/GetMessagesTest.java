@@ -11,12 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.shoutto.sdk.Message;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 import static junit.framework.Assert.assertEquals;
 import static org.mockito.Matchers.any;
@@ -33,7 +34,7 @@ public class GetMessagesTest {
     private static final String MESSAGE_ID = "messageId";
 
     @Mock
-    StmEntityRequestProcessor mockStmEntityRequestProcessor;
+    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Mock
     StmCallback<List<Message>> mockCallback;
@@ -46,19 +47,19 @@ public class GetMessagesTest {
 
     @Test
     public void get_ShouldCallProcessRequest() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessages getMessages = new GetMessages(mockStmEntityRequestProcessor);
+        GetMessages getMessages = new GetMessages(mockStmRequestProcessor);
         getMessages.get(null);
 
-        verify(mockStmEntityRequestProcessor, times(1)).processRequest(any(HttpMethod.class), any(Message.class));
+        verify(mockStmRequestProcessor, times(1)).processRequest(any(HttpMethod.class), any(Message.class));
     }
 
     @Test
     public void get_ShouldCallBackWithResult() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessages getMessages = new GetMessages(mockStmEntityRequestProcessor);
+        GetMessages getMessages = new GetMessages(mockStmRequestProcessor);
         getMessages.get(mockCallback);
 
         Message message = new Message();
@@ -77,9 +78,9 @@ public class GetMessagesTest {
 
     @Test
     public void get_WithValidMessageId_ShouldCallBackWithErrorIfProcessingError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessages getMessages = new GetMessages(mockStmEntityRequestProcessor);
+        GetMessages getMessages = new GetMessages(mockStmRequestProcessor);
         getMessages.get(mockCallback);
 
         StmObservableResults<Message> stmObservableResults = new StmObservableResults<>();

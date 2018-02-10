@@ -12,13 +12,13 @@ import me.shoutto.sdk.StmBaseEntity;
  * Gson adapter for converting Shout to Me entities to JSON objects
  */
 
-public class GsonRequestAdapter implements StmEntityJsonRequestAdapter {
+public class GsonRequestAdapter<T> implements StmJsonRequestAdapter<T> {
     @Override
-    public String adapt(StmBaseEntity entity) {
+    public String adapt(T objectToAdapt) {
         Gson gson = new GsonBuilder()
                 .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
                 .registerTypeAdapter(Date.class, new GsonDateAdapter())
                 .create();
-        return gson.toJson(entity, entity.getClass());
+        return gson.toJson(objectToAdapt, objectToAdapt.getClass());
     }
 }

@@ -2,23 +2,23 @@ package me.shoutto.sdk.internal.usecases;
 
 import android.util.Log;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.TopicPreference;
-import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Deletes a topic preference from the user's record
  */
 
-public class DeleteTopicPreference extends BaseUseCase<Void> {
+public class DeleteTopicPreference extends BaseUseCase<StmBaseEntity, Void> {
 
     private static final String TAG = DeleteTopicPreference.class.getSimpleName();
 
-    public DeleteTopicPreference(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public DeleteTopicPreference(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void delete(String topic, StmCallback<Void> callback) {
@@ -30,7 +30,7 @@ public class DeleteTopicPreference extends BaseUseCase<Void> {
             } else {
                 Log.w(TAG, validationErrorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -39,6 +39,6 @@ public class DeleteTopicPreference extends BaseUseCase<Void> {
         TopicPreference topicPreference = new TopicPreference();
         topicPreference.setTopic(topic);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.DELETE, topicPreference);
+        stmRequestProcessor.processRequest(HttpMethod.DELETE, topicPreference);
     }
 }
