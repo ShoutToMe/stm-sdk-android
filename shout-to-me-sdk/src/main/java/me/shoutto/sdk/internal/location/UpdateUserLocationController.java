@@ -104,7 +104,8 @@ public class UpdateUserLocationController implements LocationUpdateListener, Stm
                                     new UserHistoricalLocationUrlProvider(serverUrl, user)
                             );
                     PostUserHistoricalLocations postUserHistoricalLocations =
-                            new PostUserHistoricalLocations(stmRequestProcessor, context);
+                            new PostUserHistoricalLocations(stmRequestProcessor,
+                                    new UserLocationDaoImpl(context));
                     postUserHistoricalLocations.post(userLocationsAsBase, new Callback<Void>() {
                         @Override
                         public void onSuccess(StmResponse<Void> stmResponse) {

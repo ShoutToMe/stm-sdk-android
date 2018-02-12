@@ -10,7 +10,6 @@ import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.database.UserLocationDao;
-import me.shoutto.sdk.internal.database.UserLocationDaoImpl;
 import me.shoutto.sdk.internal.http.HttpMethod;
 import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
@@ -21,12 +20,12 @@ import me.shoutto.sdk.internal.http.StmRequestProcessor;
 public class PostUserHistoricalLocations extends BaseUseCase<List<StmBaseEntity>, Void> {
 
     private static final String TAG = PostUserHistoricalLocations.class.getSimpleName();
-    private Context context;
+    private UserLocationDao userLocationDao;
 
     public PostUserHistoricalLocations(StmRequestProcessor<List<StmBaseEntity>> stmRequestProcessor,
-                                       Context context) {
+                                       UserLocationDao userLocationDao) {
         super(stmRequestProcessor);
-        this.context = context;
+        this.userLocationDao = userLocationDao;
     }
 
     public void post(List<StmBaseEntity> locations, StmCallback<Void> callback) {
@@ -49,7 +48,6 @@ public class PostUserHistoricalLocations extends BaseUseCase<List<StmBaseEntity>
         super.processCallback(stmObservableResults);
 
         // If successfully sent, delete all stored user location records
-        UserLocationDao userLocationDao = new UserLocationDaoImpl(context);
         userLocationDao.deleteAllUserLocationRecords();
     }
 }

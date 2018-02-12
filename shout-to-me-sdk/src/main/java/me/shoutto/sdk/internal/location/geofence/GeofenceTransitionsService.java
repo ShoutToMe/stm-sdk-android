@@ -95,7 +95,8 @@ public class GeofenceTransitionsService extends Service {
                                                 new UserHistoricalLocationUrlProvider(serverUrl, user)
                                         );
                                 PostUserHistoricalLocations postUserHistoricalLocations =
-                                        new PostUserHistoricalLocations(stmRequestProcessor, GeofenceTransitionsService.this);
+                                        new PostUserHistoricalLocations(stmRequestProcessor,
+                                                new UserLocationDaoImpl(GeofenceTransitionsService.this));
                                 postUserHistoricalLocations.post(userLocationsAsBase, new Callback<Void>() {
                                     @Override
                                     public void onSuccess(StmResponse<Void> stmResponse) {

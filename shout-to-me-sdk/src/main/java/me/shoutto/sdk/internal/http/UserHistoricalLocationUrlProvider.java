@@ -19,6 +19,6 @@ public class UserHistoricalLocationUrlProvider implements StmUrlProvider {
 
     @Override
     public String getUrl(StmBaseEntity entity, HttpMethod httpMethod) {
-        return String.format("%s%s/%s%s", baseApiUrl, user.getBaseEndpoint(), user.getId(), "/historical-locations/batch");
+        return String.format("%s%s/%s/historical-locations/batch", baseApiUrl, user.getBaseEndpoint(), user.getId());
     }
 }
