@@ -27,7 +27,7 @@ public class StmDbHelper extends SQLiteOpenHelper {
             "DROP TABLE IF EXISTS " + UserLocationContract.UserLocation.TABLE_NAME;
 
     public StmDbHelper(Context context) {
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        super(context.getApplicationContext(), DATABASE_NAME, null, DATABASE_VERSION);
     }
 
     @Override

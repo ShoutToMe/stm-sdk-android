@@ -15,4 +15,5 @@ public interface UserLocationDao {
     public List<UserLocationRecord> getAllUserLocationRecords();
     public List<UserLocation> getAllUserLocations();
     public long getNumRows();
+    public void truncateTable();
 }

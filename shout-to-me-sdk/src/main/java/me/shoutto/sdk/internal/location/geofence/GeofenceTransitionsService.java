@@ -1,6 +1,7 @@
 package me.shoutto.sdk.internal.location.geofence;
 
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.IBinder;
@@ -13,6 +14,7 @@ import com.google.android.gms.location.sample.geofencing.GeofenceErrorMessages;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.SortedSet;
 
 import me.shoutto.sdk.Callback;
 import me.shoutto.sdk.StmBaseEntity;
@@ -20,6 +22,8 @@ import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.UserLocation;
+import me.shoutto.sdk.internal.StmObservableResults;
+import me.shoutto.sdk.internal.StmObservableType;
 import me.shoutto.sdk.internal.StmPreferenceManager;
 import me.shoutto.sdk.internal.database.UserLocationDao;
 import me.shoutto.sdk.internal.database.UserLocationDaoImpl;
@@ -29,11 +33,12 @@ import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.UserHistoricalLocationUrlProvider;
 import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
+import me.shoutto.sdk.internal.http.UserLocationsRequestAdapter;
 import me.shoutto.sdk.internal.usecases.PostUserHistoricalLocations;
 import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 
 /**
- * Handles events from geofence transitions. This process bypasses UpdateUserLocationController
+ * Handles events from geofence transitions. This process bypasses UserLocationListener
  * because it has its own location.
  */
 
@@ -63,64 +68,42 @@ public class GeofenceTransitionsService extends Service {
             int geofenceTransition = geofencingEvent.getGeofenceTransition();
             if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
                 final Location location = geofencingEvent.getTriggeringLocation();
+                final Context context = this;
+
                 if (location == null) {
                     Log.e(TAG, "Location is null. Cannot process geofence transition");
                     stopSelf(startId);
                 } else {
                     Log.i(TAG,String.format("Geofence exit detected %f, %f", location.getLatitude(), location.getLongitude()));
 
-                    final StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(this);
-                    String userId = stmPreferenceManager.getUserId();
-                    final String authToken = stmPreferenceManager.getAuthToken();
-                    final String serverUrl = stmPreferenceManager.getServerUrl();
-
-                    final User user = new User();
-                    user.setId(userId);
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
 
-                            // If there are old locations, try them now
-                            UserLocationDao userLocationDao = new UserLocationDaoImpl(GeofenceTransitionsService.this);
-                            if (userLocationDao.getNumRows() > 0) {
-                                List<UserLocation> userLocations = userLocationDao.getAllUserLocations();
-                                List<StmBaseEntity> userLocationsAsBase = new ArrayList<>();
-                                userLocationsAsBase.addAll(userLocations);
+                            final StmPreferenceManager stmPreferenceManager = new StmPreferenceManager(context);
+                            String userId = stmPreferenceManager.getUserId();
+                            final String authToken = stmPreferenceManager.getAuthToken();
+                            final String serverUrl = stmPreferenceManager.getServerUrl();
 
-                                EntityListRequestProcessorSync<Void, List<StmBaseEntity>> stmRequestProcessor =
-                                        new EntityListRequestProcessorSync<>(
-                                                new GsonRequestAdapter<List<StmBaseEntity>>(),
-                                                new NullResponseAdapter(),
-                                                authToken,
-                                                new UserHistoricalLocationUrlProvider(serverUrl, user)
-                                        );
-                                PostUserHistoricalLocations postUserHistoricalLocations =
-                                        new PostUserHistoricalLocations(stmRequestProcessor,
-                                                new UserLocationDaoImpl(GeofenceTransitionsService.this));
-                                postUserHistoricalLocations.post(userLocationsAsBase, new Callback<Void>() {
-                                    @Override
-                                    public void onSuccess(StmResponse<Void> stmResponse) {
-                                        Log.d(TAG, "User historical locations posted successfully");
-                                    }
+                            final User user = new User();
+                            user.setId(userId);
 
-                                    @Override
-                                    public void onFailure(StmError stmError) {
-                                        Log.w(TAG, "Failure posting user historical locations: " + stmError.getMessage());
-                                    }
-                                });
-                            }
-
-                            DefaultEntityRequestProcessorSync<Void> defaultEntityRequestProcessorSync =
-                                    new DefaultEntityRequestProcessorSync<>(
-                                            new GsonRequestAdapter<StmBaseEntity>(),
+                            EntityListRequestProcessorSync<Void, SortedSet<? extends StmBaseEntity>> entityListRequestProcessorSync =
+                                    new EntityListRequestProcessorSync<>(
+                                            new UserLocationsRequestAdapter(),
                                             new NullResponseAdapter(),
                                             authToken,
                                             new UserLocationUrlProvider(serverUrl, user)
                                     );
 
-                            UpdateUserLocation updateUserLocation
-                                    = new UpdateUserLocation(defaultEntityRequestProcessorSync,
-                                    new GeofenceManager(GeofenceTransitionsService.this), stmPreferenceManager, GeofenceTransitionsService.this, "GEOFENCE_EXIT");
+                            UpdateUserLocation updateUserLocation = new UpdateUserLocation(
+                                    entityListRequestProcessorSync,
+                                    new GeofenceManager(context),
+                                    stmPreferenceManager,
+                                    new UserLocationDaoImpl(context),
+                                    context,
+                                    "GEOFENCE_EXIT");
+
                             updateUserLocation.update(location, new Callback<Void>() {
                                 @Override
                                 public void onSuccess(StmResponse stmResponse) {

@@ -4,7 +4,9 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
+import android.text.TextUtils;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -21,6 +23,7 @@ import me.shoutto.sdk.UserLocation;
 public class UserLocationDaoImpl implements UserLocationDao {
 
     private static final String TAG = UserLocationDaoImpl.class.getSimpleName();
+    private static final long MAX_NUM_RECORDS = 1000;
     private StmDbHelper stmDbHelper;
 
     public UserLocationDaoImpl(Context context) {
@@ -110,5 +113,42 @@ public class UserLocationDaoImpl implements UserLocationDao {
     public long getNumRows() {
         SQLiteDatabase db = stmDbHelper.getReadableDatabase();
         return DatabaseUtils.queryNumEntries(db, UserLocationContract.UserLocation.TABLE_NAME);
+    }
+
+    @Override
+    public void truncateTable() {
+        long numRows = getNumRows();
+        if (numRows > MAX_NUM_RECORDS) {
+            long numRowsToDelete = numRows - MAX_NUM_RECORDS;
+            String[] idsToDelete = new String[(int)(numRowsToDelete)];
+            SQLiteDatabase readableDatabase = stmDbHelper.getReadableDatabase();
+
+            String[] projection = { UserLocationContract.UserLocation._ID };
+            Cursor cursor = readableDatabase.query(
+                    UserLocationContract.UserLocation.TABLE_NAME,
+                    projection,
+                    null,
+                    null,
+                    null,
+                    null,
+                    "date asc",
+                    String.valueOf(numRowsToDelete)
+            );
+
+            int index = 0;
+            List<String> placeholderList = new ArrayList<>((int)(numRowsToDelete));
+            while(cursor.moveToNext()) {
+                idsToDelete[index] = String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation._ID)));
+                placeholderList.add(index, "?");
+                index++;
+            }
+            cursor.close();
+
+            String placeholdersStr = TextUtils.join(",", placeholderList);
+
+            SQLiteDatabase writableDatabase = stmDbHelper.getWritableDatabase();
+            int result = writableDatabase.delete(UserLocationContract.UserLocation.TABLE_NAME, "_id in (" + placeholdersStr + ")", idsToDelete);
+            Log.d(TAG, String.format("Removed %d record(s) from the User Location database", result));
+        }
     }
 }

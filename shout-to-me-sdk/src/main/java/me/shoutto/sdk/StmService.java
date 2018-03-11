@@ -26,7 +26,7 @@ import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
-import me.shoutto.sdk.internal.location.UpdateUserLocationController;
+import me.shoutto.sdk.internal.location.UserLocationListener;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
@@ -104,7 +104,7 @@ public class StmService extends Service {
     private StmPreferenceManager stmPreferenceManager;
     private HandWaveGestureListener overlay;
     private ChannelManager channelManager;
-    private UpdateUserLocationController updateUserLocationController;
+    private UserLocationListener userLocationListener;
 
     public StmService() {
     }
@@ -221,11 +221,12 @@ public class StmService extends Service {
     }
 
     /**
-     * Returns the <code>UpdateUserLocationController</code>.
-     * @return The UpdateUserLocationController.
+     * Returns the <code>UserLocationListener</code>.
+     * @return The UserLocationListener.
      */
-    public UpdateUserLocationController getUpdateUserLocationController() {
-        return updateUserLocationController;
+    //TODO: Only used in one place. Refactor so only lat & lon are passed back, not an object.
+    public UserLocationListener getUserLocationListener() {
+        return userLocationListener;
     }
 
     /**
@@ -464,9 +465,9 @@ public class StmService extends Service {
             }
         }).start();
 
-        updateUserLocationController = new UpdateUserLocationController(LocationServicesClient.getInstance(), this);
-        updateUserLocationController.startTrackingUserLocation(this);
-        updateUserLocationController.updateUserLocation(this);
+        userLocationListener = new UserLocationListener(LocationServicesClient.getInstance(), this);
+        userLocationListener.startTrackingUserLocation(this);
+        userLocationListener.updateUserLocation(this);
 
         executorService = Executors.newFixedThreadPool(10);
 
@@ -505,7 +506,7 @@ public class StmService extends Service {
     }
 
     public void refreshUserLocation() {
-        updateUserLocationController.updateUserLocation(this);
+        userLocationListener.updateUserLocation(this);
     }
 
     /**

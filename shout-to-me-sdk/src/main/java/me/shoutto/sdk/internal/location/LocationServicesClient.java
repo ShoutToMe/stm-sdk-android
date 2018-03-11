@@ -42,7 +42,7 @@ public class LocationServicesClient {
     private FusedLocationProviderClient mFusedLocationClient;
     private boolean isListeningForLocation = false;
 
-    // TODO: Make this a Pending Intent callback to remove Context in static instance of UpdateUserLocationController
+    // TODO: Make this a Pending Intent callback to remove Context in static instance of UserLocationListener
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {

@@ -9,7 +9,7 @@ import me.shoutto.sdk.Callback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
-import me.shoutto.sdk.internal.location.UpdateUserLocationController;
+import me.shoutto.sdk.internal.location.UserLocationListener;
 import me.shoutto.sdk.internal.usecases.InitializeLocationAfterBoot;
 
 /**
@@ -27,7 +27,7 @@ public class GeofenceReinitializationService extends JobService {
 
         InitializeLocationAfterBoot initializeLocationAfterBoot = new InitializeLocationAfterBoot(
                 this,
-                new UpdateUserLocationController(LocationServicesClient.getInstance(), this)
+                new UserLocationListener(LocationServicesClient.getInstance(), this)
         );
         initializeLocationAfterBoot.initialize(new Callback<Void>() {
             @Override
