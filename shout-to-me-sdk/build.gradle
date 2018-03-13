@@ -2,13 +2,13 @@ apply plugin: 'com.android.library'
 apply plugin: 'jacoco'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 27
+    buildToolsVersion '27.0.3'
 
     defaultConfig {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         minSdkVersion 15
-        targetSdkVersion 26
+        targetSdkVersion 27
         versionCode 20
         versionName "1.0.18"
     }
@@ -41,7 +41,7 @@ dependencies {
     testCompile 'org.powermock:powermock-module-junit4:1.7.3'
     testCompile 'org.powermock:powermock-api-mockito2:1.7.0RC2'
 
-    androidTestCompile 'com.android.support:support-annotations:26.1.0'
+    androidTestCompile 'com.android.support:support-annotations:27.1.0'
     androidTestCompile 'com.android.support.test:runner:1.0.1'
     androidTestCompile 'com.android.support.test:rules:1.0.1'
     // Optional -- Hamcrest library

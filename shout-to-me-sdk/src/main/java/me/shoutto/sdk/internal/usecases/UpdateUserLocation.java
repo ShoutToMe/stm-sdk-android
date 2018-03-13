@@ -84,8 +84,7 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
                 distanceSinceLastUpdate = lastUserLocation.distanceTo(location);
 
                 if (distanceSinceLastUpdate < (GeofenceManager.GEOFENCE_RADIUS_IN_METERS * 0.9)) {
-                    //TODO: Uncomment code
-//                    shouldUpdateUserLocation = false;
+                    shouldUpdateUserLocation = false;
                 } else if (lastUserLocationTime != null) {
                     if ((location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
                         shouldUpdateUserLocation = false;

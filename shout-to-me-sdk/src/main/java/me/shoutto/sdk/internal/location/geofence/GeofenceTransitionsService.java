@@ -12,8 +12,6 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 import com.google.android.gms.location.sample.geofencing.GeofenceErrorMessages;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.SortedSet;
 
 import me.shoutto.sdk.Callback;
@@ -21,20 +19,12 @@ import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.User;
-import me.shoutto.sdk.UserLocation;
-import me.shoutto.sdk.internal.StmObservableResults;
-import me.shoutto.sdk.internal.StmObservableType;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.database.UserLocationDao;
 import me.shoutto.sdk.internal.database.UserLocationDaoImpl;
-import me.shoutto.sdk.internal.http.DefaultEntityRequestProcessorSync;
 import me.shoutto.sdk.internal.http.EntityListRequestProcessorSync;
-import me.shoutto.sdk.internal.http.GsonRequestAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
-import me.shoutto.sdk.internal.http.UserHistoricalLocationUrlProvider;
 import me.shoutto.sdk.internal.http.UserLocationUrlProvider;
 import me.shoutto.sdk.internal.http.UserLocationsRequestAdapter;
-import me.shoutto.sdk.internal.usecases.PostUserHistoricalLocations;
 import me.shoutto.sdk.internal.usecases.UpdateUserLocation;
 
 /**
