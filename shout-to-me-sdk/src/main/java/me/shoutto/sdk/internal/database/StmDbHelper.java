@@ -10,8 +10,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 public class StmDbHelper extends SQLiteOpenHelper {
 
-    public static final int DATABASE_VERSION = 1;
-    public static final String DATABASE_NAME = "ShoutToMeSDK.db";
+    private static final int DATABASE_VERSION = 1;
+    private static final String DATABASE_NAME = "ShoutToMeSDK.db";
 
     private static final String SQL_CREATE_ENTRIES =
             "CREATE TABLE " + UserLocationContract.UserLocation.TABLE_NAME + " (" +
@@ -26,7 +26,7 @@ public class StmDbHelper extends SQLiteOpenHelper {
     private static final String SQL_DELETE_ENTRIES =
             "DROP TABLE IF EXISTS " + UserLocationContract.UserLocation.TABLE_NAME;
 
-    public StmDbHelper(Context context) {
+    StmDbHelper(Context context) {
         super(context.getApplicationContext(), DATABASE_NAME, null, DATABASE_VERSION);
     }
 
