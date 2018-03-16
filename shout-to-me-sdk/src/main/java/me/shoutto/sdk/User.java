@@ -378,4 +378,23 @@ public class User extends StmBaseEntity {
         }
         pendingChanges.clear();
     }
+
+    static class MetaInfo {
+
+        private String gender;
+        private String operatingSystem;
+        private String operatingSystemVersion;
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
+
+        public void setOperatingSystem(String operatingSystem) {
+            this.operatingSystem = operatingSystem;
+        }
+
+        public void setOperatingSystemVersion(String operatingSystemVersion) {
+            this.operatingSystemVersion = operatingSystemVersion;
+        }
+    }
 }
