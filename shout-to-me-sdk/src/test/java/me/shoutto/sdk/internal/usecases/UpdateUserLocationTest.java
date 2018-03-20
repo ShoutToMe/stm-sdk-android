@@ -79,7 +79,7 @@ public class UpdateUserLocationTest {
     private ArgumentCaptor<StmError> errorArgumentCaptor;
 
     @Before
-    public void before() {
+    public void setUp() {
         PowerMockito.mockStatic(Log.class);
 
         when(mockLocationFromPreferences.toString()).thenReturn("Mock Location From Preferences");

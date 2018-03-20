@@ -19,15 +19,21 @@ import java.util.concurrent.Executors;
 import me.shoutto.sdk.internal.ChannelManager;
 import me.shoutto.sdk.internal.ProximitySensorClient;
 import me.shoutto.sdk.internal.S3Client;
+import me.shoutto.sdk.internal.http.BasicAuthHeaderProvider;
 import me.shoutto.sdk.internal.http.ChannelSubscriptionUrlProvider;
 import me.shoutto.sdk.internal.http.CountResponseAdapter;
+import me.shoutto.sdk.internal.http.CreateUserUrlProvider;
+import me.shoutto.sdk.internal.http.DefaultEntityRequestProcessorSync;
 import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
+import me.shoutto.sdk.internal.http.GsonUserResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
 import me.shoutto.sdk.internal.location.UserLocationListener;
 import me.shoutto.sdk.internal.usecases.CreateChannelSubscription;
+import me.shoutto.sdk.internal.usecases.CreateOrGetUser;
 import me.shoutto.sdk.internal.usecases.CreateTopicPreference;
 import me.shoutto.sdk.internal.usecases.DeleteChannelSubscription;
 import me.shoutto.sdk.internal.usecases.DeleteTopicPreference;
@@ -328,7 +334,7 @@ public class StmService extends Service {
         DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
                 new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                new GsonUserResponseAdapter(),
                 getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
@@ -341,7 +347,40 @@ public class StmService extends Service {
             String userId = stmPreferenceManager.getUserId();
             String authToken = stmPreferenceManager.getAuthToken();
             if (userId == null || authToken == null) {
-                createOrGetUserAccount();
+
+                User user = new User();
+                if (getUserLocationListener() != null && getUserLocationListener().getLatitude() != 0
+                        && getUserLocationListener().getLongitude() != 0) {
+                    double lat = getUserLocationListener().getLatitude();
+                    double lon = getUserLocationListener().getLongitude();
+                    Double[] coordinates = {lon, lat};
+                    User.Locations.Location location = new User.Locations.Location(coordinates);
+                    User.Locations locations = new User.Locations();
+                    locations.setLocation(location);
+                    user.setLocations(locations);
+                }
+                user.setDeviceId(getInstallationId());
+
+                DefaultEntityRequestProcessorSync<User> stmRequestProcessor = new DefaultEntityRequestProcessorSync<>(
+                        new GsonRequestAdapter<StmBaseEntity>(),
+                        new GsonUserResponseAdapter(),
+                        new BasicAuthHeaderProvider(getAccessToken()),
+                        new CreateUserUrlProvider(stmPreferenceManager.getServerUrl())
+                );
+                CreateOrGetUser createOrGetUser = new CreateOrGetUser(stmRequestProcessor);
+                createOrGetUser.createOrGet(user, new Callback<User>() {
+                    @Override
+                    public void onSuccess(StmResponse<User> stmResponse) {
+                        stmPreferenceManager.setAuthToken(stmResponse.get().getAuthToken());
+                        stmPreferenceManager.setUserId(stmResponse.get().getId());
+                    }
+
+                    @Override
+                    public void onFailure(StmError stmError) {
+                        Log.e(TAG, "Could not create or get user. " + stmError.getMessage());
+                    }
+                });
+
                 authToken = stmPreferenceManager.getAuthToken();
                 userId = stmPreferenceManager.getUserId();
             }
@@ -349,16 +388,6 @@ public class StmService extends Service {
             user.setAuthToken(authToken);
             user.setIsInitialized(true);
             Log.d(TAG, "User has been initialized");
-        }
-    }
-
-    private void createOrGetUserAccount() {
-        try {
-            stmHttpSender.getUserWithClientToken(user);
-            stmPreferenceManager.setAuthToken(user.getAuthToken());
-            stmPreferenceManager.setUserId(user.getId());
-        } catch (Exception ex) {
-            Log.e(TAG, "Could not create or get user account.", ex);
         }
     }
 
@@ -409,7 +438,7 @@ public class StmService extends Service {
         DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
                 new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                new GsonUserResponseAdapter(),
                 getUserAuthToken(),
                 new DefaultUrlProvider(getServerUrl())
         );
@@ -692,7 +721,7 @@ public class StmService extends Service {
         DefaultEntityRequestProcessorAsync<User> defaultEntityRequestProcessorAsync = new DefaultEntityRequestProcessorAsync<>(
                 new GsonRequestAdapter<StmBaseEntity>(),
                 StmRequestQueue.getInstance(),
-                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
+                new GsonUserResponseAdapter(),
                 getUserAuthToken(),
                 new DefaultUrlProvider(this.getServerUrl())
         );

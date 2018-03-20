@@ -107,7 +107,10 @@ public class UpdateUserTest {
     public void update_ValidInput_ShouldCallProcessRequestWithUser() {
         String userId = "userId";
         String email = "email";
+        String gender = "gender";
         String handle = "handle";
+        String operatingSystem = "operatingSystem";
+        String operatingSystemVersion = "operatingSystemVersion";
         String phone = "phone";
         String channel = "channel";
         List<String> channelSubscriptions = new ArrayList<>();
@@ -122,7 +125,10 @@ public class UpdateUserTest {
         UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail(email);
+        updateUserRequest.setGender(gender);
         updateUserRequest.setHandle(handle);
+        updateUserRequest.setOperatingSystem(operatingSystem);
+        updateUserRequest.setOperatingSystemVersion(operatingSystemVersion);
         updateUserRequest.setPhone(phone);
         updateUserRequest.setChannelSubscriptions(channelSubscriptions);
         updateUserRequest.setTopicPreferences(topicPreferences);
@@ -131,7 +137,10 @@ public class UpdateUserTest {
         verify(mockStmRequestProcessor, times(1)).processRequest(any(HttpMethod.class), userArgumentCaptor.capture());
         assertEquals(userId, userArgumentCaptor.getValue().getId());
         assertEquals(email, userArgumentCaptor.getValue().getEmail());
+        assertEquals(gender, userArgumentCaptor.getValue().getMetaInfo().getGender());
         assertEquals(handle, userArgumentCaptor.getValue().getHandle());
+        assertEquals(operatingSystem, userArgumentCaptor.getValue().getMetaInfo().getOperatingSystem());
+        assertEquals(operatingSystemVersion, userArgumentCaptor.getValue().getMetaInfo().getOperatingSystemVersion());
         assertEquals(phone, userArgumentCaptor.getValue().getPhone());
         assertEquals(channel, userArgumentCaptor.getValue().getChannelSubscriptions().get(0));
         assertEquals(topic, userArgumentCaptor.getValue().getTopicPreferences().get(0));

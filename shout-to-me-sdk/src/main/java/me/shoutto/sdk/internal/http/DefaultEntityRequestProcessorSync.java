@@ -28,17 +28,17 @@ public class DefaultEntityRequestProcessorSync<T>
     private static final String TAG = DefaultEntityRequestProcessorSync.class.getSimpleName();
     private StmJsonRequestAdapter<StmBaseEntity> requestAdapter;
     private StmHttpResponseAdapter<T> responseAdapter;
-    private final String authToken;
+    private final HttpAuthHeaderProvider httpAuthHeaderProvider;
     private StmUrlProvider urlProvider;
     private ArrayList<StmObserver> observers;
 
     public DefaultEntityRequestProcessorSync(StmJsonRequestAdapter<StmBaseEntity> requestAdapter,
                                              StmHttpResponseAdapter<T> responseAdapter,
-                                             String authToken,
+                                             HttpAuthHeaderProvider httpAuthHeaderProvider,
                                              StmUrlProvider urlProvider) {
         this.requestAdapter = requestAdapter;
         this.responseAdapter = responseAdapter;
-        this.authToken = authToken;
+        this.httpAuthHeaderProvider = httpAuthHeaderProvider;
         this.urlProvider = urlProvider;
         observers = new ArrayList<>();
     }
@@ -47,15 +47,23 @@ public class DefaultEntityRequestProcessorSync<T>
     @Override
     public void processRequest(HttpMethod httpMethod, StmBaseEntity stmBaseEntity) {
 
-        if (authToken == null || "".equals(authToken)) {
+        try {
+            if (httpAuthHeaderProvider.getHeaderValue() == null || "".equals(httpAuthHeaderProvider.getHeaderValue())) {
+                StmObservableResults stmObservableResults = new StmObservableResults();
+                stmObservableResults.setError(true);
+                stmObservableResults.setErrorMessage("Attempted to call Shout to Me service with invalid httpAuthHeaderProvider value");
+                notifyObservers(stmObservableResults);
+                return;
+            }
+        } catch (IllegalStateException ex) {
             StmObservableResults stmObservableResults = new StmObservableResults();
             stmObservableResults.setError(true);
-            stmObservableResults.setErrorMessage("Attempted to call Shout to Me service with invalid authToken");
+            stmObservableResults.setErrorMessage("Illegal argument passed to HttpAuthHeaderProvider");
             notifyObservers(stmObservableResults);
             return;
         }
 
-        T entity = null;
+        T entity;
 
         HttpURLConnection connection;
         URL url;
@@ -68,7 +76,7 @@ public class DefaultEntityRequestProcessorSync<T>
                 connection = (HttpURLConnection) url.openConnection();
             }
             connection.setRequestMethod(httpMethod.toString());
-            connection.addRequestProperty("Authorization", "Bearer " + authToken);
+            connection.addRequestProperty("Authorization", httpAuthHeaderProvider.getHeaderValue());
             connection.addRequestProperty("Content-Type", "application/json");
 
             String jsonDataString = "";
