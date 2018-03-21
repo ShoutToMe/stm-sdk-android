@@ -2,10 +2,8 @@ package me.shoutto.sdk.internal.http;
 
 import org.junit.Test;
 
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URLEncoder;
 
 import me.shoutto.sdk.TopicPreference;
 import me.shoutto.sdk.User;
@@ -23,7 +21,6 @@ public class TopicUrlProviderTest {
     public void getUrl_WithUnencodedTopic_ReturnsUrlEncodedTopic() {
 
         String unencodedString = "unencoded characters ~`#%^{}|$-_.+!*'(),;/?@=&";
-
 
         User user = new User();
         user.setId("userId");

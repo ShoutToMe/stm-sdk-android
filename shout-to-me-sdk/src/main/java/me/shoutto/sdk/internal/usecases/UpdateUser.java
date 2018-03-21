@@ -2,27 +2,27 @@ package me.shoutto.sdk.internal.usecases;
 
 import android.util.Log;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmService;
 import me.shoutto.sdk.UpdateUserRequest;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
-import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Updates a Shout to Me user object.
  */
 
-public class UpdateUser extends BaseUseCase<User> {
+public class UpdateUser extends BaseUseCase<StmBaseEntity, User> {
 
     private static final String TAG = UpdateUser.class.getSimpleName();
     private StmService stmService;
 
-    public UpdateUser(StmEntityRequestProcessor stmEntityRequestProcessor, StmService stmService) {
-        super(stmEntityRequestProcessor);
+    public UpdateUser(StmRequestProcessor<StmBaseEntity> stmRequestProcessor, StmService stmService) {
+        super(stmRequestProcessor);
         this.stmService = stmService;
     }
 
@@ -43,7 +43,7 @@ public class UpdateUser extends BaseUseCase<User> {
             } else {
                 Log.w(TAG, errorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -52,7 +52,7 @@ public class UpdateUser extends BaseUseCase<User> {
         User user = (User)updateUserRequest.adaptToBaseEntity();
         user.setId(userId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.PUT, user);
+        stmRequestProcessor.processRequest(HttpMethod.PUT, user);
     }
 
     @Override

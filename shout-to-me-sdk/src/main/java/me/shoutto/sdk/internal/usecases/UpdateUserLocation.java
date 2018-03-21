@@ -1,16 +1,29 @@
 package me.shoutto.sdk.internal.usecases;
 
+import android.content.Context;
+import android.content.Intent;
 import android.location.Location;
 import android.util.Log;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.UserLocation;
+import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.database.UserLocationDao;
+import me.shoutto.sdk.internal.database.UserLocationDaoImpl;
+import me.shoutto.sdk.internal.database.UserLocationRecord;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
+import me.shoutto.sdk.internal.location.UserLocationListener;
 import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 
 /**
@@ -18,29 +31,35 @@ import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
  * update to the Shout to Me service.
  */
 
-public class UpdateUserLocation extends BaseUseCase<Void> {
+public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseEntity>, Void> {
 
     private static final String TAG = UpdateUserLocation.class.getSimpleName();
+    private static final Object lock = new Object();
+    private static final long MINIMUM_UPDATE_PERIOD = 15000;
+    private static final String BROADCAST_ACTION = "me.shoutto.sdk.action.UpdateUserLocation";
+    private static final String PACKAGE_VOIGO = "me.shoutto.voigo";
     private GeofenceManager geofenceManager;
-    private Location newLocation;
     private StmPreferenceManager stmPreferenceManager;
-    private Double lastUserLocationLat;
-    private Double lastUserLocationLon;
-    private float distanceSinceLastUpdate;
+    private UserLocationDao userLocationDao;
+    private Context context;
+    private String triggeringEvent;
+    private UserLocation userLocation;
 
-    public UpdateUserLocation(StmEntityRequestProcessor stmEntityRequestProcessor,
+    public UpdateUserLocation(StmRequestProcessor<SortedSet<? extends StmBaseEntity>> stmRequestProcessor,
                               GeofenceManager geofenceManager,
-                              StmPreferenceManager stmPreferenceManager) {
-        super(stmEntityRequestProcessor);
+                              StmPreferenceManager stmPreferenceManager,
+                              UserLocationDao userLocationDao,
+                              Context context, String triggeringEvent) {
+        super(stmRequestProcessor);
         this.geofenceManager = geofenceManager;
-
         this.stmPreferenceManager = stmPreferenceManager;
-        lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
-        lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
+        this.userLocationDao = userLocationDao;
+        this.context = context;
+        this.triggeringEvent = triggeringEvent;
     }
 
-    public void update(Location newLocation, StmCallback<Void> callback, boolean forceUpdate) {
-        if (newLocation == null) {
+    public void update(Location location, StmCallback<Void> callback) {
+        if (location == null) {
             Log.w(TAG, "Cannot process location update. Location is null");
             if (callback != null) {
                 StmError stmError = new StmError("Cannot process location update. Location is null", false, StmError.SEVERITY_MAJOR);
@@ -49,31 +68,68 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
             return;
         }
 
-        this.callback = callback;
+        boolean shouldUpdateUserLocation = true;
+        Float distanceSinceLastUpdate = null;
 
-        if (lastUserLocationLat != null && lastUserLocationLon != null) {
-            Location lastUserLocation = new Location("");
-            lastUserLocation.setLatitude(lastUserLocationLat);
-            lastUserLocation.setLongitude(lastUserLocationLon);
+        synchronized (lock) {
+            Double lastUserLocationLat = stmPreferenceManager.getUserLocationLat();
+            Double lastUserLocationLon = stmPreferenceManager.getUserLocationLon();
+            Long lastUserLocationTime = stmPreferenceManager.getUserLocationTime();
 
-            distanceSinceLastUpdate = lastUserLocation.distanceTo(newLocation);
+            if (lastUserLocationLat != null && lastUserLocationLon != null) {
+                Location lastUserLocation = new Location("");
+                lastUserLocation.setLatitude(lastUserLocationLat);
+                lastUserLocation.setLongitude(lastUserLocationLon);
 
-            if (!forceUpdate && distanceSinceLastUpdate < GeofenceManager.GEOFENCE_RADIUS_IN_METERS) {
-                Log.d(TAG, "User is still in Geofence. Ignore location update");
+                distanceSinceLastUpdate = lastUserLocation.distanceTo(location);
+
+                if (distanceSinceLastUpdate < (GeofenceManager.GEOFENCE_RADIUS_IN_METERS * 0.9)) {
+                    shouldUpdateUserLocation = false;
+                } else if (lastUserLocationTime != null) {
+                    if ((location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
+                        shouldUpdateUserLocation = false;
+                    }
+                }
+            }
+
+            if (!shouldUpdateUserLocation) {
                 if (callback != null) {
                     callback.onResponse(null);
                 }
                 return;
             }
+
+            stmPreferenceManager.setUserLocationLat(location.getLatitude());
+            stmPreferenceManager.setUserLocationLon(location.getLongitude());
+            stmPreferenceManager.setUserLocationTime(location.getTime());
         }
 
-        this.newLocation = newLocation;
+        this.callback = callback;
 
-        updateGeofence();
-        processUpdateRequest();
+        sendLocationUpdateBroadcast(location, distanceSinceLastUpdate);
+        updateGeofence(location);
+        processUpdateRequest(location, distanceSinceLastUpdate);
     }
 
-    private void updateGeofence() {
+    /**
+     * Broadcast for Shout to Me's internal app. Not relevant for other clients.
+     * @param newLocation the new Location
+     * @param distanceSinceLastUpdate the distance in meters since the last update
+     */
+    private void sendLocationUpdateBroadcast(Location newLocation, Float distanceSinceLastUpdate) {
+        Intent intent = new Intent();
+        intent.setAction(BROADCAST_ACTION);
+        intent.putExtra("timestamp", newLocation.getTime());
+        intent.putExtra("lat",newLocation.getLatitude());
+        intent.putExtra("lon", newLocation.getLongitude());
+        intent.putExtra("accuracy", newLocation.getAccuracy());
+        intent.putExtra("distanceSinceLastUpdate", distanceSinceLastUpdate);
+        intent.putExtra("triggeringEvent", triggeringEvent);
+        intent.setPackage(PACKAGE_VOIGO);
+        context.sendBroadcast(intent);
+    }
+
+    private void updateGeofence(Location newLocation) {
         try {
             geofenceManager.addUserLocationGeofence(newLocation);
         } catch (Exception e) {
@@ -81,19 +137,60 @@ public class UpdateUserLocation extends BaseUseCase<Void> {
         }
     }
 
-    private void processUpdateRequest() {
-        Double[] coordinates = { newLocation.getLongitude(), newLocation.getLatitude() };
-        UserLocation userLocation = new UserLocation();
-        userLocation.setLocation(new UserLocation.Location(coordinates));
-        userLocation.setDate(new Date());
+    private void processUpdateRequest(Location location, Float distanceSinceLastUpdate) {
 
-        if (lastUserLocationLat != null && lastUserLocationLon != null) {
-            userLocation.setMetersSinceLastUpdate(distanceSinceLastUpdate);
+        SortedSet<UserLocation> userLocationSortedSet = new TreeSet<>(new UserLocationDateComparator());
+
+        // Get any previously saved user locations
+        userLocationSortedSet.addAll(userLocationDao.getAllUserLocations());
+
+        // Add the current location
+        Double[] coordinates = { location.getLongitude(), location.getLatitude() };
+        userLocation = new UserLocation();
+        userLocation.setLocation(new UserLocation.Location(coordinates));
+        if (location.getTime() > 0) {
+            userLocation.setDate(new Date(location.getTime()));
+        } else {
+            userLocation.setDate(new Date());
         }
 
-        stmPreferenceManager.setUserLocationLat(newLocation.getLatitude());
-        stmPreferenceManager.setUserLocationLon(newLocation.getLongitude());
+        if (distanceSinceLastUpdate != null) {
+            userLocation.setMetersSinceLastUpdate(distanceSinceLastUpdate);
+        }
+        userLocationSortedSet.add(userLocation);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.PUT, userLocation);
+        stmRequestProcessor.processRequest(HttpMethod.PUT, userLocationSortedSet);
+    }
+
+    @Override
+    public void processCallback(StmObservableResults stmObservableResults) {
+        userLocationDao.deleteAllUserLocationRecords();
+        super.processCallback(stmObservableResults);
+    }
+
+    @Override
+    public void processCallbackError(StmObservableResults stmObservableResults) {
+
+        // Insert the failed object into the db
+        UserLocationRecord userLocationRecord = new UserLocationRecord();
+        userLocationRecord.setDate(userLocation.getDate());
+        userLocationRecord.setLat(userLocation.getLocation().getCoordinates()[1]);
+        userLocationRecord.setLon(userLocation.getLocation().getCoordinates()[0]);
+        userLocationRecord.setRadius(userLocation.getLocation().getRadius());
+        userLocationRecord.setType(userLocation.getLocation().getType());
+        if (userLocation.getMetersSinceLastUpdate() != null) {
+            userLocationRecord.setMetersSinceLastUpdate(userLocation.getMetersSinceLastUpdate());
+        }
+        userLocationDao.addUserLocationRecord(userLocationRecord);
+
+        userLocationDao.truncateTable();
+
+        super.processCallbackError(stmObservableResults);
+    }
+
+    class UserLocationDateComparator implements Comparator<UserLocation> {
+        public int compare(UserLocation ul1, UserLocation ul2) {
+            return ul2.getDate().compareTo(ul1.getDate());
+        }
     }
 }

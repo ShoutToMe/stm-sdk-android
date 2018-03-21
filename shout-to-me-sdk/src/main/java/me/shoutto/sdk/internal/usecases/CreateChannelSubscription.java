@@ -3,22 +3,22 @@ package me.shoutto.sdk.internal.usecases;
 import android.util.Log;
 
 import me.shoutto.sdk.ChannelSubscription;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
-import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Subscribes the user to the specified channel
  */
 
-public class CreateChannelSubscription extends BaseUseCase<Void> {
+public class CreateChannelSubscription extends BaseUseCase<StmBaseEntity, Void> {
 
     private static final String TAG = CreateChannelSubscription.class.getSimpleName();
 
-    public CreateChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public CreateChannelSubscription(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void create(String channelId, StmCallback<Void> callback) {
@@ -31,7 +31,7 @@ public class CreateChannelSubscription extends BaseUseCase<Void> {
             } else {
                 Log.w(TAG, validationErrorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -40,6 +40,6 @@ public class CreateChannelSubscription extends BaseUseCase<Void> {
         ChannelSubscription channelSubscription = new ChannelSubscription();
         channelSubscription.setChannelId(channelId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.PUT, channelSubscription);
+        stmRequestProcessor.processRequest(HttpMethod.PUT, channelSubscription);
     }
 }

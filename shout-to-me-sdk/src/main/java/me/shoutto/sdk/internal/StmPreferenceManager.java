@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import java.util.Date;
+
 import me.shoutto.sdk.StmService;
 
 /**
@@ -20,6 +22,7 @@ public class StmPreferenceManager {
     private static final String PREF_USER_ID = "me.shoutto.sdk.USER_ID";
     private static final String PREF_USER_LOCATION_LAT = "me.shoutto.sdk.USER_LOCATION_LAT";
     private static final String PREF_USER_LOCATION_LON = "me.shoutto.sdk.USER_LOCATION_LON";
+    private static final String PREF_USER_LOCATION_TIME = "me.shoutto.sdk.USER_LOCATION_TIME";
     private SharedPreferences sharedPreferences;
 
     public StmPreferenceManager(Context context) {
@@ -103,6 +106,17 @@ public class StmPreferenceManager {
 
     public void setUserLocationLon(Double lon) {
         setPreferenceString(PREF_USER_LOCATION_LON, Double.toString(lon));
+    }
+
+    public Long getUserLocationTime() {
+        Long userLocationTime = sharedPreferences.getLong(PREF_USER_LOCATION_TIME, 0L);
+        return (userLocationTime == 0L) ? null : userLocationTime;
+    }
+
+    public void setUserLocationTime(Long userLocationTime) {
+        if (userLocationTime != null) {
+            sharedPreferences.edit().putLong(PREF_USER_LOCATION_TIME, userLocationTime).apply();
+        }
     }
 
     private void setPreferenceString(String key, String value) {

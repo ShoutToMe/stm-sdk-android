@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import me.shoutto.sdk.Callback;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmResponse;
 import me.shoutto.sdk.UpdateUserRequest;
@@ -22,7 +23,7 @@ import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -38,15 +39,15 @@ import static org.mockito.Mockito.*;
 public class UpdateUserTest {
 
     @Mock
-    StmEntityRequestProcessor mockStmEntityRequestProcessor;
+    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Captor
     ArgumentCaptor<User> userArgumentCaptor;
 
     @Test
     public void update_InvalidInput_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
+        UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUser.update(updateUserRequest, "userId", new Callback<User>() {
             @Override
@@ -63,8 +64,8 @@ public class UpdateUserTest {
 
     @Test
     public void update_NullUserId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
+        UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
         updateUser.update(updateUserRequest, null, new Callback<User>() {
@@ -79,13 +80,13 @@ public class UpdateUserTest {
             }
         });
 
-        verify(mockStmEntityRequestProcessor, times(0)).processRequest(any(HttpMethod.class), any(User.class));
+        verify(mockStmRequestProcessor, times(0)).processRequest(any(HttpMethod.class), any(User.class));
     }
 
     @Test
     public void update_EmptyStringUserId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
+        UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
         updateUser.update(updateUserRequest, "", new Callback<User>() {
@@ -99,7 +100,7 @@ public class UpdateUserTest {
                 assertNotNull(stmError);
             }
         });
-        verify(mockStmEntityRequestProcessor, times(0)).processRequest(any(HttpMethod.class), any(User.class));
+        verify(mockStmRequestProcessor, times(0)).processRequest(any(HttpMethod.class), any(User.class));
     }
 
     @Test
@@ -116,9 +117,9 @@ public class UpdateUserTest {
         topicPreferences.add(topic);
 
         PowerMockito.mockStatic(Log.class);
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
+        UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail(email);
         updateUserRequest.setHandle(handle);
@@ -127,7 +128,7 @@ public class UpdateUserTest {
         updateUserRequest.setTopicPreferences(topicPreferences);
         updateUser.update(updateUserRequest, userId, null);
 
-        verify(mockStmEntityRequestProcessor, times(1)).processRequest(any(HttpMethod.class), userArgumentCaptor.capture());
+        verify(mockStmRequestProcessor, times(1)).processRequest(any(HttpMethod.class), userArgumentCaptor.capture());
         assertEquals(userId, userArgumentCaptor.getValue().getId());
         assertEquals(email, userArgumentCaptor.getValue().getEmail());
         assertEquals(handle, userArgumentCaptor.getValue().getHandle());
@@ -141,8 +142,8 @@ public class UpdateUserTest {
         final User userResult = new User();
         userResult.setId("userResult");
 
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
-        UpdateUser updateUser = new UpdateUser(mockStmEntityRequestProcessor, null);
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
+        UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setHandle("handle");
         updateUser.update(updateUserRequest, "userId", new Callback<User>() {

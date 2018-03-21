@@ -8,13 +8,13 @@ import org.mockito.Mock;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import me.shoutto.sdk.Message;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
-import me.shoutto.sdk.internal.StmObservable;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -33,7 +33,7 @@ public class GetMessageTest {
     private static final String MESSAGE_ID = "messageId";
 
     @Mock
-    StmEntityRequestProcessor mockStmEntityRequestProcessor;
+    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Mock
     StmCallback<Message> mockCallback;
@@ -46,9 +46,9 @@ public class GetMessageTest {
 
     @Test
     public void get_WithNullMessageId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessage getMessage = new GetMessage(mockStmEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(mockStmRequestProcessor);
         getMessage.get(null, mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -58,9 +58,9 @@ public class GetMessageTest {
 
     @Test
     public void get_WithEmptyStringMessageId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessage getMessage = new GetMessage(mockStmEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(mockStmRequestProcessor);
         getMessage.get("", mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -70,21 +70,21 @@ public class GetMessageTest {
 
     @Test
     public void get_WithValidMessageId_ShouldCallProcessRequestWithMessage() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessage getMessage = new GetMessage(mockStmEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(mockStmRequestProcessor);
         getMessage.get(MESSAGE_ID, null);
 
-        verify(mockStmEntityRequestProcessor, times(1))
+        verify(mockStmRequestProcessor, times(1))
                 .processRequest(any(HttpMethod.class), messageArgumentCaptor.capture());
         assertEquals(MESSAGE_ID, messageArgumentCaptor.getValue().getId());
     }
 
     @Test
     public void get_WithValidMessageId_ShouldCallBackWithResult() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessage getMessage = new GetMessage(mockStmEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(mockStmRequestProcessor);
         getMessage.get(MESSAGE_ID, mockCallback);
 
         Message message = new Message();
@@ -99,9 +99,9 @@ public class GetMessageTest {
 
     @Test
     public void get_WithValidMessageId_ShouldCallBackWithErrorIfProcessingError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessage getMessage = new GetMessage(mockStmEntityRequestProcessor);
+        GetMessage getMessage = new GetMessage(mockStmRequestProcessor);
         getMessage.get(MESSAGE_ID, mockCallback);
 
         StmObservableResults<Message> stmObservableResults = new StmObservableResults<>();

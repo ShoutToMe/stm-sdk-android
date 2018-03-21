@@ -13,13 +13,14 @@ import org.powermock.modules.junit4.PowerMockRunner;
 import java.util.ArrayList;
 import java.util.List;
 
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -39,7 +40,7 @@ public class GetChannelSubscriptionTest {
     private static final String USER_ID = "userId";
 
     @Mock
-    StmEntityRequestProcessor mockStmEntityRequestProcessor;
+    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Mock
     StmCallback<Boolean> mockCallback;
@@ -55,9 +56,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithNullChannelId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(null, USER_ID, mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -67,9 +68,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithEmptyStringChannelId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get("", USER_ID, mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -79,9 +80,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithNullUserId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, null, mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -91,9 +92,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithEmptyStringUserId_ShouldCallBackWithError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, "", mockCallback);
 
         verify(mockCallback, times(1)).onError(errorArgumentCaptor.capture());
@@ -103,21 +104,21 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithValidInput_ShouldCallProcessRequestWithUser() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, null);
 
-        verify(mockStmEntityRequestProcessor, times(1))
+        verify(mockStmRequestProcessor, times(1))
                 .processRequest(any(HttpMethod.class), userArgumentCaptor.capture());
         assertEquals(USER_ID, userArgumentCaptor.getValue().getId());
     }
 
     @Test
     public void get_WithValidInput_ShouldReturnFalseWithNullArray() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, mockCallback);
 
         User user = new User();
@@ -130,9 +131,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithValidInput_ShouldReturnFalseWithEmptyArray() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, mockCallback);
 
         User user = new User();
@@ -146,9 +147,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithValidInput_ShouldReturnFalseIfChannelNotInArray() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, mockCallback);
 
         User user = new User();
@@ -166,9 +167,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithValidInput_ShouldReturnTrueIfChannelInArray() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, mockCallback);
 
         User user = new User();
@@ -186,9 +187,9 @@ public class GetChannelSubscriptionTest {
 
     @Test
     public void get_WithValidInput_ShouldCallBackErrorOnProcessingError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmEntityRequestProcessor);
+        GetChannelSubscription getChannelSubscription = new GetChannelSubscription(mockStmRequestProcessor);
         getChannelSubscription.get(CHANNEL_ID, USER_ID, mockCallback);
         getChannelSubscription.processCallbackError(new StmObservableResults());
 

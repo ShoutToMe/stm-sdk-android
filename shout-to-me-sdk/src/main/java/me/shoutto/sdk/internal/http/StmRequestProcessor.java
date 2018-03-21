@@ -7,7 +7,6 @@ import me.shoutto.sdk.internal.StmObservable;
  * Interface for async HTTP request processors
  */
 
-public interface StmEntityRequestProcessor extends StmObservable {
-
-    void processRequest(HttpMethod httpMethod, StmBaseEntity stmBaseEntity);
+public interface StmRequestProcessor<T> extends StmObservable {
+    void processRequest(HttpMethod httpMethod, T requestObject);
 }

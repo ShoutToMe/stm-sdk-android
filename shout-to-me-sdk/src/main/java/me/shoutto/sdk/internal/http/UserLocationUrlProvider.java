@@ -19,6 +19,6 @@ public class UserLocationUrlProvider implements StmUrlProvider {
 
     @Override
     public String getUrl(StmBaseEntity entity, HttpMethod httpMethod) {
-        return String.format("%s%s/%s%s", baseApiUrl, user.getBaseEndpoint(), user.getId(), entity.getBaseEndpoint());
+        return String.format("%s%s/%s/locations", baseApiUrl, user.getBaseEndpoint(), user.getId());
     }
 }

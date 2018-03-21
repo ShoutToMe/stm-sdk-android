@@ -31,7 +31,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.http.DefaultSyncEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.DefaultEntityRequestProcessorSync;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
 import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
@@ -281,13 +281,13 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
             return null;
         }
 
-        DefaultSyncEntityRequestProcessor<User> defaultSyncEntityRequestProcessor = new DefaultSyncEntityRequestProcessor<>(
+        DefaultEntityRequestProcessorSync<User> defaultEntityRequestProcessorSync = new DefaultEntityRequestProcessorSync<>(
                 null,
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 authToken,
                 new DefaultUrlProvider(serverUrl)
         );
-        GetUser getUser = new GetUser(defaultSyncEntityRequestProcessor);
+        GetUser getUser = new GetUser(defaultEntityRequestProcessorSync);
         getUser.get(userId, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
@@ -320,13 +320,13 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
         updateUserRequest.setPlatformEndpointEnabled(true);
         updateUserRequest.setPlatformEndpointArn(platformEndpointArn);
 
-        DefaultSyncEntityRequestProcessor<User> defaultSyncEntityRequestProcessor = new DefaultSyncEntityRequestProcessor<>(
-                new GsonRequestAdapter(),
+        DefaultEntityRequestProcessorSync<User> defaultEntityRequestProcessorSync = new DefaultEntityRequestProcessorSync<>(
+                new GsonRequestAdapter<StmBaseEntity>(),
                 new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
                 authToken,
                 new DefaultUrlProvider(serverUrl)
         );
-        UpdateUser updateUser = new UpdateUser(defaultSyncEntityRequestProcessor, null);
+        UpdateUser updateUser = new UpdateUser(defaultEntityRequestProcessorSync, null);
         updateUser.update(updateUserRequest, userId, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {

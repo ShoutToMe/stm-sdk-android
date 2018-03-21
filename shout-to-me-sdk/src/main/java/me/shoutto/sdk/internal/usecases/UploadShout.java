@@ -6,14 +6,14 @@ import java.io.File;
 
 import me.shoutto.sdk.CreateShoutRequest;
 import me.shoutto.sdk.Shout;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.StmService;
 import me.shoutto.sdk.internal.StmObservable;
 import me.shoutto.sdk.internal.StmObservableResults;
-import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Used to upload a Shout to the Shout to Me system.  The two steps of the process are
@@ -21,7 +21,7 @@ import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
  *      2) post data to the Shout to Me REST API.
  */
 
-public class UploadShout extends BaseUseCase<Shout> {
+public class UploadShout extends BaseUseCase<StmBaseEntity, Shout> {
 
     private static final String TAG = UploadShout.class.getSimpleName();
     private static final String FILE_NULL_MESSAGE = "CreateShoutRequest did not return a File object. If you used a Uri, ensure that it can be converted to a File. Aborting upload.";
@@ -31,8 +31,8 @@ public class UploadShout extends BaseUseCase<Shout> {
     private StmService stmService;
     private boolean shoutPostedToApi = false;
 
-    public UploadShout(StmService stmService, FileUploader fileUploader, StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public UploadShout(StmService stmService, FileUploader fileUploader, StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
         this.fileUploader = fileUploader;
         this.stmService = stmService;
     }
@@ -51,7 +51,7 @@ public class UploadShout extends BaseUseCase<Shout> {
                     callback.onError(error);
                 }
             } else {
-                stmEntityRequestProcessor.addObserver(this);
+                stmRequestProcessor.addObserver(this);
                 fileUploader.addObserver(this);
                 fileUploader.uploadFile(file);
             }
@@ -91,7 +91,7 @@ public class UploadShout extends BaseUseCase<Shout> {
             Shout shout = (Shout)createShoutRequest.adaptToBaseEntity();
             shout.setChannelId(stmService.getChannelId());
             shout.setMediaFileUrl(fileUrl);
-            stmEntityRequestProcessor.processRequest(HttpMethod.POST, shout);
+            stmRequestProcessor.processRequest(HttpMethod.POST, shout);
         }
     }
 

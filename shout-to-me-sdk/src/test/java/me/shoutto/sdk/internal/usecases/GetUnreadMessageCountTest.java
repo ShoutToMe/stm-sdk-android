@@ -8,12 +8,13 @@ import org.mockito.Mock;
 import org.powermock.modules.junit4.PowerMockRunner;
 
 import me.shoutto.sdk.Message;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertNotNull;
@@ -29,7 +30,7 @@ import static org.mockito.Mockito.verify;
 public class GetUnreadMessageCountTest {
 
     @Mock
-    StmEntityRequestProcessor mockStmEntityRequestProcessor;
+    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Mock
     StmCallback<Integer> mockCallback;
@@ -39,19 +40,19 @@ public class GetUnreadMessageCountTest {
 
     @Test
     public void get_shouldCallProcessRequestWithNewMessage() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmEntityRequestProcessor);
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmRequestProcessor);
         getUnreadMessageCount.get(null);
 
-        verify(mockStmEntityRequestProcessor, times(1)).processRequest(any(HttpMethod.class), any(Message.class));
+        verify(mockStmRequestProcessor, times(1)).processRequest(any(HttpMethod.class), any(Message.class));
     }
 
     @Test
     public void get_shouldCallBackWithInteger() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmEntityRequestProcessor);
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmRequestProcessor);
         getUnreadMessageCount.get(mockCallback);
 
         Integer fakeResult = 10;
@@ -64,9 +65,9 @@ public class GetUnreadMessageCountTest {
 
     @Test
     public void get_ShouldCallBackWithErrorIfProcessingError() {
-        doNothing().when(mockStmEntityRequestProcessor).addObserver(any(StmObserver.class));
+        doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
 
-        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmEntityRequestProcessor);
+        GetMessageCount getUnreadMessageCount = new GetMessageCount(mockStmRequestProcessor);
         getUnreadMessageCount.get(mockCallback);
         getUnreadMessageCount.processCallbackError(new StmObservableResults());
 

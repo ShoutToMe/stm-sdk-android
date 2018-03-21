@@ -10,7 +10,7 @@ import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
 import me.shoutto.sdk.internal.StmPreferenceManager;
-import me.shoutto.sdk.internal.location.UpdateUserLocationController;
+import me.shoutto.sdk.internal.location.UserLocationListener;
 
 /**
  * Initializes the location services, creates a geofence, and sends the location to the Shout to Me
@@ -22,7 +22,7 @@ public class InitializeLocationAfterBoot implements StmObserver {
     private static final String TAG = InitializeLocationAfterBoot.class.getSimpleName();
     private static final int LOCATION_LISTENING_TIMEOUT = 10000;
     private Context context;
-    private UpdateUserLocationController updateUserLocationController;
+    private UserLocationListener userLocationListener;
     private StmCallback<Void> callback;
     private Handler locationListeningHandler;
     private Runnable cancelLocationListeningRunnable;
@@ -30,9 +30,9 @@ public class InitializeLocationAfterBoot implements StmObserver {
     private String serverUrl;
     private User user;
 
-    public InitializeLocationAfterBoot(Context context, UpdateUserLocationController updateUserLocationController) {
+    public InitializeLocationAfterBoot(Context context, UserLocationListener userLocationListener) {
         this.context = context;
-        this.updateUserLocationController = updateUserLocationController;
+        this.userLocationListener = userLocationListener;
         locationListeningHandler = new Handler();
         cancelLocationListeningRunnable = new Runnable() {
             @Override
@@ -58,8 +58,8 @@ public class InitializeLocationAfterBoot implements StmObserver {
             return;
         }
 
-        updateUserLocationController.addObserver(this);
-        updateUserLocationController.updateUserLocation(context);
+        userLocationListener.addObserver(this);
+        userLocationListener.updateUserLocation(context);
 
         locationListeningHandler.postDelayed(cancelLocationListeningRunnable, LOCATION_LISTENING_TIMEOUT);
     }
@@ -79,11 +79,11 @@ public class InitializeLocationAfterBoot implements StmObserver {
             }
         }
 
-        updateUserLocationController.deleteObserver(this);
+        userLocationListener.deleteObserver(this);
     }
 
     private void cancelLocationUpdate() {
-        updateUserLocationController.deleteObserver(this);
+        userLocationListener.deleteObserver(this);
         processCallbackError("Location cannot be retrieved");
     }
 
@@ -93,6 +93,6 @@ public class InitializeLocationAfterBoot implements StmObserver {
             StmError stmError = new StmError(message, false, StmError.SEVERITY_MINOR);
             callback.onError(stmError);
         }
-        updateUserLocationController.deleteObserver(this);
+        userLocationListener.deleteObserver(this);
     }
 }

@@ -42,6 +42,7 @@ public class LocationServicesClient {
     private FusedLocationProviderClient mFusedLocationClient;
     private boolean isListeningForLocation = false;
 
+    // TODO: Make this a Pending Intent callback to remove Context in static instance of UserLocationListener
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(LocationResult locationResult) {
@@ -161,8 +162,6 @@ public class LocationServicesClient {
     private void processLongDelayLocationUpdate(Location location) {
         if (location != null) {
             long timeSinceLastUpdate = -1;
-
-
 
             if (lastLocation != null) {
                 timeSinceLastUpdate = new Date().getTime() - lastLocation.getTime();

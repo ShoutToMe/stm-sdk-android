@@ -3,21 +3,22 @@ package me.shoutto.sdk.internal.usecases;
 import android.util.Log;
 
 import me.shoutto.sdk.Message;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Use case for getting a single message
  */
 
-public class GetMessage extends BaseUseCase<Message> {
+public class GetMessage extends BaseUseCase<StmBaseEntity, Message> {
 
     private static final String TAG = GetMessage.class.getSimpleName();
 
-    public GetMessage(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public GetMessage(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void get(String messageId, StmCallback<Message> callback) {
@@ -37,6 +38,6 @@ public class GetMessage extends BaseUseCase<Message> {
         Message message = new Message();
         message.setId(messageId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.GET, message);
+        stmRequestProcessor.processRequest(HttpMethod.GET, message);
     }
 }

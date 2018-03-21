@@ -3,22 +3,22 @@ package me.shoutto.sdk.internal.usecases;
 import android.util.Log;
 
 import me.shoutto.sdk.ChannelSubscription;
+import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
-import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.http.HttpMethod;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Unsubscribes the user from a channel
  */
 
-public class DeleteChannelSubscription extends BaseUseCase<Void> {
+public class DeleteChannelSubscription extends BaseUseCase<StmBaseEntity, Void> {
 
     private static final String TAG = DeleteChannelSubscription.class.getSimpleName();
 
-    public DeleteChannelSubscription(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        super(stmEntityRequestProcessor);
+    public DeleteChannelSubscription(StmRequestProcessor<StmBaseEntity> stmRequestProcessor) {
+        super(stmRequestProcessor);
     }
 
     public void delete(String channelId, StmCallback<Void> callback) {
@@ -30,7 +30,7 @@ public class DeleteChannelSubscription extends BaseUseCase<Void> {
             } else {
                 Log.w(TAG, validationErrorMessage);
             }
-            stmEntityRequestProcessor.deleteObserver(this);
+            stmRequestProcessor.deleteObserver(this);
             return;
         }
 
@@ -39,6 +39,6 @@ public class DeleteChannelSubscription extends BaseUseCase<Void> {
         ChannelSubscription channelSubscription = new ChannelSubscription();
         channelSubscription.setChannelId(channelId);
 
-        stmEntityRequestProcessor.processRequest(HttpMethod.DELETE, channelSubscription);
+        stmRequestProcessor.processRequest(HttpMethod.DELETE, channelSubscription);
     }
 }

@@ -4,20 +4,20 @@ import me.shoutto.sdk.StmCallback;
 import me.shoutto.sdk.StmError;
 import me.shoutto.sdk.internal.StmObservableResults;
 import me.shoutto.sdk.internal.StmObserver;
-import me.shoutto.sdk.internal.http.StmEntityRequestProcessor;
+import me.shoutto.sdk.internal.http.StmRequestProcessor;
 
 /**
  * Base class for Shout to Me service use case classes
  */
 
-abstract class BaseUseCase<T> implements StmObserver {
+abstract class BaseUseCase<T, U> implements StmObserver {
 
-    protected StmEntityRequestProcessor stmEntityRequestProcessor;
-    protected StmCallback<T> callback;
+    protected StmRequestProcessor<T> stmRequestProcessor;
+    protected StmCallback<U> callback;
 
-    protected BaseUseCase(StmEntityRequestProcessor stmEntityRequestProcessor) {
-        this.stmEntityRequestProcessor = stmEntityRequestProcessor;
-        this.stmEntityRequestProcessor.addObserver(this);
+    protected BaseUseCase(StmRequestProcessor<T> stmRequestProcessor) {
+        this.stmRequestProcessor = stmRequestProcessor;
+        this.stmRequestProcessor.addObserver(this);
     }
 
     @Override
@@ -30,7 +30,7 @@ abstract class BaseUseCase<T> implements StmObserver {
 
         processCallback(stmObservableResults);
 
-        stmEntityRequestProcessor.deleteObserver(this);
+        stmRequestProcessor.deleteObserver(this);
     }
 
     /**
@@ -41,7 +41,7 @@ abstract class BaseUseCase<T> implements StmObserver {
     @SuppressWarnings("unchecked")
     public void processCallback(StmObservableResults stmObservableResults) {
         if (callback != null) {
-            callback.onResponse((T)stmObservableResults.getResult());
+            callback.onResponse((U)stmObservableResults.getResult());
         }
     }
 
