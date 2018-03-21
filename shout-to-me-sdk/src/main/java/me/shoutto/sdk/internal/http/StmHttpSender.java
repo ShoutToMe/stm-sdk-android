@@ -22,18 +22,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import javax.net.ssl.HttpsURLConnection;
-
 import me.shoutto.sdk.Shout;
 import me.shoutto.sdk.StmBaseEntity;
 import me.shoutto.sdk.StmService;
-import me.shoutto.sdk.User;
 import me.shoutto.sdk.internal.PendingApiObjectChange;
 
 public class StmHttpSender {
 
     private static final String TAG = StmHttpSender.class.getSimpleName();
-    private static final String ANONYMOUS_USER_PATH = "/users/skip";
     private StmService stmService;
 
     public StmHttpSender(StmService stmService) {
@@ -73,7 +69,7 @@ public class StmHttpSender {
             responseCode = connection.getResponseCode();
             Log.d(TAG, String.valueOf(responseCode));
 
-            String response = "";
+            String response;
             if (responseCode == 200) {
                 final InputStream in = new BufferedInputStream(connection.getInputStream());
                 response = convertStreamToString(in);
@@ -108,91 +104,10 @@ public class StmHttpSender {
         return shoutFromResponse;
     }
 
-    public void getUserWithClientToken(User user) throws Exception {
-
-        HttpURLConnection connection;
-        int responseCode = 0;
-        try {
-            String requestString = buildRequestString(null);
-
-            URL url = new URL(stmService.getServerUrl() + ANONYMOUS_USER_PATH);
-            if (url.getProtocol().equals("https")) {
-                connection = (HttpsURLConnection) url.openConnection();
-            } else {
-                connection = (HttpURLConnection) url.openConnection();
-            }
-
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.addRequestProperty("Authorization", "Basic " + stmService.getAccessToken());
-            connection.addRequestProperty("Content-Type", "application/json");
-            connection.setFixedLengthStreamingMode(requestString.getBytes().length);
-            connection.connect();
-
-            OutputStream outStream = connection.getOutputStream();
-            outStream.write(requestString.getBytes());
-            outStream.close();
-
-            responseCode = connection.getResponseCode();
-
-            String response = "";
-            try {
-                if (responseCode == 200) {
-                    final InputStream in = new BufferedInputStream(connection.getInputStream());
-                    response = convertStreamToString(in);
-                    Log.d(TAG, response);
-                    in.close();
-                } else {
-                    final InputStream in = new BufferedInputStream(connection.getErrorStream());
-                    response = convertStreamToString(in);
-                    in.close();
-                }
-            } finally {
-                connection.disconnect();
-            }
-
-            try {
-                Log.d(TAG, response);
-                JSONObject responseJson = new JSONObject(response);
-                if (responseJson.getString("status").equals("success")) {
-                    user.setAuthToken(responseJson
-                            .getJSONObject("data")
-                            .getString("auth_token"));
-                    user.setId(responseJson.getJSONObject("data")
-                            .getJSONObject("user")
-                            .getString("id"));
-                    try {
-                        if (stmService.getChannelId() == null) {
-                            stmService.setChannelId(responseJson
-                                    .getJSONObject("data")
-                                    .getJSONObject("user")
-                                    .getJSONObject("affiliate")
-                                    .getJSONObject("default_channel")
-                                    .getString("id"));
-                        }
-                    } catch (JSONException ex) {
-                        Log.w(TAG, "Could not set default channel ID for user.");
-                    }
-                }
-            } catch (JSONException ex) {
-                Log.e(TAG, "Could not parse get user with client token response JSON", ex);
-            }
-        } catch (MalformedURLException ex) {
-            Log.e(TAG, "Could not create URL for Shout to Me service", ex);
-            throw(ex);
-        } catch (IOException ex) {
-            Log.e(TAG, "Could not connect to Shout to Me service", ex);
-            throw(ex);
-        } catch (Exception ex) {
-            Log.e(TAG, "Error occurred in trying to send Shout to Shout to Me service", ex);
-            throw(ex);
-        }
-    }
-
     public JSONObject putEntityObject(StmBaseEntity baseEntity) throws Exception {
 
         HttpURLConnection connection;
-        int responseCode = 0;
+        int responseCode;
 
         JSONObject requestJson = new JSONObject();
         try {
@@ -224,7 +139,7 @@ public class StmHttpSender {
             responseCode = connection.getResponseCode();
             Log.d(TAG, String.valueOf(responseCode));
 
-            String response = "";
+            String response;
             if (responseCode == 200) {
                 final InputStream in = new BufferedInputStream(connection.getInputStream());
                 response = convertStreamToString(in);
@@ -238,8 +153,7 @@ public class StmHttpSender {
             connection.disconnect();
 
             try {
-                JSONObject responseObject = new JSONObject(response);
-                return responseObject;
+                return new JSONObject(response);
             } catch (JSONException ex) {
                 Log.e(TAG, "Could not parse create shout response JSON", ex);
             }

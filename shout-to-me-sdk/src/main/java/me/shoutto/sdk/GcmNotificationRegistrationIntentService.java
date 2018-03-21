@@ -31,10 +31,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import me.shoutto.sdk.internal.StmPreferenceManager;
+import me.shoutto.sdk.internal.http.BearerAuthHeaderProvider;
 import me.shoutto.sdk.internal.http.DefaultEntityRequestProcessorSync;
 import me.shoutto.sdk.internal.http.DefaultUrlProvider;
-import me.shoutto.sdk.internal.http.GsonObjectResponseAdapter;
 import me.shoutto.sdk.internal.http.GsonRequestAdapter;
+import me.shoutto.sdk.internal.http.GsonUserResponseAdapter;
 import me.shoutto.sdk.internal.usecases.GetUser;
 import me.shoutto.sdk.internal.usecases.UpdateUser;
 
@@ -283,8 +284,8 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
 
         DefaultEntityRequestProcessorSync<User> defaultEntityRequestProcessorSync = new DefaultEntityRequestProcessorSync<>(
                 null,
-                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
-                authToken,
+                new GsonUserResponseAdapter(),
+                new BearerAuthHeaderProvider(authToken),
                 new DefaultUrlProvider(serverUrl)
         );
         GetUser getUser = new GetUser(defaultEntityRequestProcessorSync);
@@ -322,8 +323,8 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
 
         DefaultEntityRequestProcessorSync<User> defaultEntityRequestProcessorSync = new DefaultEntityRequestProcessorSync<>(
                 new GsonRequestAdapter<StmBaseEntity>(),
-                new GsonObjectResponseAdapter<User>(User.SERIALIZATION_KEY, User.getSerializationType()),
-                authToken,
+                new GsonUserResponseAdapter(),
+                new BearerAuthHeaderProvider(authToken),
                 new DefaultUrlProvider(serverUrl)
         );
         UpdateUser updateUser = new UpdateUser(defaultEntityRequestProcessorSync, null);

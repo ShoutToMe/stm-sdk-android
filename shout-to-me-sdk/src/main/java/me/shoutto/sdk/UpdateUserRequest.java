@@ -10,7 +10,10 @@ public class UpdateUserRequest implements StmEntityActionRequest {
 
     private List<String> channelSubscriptions;
     private String email;
+    private String gender;
     private String handle;
+    private String operatingSystem;
+    private String operatingSystemVersion;
     private String phone;
     private String platformEndpointArn;
     private Boolean platformEndpointEnabled;
@@ -49,6 +52,23 @@ public class UpdateUserRequest implements StmEntityActionRequest {
     }
 
     /**
+     * Gets the gender that will be sent in the update user request
+     * @return The gender
+     */
+    public String getGender() {
+        return gender;
+    }
+
+    /**
+     * Sets the gender that will be sent in the update user request. There is no enum for this
+     * value as client developers can specify values based on their organization's conventions
+     * @param gender
+     */
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    /**
      * Gets the user's handle
      * @return The user's handle
      */
@@ -62,6 +82,41 @@ public class UpdateUserRequest implements StmEntityActionRequest {
      */
     public void setHandle(String handle) {
         this.handle = handle;
+    }
+
+    /**
+     * Gets the operating system that will be sent in the update user request
+     * @return The operating system
+     */
+    public String getOperatingSystem() {
+        return operatingSystem;
+    }
+
+    /**
+     * Sets the operating system that will be sent in the update user request. There is no enum for
+     * this value as client developers can specify values based on their organization's conventions
+     * @param operatingSystem The operating system
+     */
+    public void setOperatingSystem(String operatingSystem) {
+        this.operatingSystem = operatingSystem;
+    }
+
+    /**
+     * Gets the operating system version that will be sent in the update user request
+     * @return The operating system version
+     */
+    public String getOperatingSystemVersion() {
+        return operatingSystemVersion;
+    }
+
+    /**
+     * Sets the operating system version that will be sent in the update user request. There is no
+     * enum for this value as client developers can specify values based on their organization's
+     * conventions
+     * @param operatingSystemVersion The operating system version
+     */
+    public void setOperatingSystemVersion(String operatingSystemVersion) {
+        this.operatingSystemVersion = operatingSystemVersion;
     }
 
     /**
@@ -124,7 +179,10 @@ public class UpdateUserRequest implements StmEntityActionRequest {
 
         return !(channelSubscriptions == null
                 && email == null
+                && gender == null
                 && handle == null
+                && operatingSystem == null
+                && operatingSystemVersion == null
                 && phone == null
                 && platformEndpointArn == null
                 && platformEndpointEnabled == null
@@ -165,6 +223,14 @@ public class UpdateUserRequest implements StmEntityActionRequest {
 
         if (topicPreferences != null) {
             user.setTopicPreferences(topicPreferences);
+        }
+
+        if (gender != null || operatingSystem != null || operatingSystemVersion != null) {
+            User.MetaInfo metaInfo = new User.MetaInfo();
+            metaInfo.setGender(gender);
+            metaInfo.setOperatingSystem(operatingSystem);
+            metaInfo.setOperatingSystemVersion(operatingSystemVersion);
+            user.setMetaInfo(metaInfo);
         }
 
         return user;

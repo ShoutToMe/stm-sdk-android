@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TimeZone;
 
 import me.shoutto.sdk.internal.PendingApiObjectChange;
+import me.shoutto.sdk.internal.location.geofence.GeofenceManager;
 
 /**
  * This class represents a Shout to Me user entity. A Shout to Me User entity is generally used
@@ -41,12 +42,15 @@ public class User extends StmBaseEntity {
 
     private String authToken;
     private List<String> channelSubscriptions;
+    private String deviceId;
     private String email;
     private String handle;
     private String phone;
     private String platformEndpointArn;
     private Boolean platformEndpointEnabled;
     private List<String> topicPreferences;
+    private Locations locations;
+    private MetaInfo metaInfo;
 
     private transient boolean isInitialized = false;
 
@@ -69,7 +73,7 @@ public class User extends StmBaseEntity {
         this.isInitialized = isInitialized;
     }
 
-    String getAuthToken() {
+    public String getAuthToken() {
         return authToken;
     }
 
@@ -87,6 +91,22 @@ public class User extends StmBaseEntity {
 
     public void setChannelSubscriptions(List<String> channelSubscriptions) {
         this.channelSubscriptions = channelSubscriptions;
+    }
+
+    /**
+     * Gets the device ID
+     * @return The device ID
+     */
+    public String getDeviceId() {
+        return deviceId;
+    }
+
+    /**
+     * Sets a unique ID to be associated associated with the user, e.g. an app installation ID
+     * @param deviceId A unique ID
+     */
+    public void setDeviceId(String deviceId) {
+        this.deviceId = deviceId;
     }
 
     /**
@@ -143,6 +163,38 @@ public class User extends StmBaseEntity {
     @Deprecated
     public void setLastReadMessagesDate(Date lastReadMessagesDate) {
         // Stubbed for backwards compatibility but does not do anything
+    }
+
+    /**
+     * Gets the locations associated with the user
+     * @return A Locations object
+     */
+    public Locations getLocations() {
+        return locations;
+    }
+
+    /**
+     * Sets the locations to be associated with the user
+     * @param locations A Locations object
+     */
+    public void setLocations(Locations locations) {
+        this.locations = locations;
+    }
+
+    /**
+     * Gets the meta info associated with the user
+     * @return A MetaInfo object
+     */
+    public MetaInfo getMetaInfo() {
+        return metaInfo;
+    }
+
+    /**
+     * Sets the meta info to be associated with the user
+     * @param metaInfo A MetaInfo object
+     */
+    public void setMetaInfo(MetaInfo metaInfo) {
+        this.metaInfo = metaInfo;
     }
 
     /**
@@ -377,5 +429,91 @@ public class User extends StmBaseEntity {
             }
         }
         pendingChanges.clear();
+    }
+
+    public static class MetaInfo {
+
+        private String gender;
+        private String operatingSystem;
+        private String operatingSystemVersion;
+
+        public String getGender() {
+            return gender;
+        }
+
+        public void setGender(String gender) {
+            this.gender = gender;
+        }
+
+        public String getOperatingSystem() {
+            return operatingSystem;
+        }
+
+        public void setOperatingSystem(String operatingSystem) {
+            this.operatingSystem = operatingSystem;
+        }
+
+        public String getOperatingSystemVersion() {
+            return operatingSystemVersion;
+        }
+
+        public void setOperatingSystemVersion(String operatingSystemVersion) {
+            this.operatingSystemVersion = operatingSystemVersion;
+        }
+    }
+
+    static class Locations {
+
+        private Location location;
+        private Date date;
+        private Float metersSinceLastUpdate;
+
+        public Date getDate() {
+            return date;
+        }
+
+        public void setDate(Date date) {
+            this.date = date;
+        }
+
+        public Location getLocation() {
+            return location;
+        }
+
+        public void setLocation(Location location) {
+            this.location = location;
+        }
+
+        public Float getMetersSinceLastUpdate() {
+            return metersSinceLastUpdate;
+        }
+
+        public void setMetersSinceLastUpdate(Float metersSinceLastUpdate) {
+            this.metersSinceLastUpdate = metersSinceLastUpdate;
+        }
+
+        static class Location {
+            String type;
+            Double[] coordinates;
+            String radius;
+
+            public Location(Double[] coordinates) {
+                this.coordinates = coordinates;
+                type = "circle";
+                radius = Float.toString(GeofenceManager.GEOFENCE_RADIUS_IN_METERS);
+            }
+
+            public Double[] getCoordinates() {
+                return coordinates;
+            }
+
+            public float getRadius() {
+                return Float.parseFloat(radius);
+            }
+
+            public String getType() {
+                return type;
+            }
+        }
     }
 }
