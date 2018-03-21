@@ -24,7 +24,7 @@ import java.util.concurrent.TimeoutException;
 /**
  * GeofenceTransitionsServiceTest
  */
-@RunWith(AndroidJUnit4.class)
+//@RunWith(AndroidJUnit4.class)
 public class GeofenceTransitionsServiceTest {
 
     @Rule

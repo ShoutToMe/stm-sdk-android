@@ -8,8 +8,8 @@ import android.test.RenamingDelegatingContext;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 
-@RunWith(AndroidJUnit4.class)
-@SmallTest
+//@RunWith(AndroidJUnit4.class)
+//@SmallTest
 public class GeofenceManagerTest {
 
     private RenamingDelegatingContext context;
