@@ -33,21 +33,20 @@ public class GeofenceTransitionsServiceTest {
 //    @Mock
 //    private GeofencingEvent mockGeofencingEvent;
 
-    @Test
-    public void onStartCommand() throws TimeoutException {
+//    @Test
+//    public void onStartCommand() throws TimeoutException {
 //        PowerMockito.mockStatic(GeofencingEvent.class);
 //        when(GeofencingEvent.fromIntent(any(Intent.class))).thenReturn(null);
-
-        Intent intent = new Intent(InstrumentationRegistry.getTargetContext(), GeofenceTransitionsService.class);
-        intent.putExtra("testyo", "hi");
-        GeofencingEvent event = GeofencingEvent.fromIntent(intent);
-        intent.putExtra("gms_error_code", 999);
-        try {
-            mServiceRule.startService(intent);
-        } catch (TimeoutException ex) {
-            ex.printStackTrace();
-        }
-
-    }
+//
+//        Intent intent = new Intent(InstrumentationRegistry.getTargetContext(), GeofenceTransitionsService.class);
+//        GeofencingEvent event = GeofencingEvent.fromIntent(intent);
+//        intent.putExtra("gms_error_code", 999);
+//        try {
+//            mServiceRule.startService(intent);
+//        } catch (TimeoutException ex) {
+//            ex.printStackTrace();
+//        }
+//
+//    }
 
 }
