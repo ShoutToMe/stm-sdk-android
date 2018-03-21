@@ -93,10 +93,18 @@ public class User extends StmBaseEntity {
         this.channelSubscriptions = channelSubscriptions;
     }
 
+    /**
+     * Gets the device ID
+     * @return The device ID
+     */
     public String getDeviceId() {
         return deviceId;
     }
 
+    /**
+     * Sets a unique ID to be associated associated with the user, e.g. an app installation ID
+     * @param deviceId A unique ID
+     */
     public void setDeviceId(String deviceId) {
         this.deviceId = deviceId;
     }
@@ -157,18 +165,34 @@ public class User extends StmBaseEntity {
         // Stubbed for backwards compatibility but does not do anything
     }
 
+    /**
+     * Gets the locations associated with the user
+     * @return A Locations object
+     */
     public Locations getLocations() {
         return locations;
     }
 
+    /**
+     * Sets the locations to be associated with the user
+     * @param locations A Locations object
+     */
     public void setLocations(Locations locations) {
         this.locations = locations;
     }
 
+    /**
+     * Gets the meta info associated with the user
+     * @return A MetaInfo object
+     */
     public MetaInfo getMetaInfo() {
         return metaInfo;
     }
 
+    /**
+     * Sets the meta info to be associated with the user
+     * @param metaInfo A MetaInfo object
+     */
     public void setMetaInfo(MetaInfo metaInfo) {
         this.metaInfo = metaInfo;
     }
