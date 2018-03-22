@@ -143,7 +143,7 @@ public class LocationServicesClient {
     }
 
     private LocationRequest createLongDelayLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest();
+        LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setInterval(LONG_DELAY_UPDATE_INTERVAL);
         locationRequest.setFastestInterval(LONG_DELAY_FASTEST_INTERVAL);
         locationRequest.setPriority(LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY);
@@ -152,7 +152,7 @@ public class LocationServicesClient {
     }
 
     private LocationRequest createShortDelayLocationRequest() {
-        LocationRequest locationRequest = new LocationRequest();
+        LocationRequest locationRequest = LocationRequest.create();
         locationRequest.setInterval(SHORT_DELAY_INTERVAL);
         locationRequest.setFastestInterval(SHORT_DELAY_INTERVAL);
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);

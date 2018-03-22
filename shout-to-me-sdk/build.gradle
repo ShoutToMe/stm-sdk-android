@@ -1,6 +1,18 @@
 apply plugin: 'com.android.library'
 apply plugin: 'jacoco'
 
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "https://maven.google.com"
+        }
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.0.1'
+    }
+}
+
 android {
     compileSdkVersion 26
     buildToolsVersion '26.0.3'
