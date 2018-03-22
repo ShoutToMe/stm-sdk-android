@@ -21,8 +21,8 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 22
-        versionName "1.1.1"
+        versionCode 23
+        versionName "1.1.2"
         multiDexEnabled true
     }
     buildTypes {
@@ -91,7 +91,7 @@ ext {
     gitUrl = 'https://github.com/ShoutToMe/stm-sdk-android.git'
     githubRepository= 'ShoutToMe/stm-sdk-android'
 
-    libraryVersion = '1.1.1'
+    libraryVersion = '1.1.2'
 
     developerId = 'trojas'
     developerName = 'Tracy Rojas'
