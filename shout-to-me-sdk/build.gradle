@@ -1,18 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'jacoco'
 
-buildscript {
-    repositories {
-        jcenter()
-        maven {
-            url "https://maven.google.com"
-        }
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.0.1'
-    }
-}
-
 android {
     compileSdkVersion 26
     buildToolsVersion '26.0.3'
@@ -21,9 +9,8 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         minSdkVersion 15
         targetSdkVersion 26
-        versionCode 23
-        versionName "1.1.2"
-        multiDexEnabled true
+        versionCode 25
+        versionName "1.1.4"
     }
     buildTypes {
         release {
@@ -35,22 +22,18 @@ android {
             testCoverageEnabled true
         }
     }
-
-    packagingOptions {
-        pickFirst 'protobuf.meta'
-    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.volley:volley:1.0.0'
-    implementation 'com.android.support:appcompat-v7:26.1.0'
-    implementation 'com.google.android.gms:play-services-gcm:12.0.0'
-    implementation 'com.google.android.gms:play-services-location:12.0.0'
-    implementation group: 'com.google.code.gson', name: 'gson', version: '2.8.0'
-    implementation 'com.amazonaws:aws-android-sdk-core:2.2.+'
-    implementation 'com.amazonaws:aws-android-sdk-s3:2.2.+'
-    implementation 'com.amazonaws:aws-android-sdk-sns:2.2.+'
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.volley:volley:1.0.0'
+    compile 'com.android.support:appcompat-v7:26.1.0'
+    compile 'com.google.android.gms:play-services-gcm:12.0.0'
+    compile 'com.google.android.gms:play-services-location:12.0.0'
+    compile group: 'com.google.code.gson', name: 'gson', version: '2.8.0'
+    compile 'com.amazonaws:aws-android-sdk-core:2.2.+'
+    compile 'com.amazonaws:aws-android-sdk-s3:2.2.+'
+    compile 'com.amazonaws:aws-android-sdk-sns:2.2.+'
 
     testImplementation 'junit:junit:4.12'
     testImplementation 'org.mockito:mockito-core:2.8.9'
@@ -91,7 +74,7 @@ ext {
     gitUrl = 'https://github.com/ShoutToMe/stm-sdk-android.git'
     githubRepository= 'ShoutToMe/stm-sdk-android'
 
-    libraryVersion = '1.1.2'
+    libraryVersion = '1.1.4'
 
     developerId = 'trojas'
     developerName = 'Tracy Rojas'
