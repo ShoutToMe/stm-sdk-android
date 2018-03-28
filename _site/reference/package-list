@@ -3,6 +3,7 @@ com.google.gson.typeadapters
 me.shoutto.sdk
 me.shoutto.sdk.internal
 me.shoutto.sdk.internal.audio
+me.shoutto.sdk.internal.database
 me.shoutto.sdk.internal.http
 me.shoutto.sdk.internal.location
 me.shoutto.sdk.internal.location.geofence

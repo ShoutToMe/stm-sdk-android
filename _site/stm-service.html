@@ -93,7 +93,7 @@
     <div style="width:100%;">
       <h1 id="stmservice">StmService</h1>
 
-<p><a href="http://localhost:4000/stm-sdk-android/reference/me/shoutto/sdk/StmService.html">StmService</a> is the primary class in the
+<p><a href="/stm-sdk-android/reference/me/shoutto/sdk/StmService.html">StmService</a> is the primary class in the
 Shout to Me SDK for Android that a developer will interact with. It is implemented as an
 <a href="https://developer.android.com/reference/android/app/Service.html">Android Service</a> to provide developers a convenient,
 native integration. When you start or bind to the StmService, it reads the access token and channel ID values from
@@ -250,13 +250,16 @@ to match the handle in your system.</p>
 </code></pre>
 </div>
 
-<p>To update a user, instantiate an <code class="highlighter-rouge">UpdateUserRequest</code> object, complete the desired update fields, and then submit the
+<p>To update a user, instantiate an <a href="/stm-sdk-android/reference/index.html?me/shoutto/sdk/UpdateUserRequest.html">UpdateUserRequest</a> object, complete the desired update fields, and then submit the
 object to the <code class="highlighter-rouge">stmService.updateUser()</code> method with an optional callback.</p>
 
 <div class="language-java highlighter-rouge"><pre class="highlight"><code><span class="n">UpdateUserRequest</span> <span class="n">updateUserRequest</span> <span class="o">=</span> <span class="k">new</span> <span class="n">UpdateUserRequest</span><span class="o">();</span>
 <span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setEmail</span><span class="o">(</span><span class="s">"user@example.com"</span><span class="o">);</span>
 <span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setHandle</span><span class="o">(</span><span class="s">"BobSmith"</span><span class="o">);</span>
 <span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setPhone</span><span class="o">(</span><span class="s">"8885551212"</span><span class="o">);</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setGender</span><span class="o">(</span><span class="s">"female"</span><span class="o">);</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setOperatingSystem</span><span class="o">(</span><span class="s">"android"</span><span class="o">);</span>
+<span class="n">updateUserRequest</span><span class="o">.</span><span class="na">setOperatingSystemVersion</span><span class="o">(</span><span class="s">"26"</span><span class="o">);</span>
 
 <span class="n">stmService</span><span class="o">.</span><span class="na">updateUser</span><span class="o">(</span><span class="n">updateUserRequest</span><span class="o">,</span> <span class="k">new</span> <span class="n">Callback</span><span class="o">&lt;</span><span class="n">User</span><span class="o">&gt;()</span> <span class="o">{</span>
     <span class="nd">@Override</span>
