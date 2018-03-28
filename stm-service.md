@@ -4,7 +4,7 @@ layout: home
 
 # StmService
 
-[StmService](http://localhost:4000/stm-sdk-android/reference/me/shoutto/sdk/StmService.html) is the primary class in the
+[StmService](/stm-sdk-android/reference/me/shoutto/sdk/StmService.html) is the primary class in the
 Shout to Me SDK for Android that a developer will interact with. It is implemented as an
 [Android Service](https://developer.android.com/reference/android/app/Service.html) to provide developers a convenient,
 native integration. When you start or bind to the StmService, it reads the access token and channel ID values from
@@ -161,7 +161,7 @@ stmService.getUser(new Callback<User>() {
 });
 ```
 
-To update a user, instantiate an `UpdateUserRequest` object, complete the desired update fields, and then submit the
+To update a user, instantiate an [UpdateUserRequest](/stm-sdk-android/reference/index.html?me/shoutto/sdk/UpdateUserRequest.html) object, complete the desired update fields, and then submit the
 object to the `stmService.updateUser()` method with an optional callback.
 
 ```java
@@ -169,6 +169,9 @@ UpdateUserRequest updateUserRequest = new UpdateUserRequest();
 updateUserRequest.setEmail("user@example.com");
 updateUserRequest.setHandle("BobSmith");
 updateUserRequest.setPhone("8885551212");
+updateUserRequest.setGender("female");
+updateUserRequest.setOperatingSystem("android");
+updateUserRequest.setOperatingSystemVersion("26");
 
 stmService.updateUser(updateUserRequest, new Callback<User>() {
     @Override
