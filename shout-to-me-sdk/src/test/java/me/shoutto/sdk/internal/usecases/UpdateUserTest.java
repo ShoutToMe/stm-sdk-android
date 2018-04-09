@@ -39,10 +39,10 @@ import static org.mockito.Mockito.*;
 public class UpdateUserTest {
 
     @Mock
-    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
+    private StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Captor
-    ArgumentCaptor<User> userArgumentCaptor;
+    private ArgumentCaptor<User> userArgumentCaptor;
 
     @Test
     public void update_InvalidInput_ShouldCallBackWithError() {
@@ -109,8 +109,6 @@ public class UpdateUserTest {
         String email = "email";
         String gender = "gender";
         String handle = "handle";
-        String operatingSystem = "operatingSystem";
-        String operatingSystemVersion = "operatingSystemVersion";
         String phone = "phone";
         String channel = "channel";
         List<String> channelSubscriptions = new ArrayList<>();
@@ -127,8 +125,6 @@ public class UpdateUserTest {
         updateUserRequest.setEmail(email);
         updateUserRequest.setGender(gender);
         updateUserRequest.setHandle(handle);
-        updateUserRequest.setOperatingSystem(operatingSystem);
-        updateUserRequest.setOperatingSystemVersion(operatingSystemVersion);
         updateUserRequest.setPhone(phone);
         updateUserRequest.setChannelSubscriptions(channelSubscriptions);
         updateUserRequest.setTopicPreferences(topicPreferences);
@@ -139,8 +135,6 @@ public class UpdateUserTest {
         assertEquals(email, userArgumentCaptor.getValue().getEmail());
         assertEquals(gender, userArgumentCaptor.getValue().getMetaInfo().getGender());
         assertEquals(handle, userArgumentCaptor.getValue().getHandle());
-        assertEquals(operatingSystem, userArgumentCaptor.getValue().getMetaInfo().getOperatingSystem());
-        assertEquals(operatingSystemVersion, userArgumentCaptor.getValue().getMetaInfo().getOperatingSystemVersion());
         assertEquals(phone, userArgumentCaptor.getValue().getPhone());
         assertEquals(channel, userArgumentCaptor.getValue().getChannelSubscriptions().get(0));
         assertEquals(topic, userArgumentCaptor.getValue().getTopicPreferences().get(0));
