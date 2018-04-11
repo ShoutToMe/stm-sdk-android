@@ -159,6 +159,26 @@ public class UpdateUserLocationTest {
     }
 
     @Test
+    public void update_WithOutOfOrderLocation_ShouldCallBackWithNullResultAndReturn() {
+
+        when(mockLocationFromPreferences.distanceTo(mockLocation)).thenReturn(10000.0f);
+        when(mockStmPreferenceManager.getUserLocationTime()).thenReturn(61000L);
+
+        UpdateUserLocation updateUserLocation = new UpdateUserLocation(mockStmRequestProcessor,
+                mockGeofenceManager, mockStmPreferenceManager, mockUserLocationDao, mockContext, "");
+        updateUserLocation.update(mockLocation, mockCallback);
+
+        verify(mockCallback, times(0)).onError(any(StmError.class));
+        verify(mockCallback, times(1)).onResponse(null);
+        verify(mockStmPreferenceManager, times(0)).setUserLocationLat(any(double.class));
+        verify(mockStmPreferenceManager, times(0)).setUserLocationLon(any(double.class));
+        verify(mockStmPreferenceManager, times(0)).setUserLocationTime(any(Long.class));
+        verify(mockContext, times(0)).sendBroadcast(any(Intent.class));
+        verify(mockGeofenceManager, times(0)).addUserLocationGeofence(any(Location.class));
+        verify(mockStmRequestProcessor, times(0)).processRequest(any(HttpMethod.class), ArgumentMatchers.<SortedSet<UserLocation>>any());
+    }
+
+    @Test
     public void update_WithValidLocation_ShouldProcessLocationAndCallBackWithNullResult() {
         when(mockLocationFromPreferences.distanceTo(mockLocation)).thenReturn(10000.0f);
         when(mockStmPreferenceManager.getUserLocationTime()).thenReturn(30000L);

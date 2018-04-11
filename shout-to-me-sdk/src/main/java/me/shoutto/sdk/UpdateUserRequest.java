@@ -12,8 +12,6 @@ public class UpdateUserRequest implements StmEntityActionRequest {
     private String email;
     private String gender;
     private String handle;
-    private String operatingSystem;
-    private String operatingSystemVersion;
     private String phone;
     private String platformEndpointArn;
     private Boolean platformEndpointEnabled;
@@ -85,41 +83,6 @@ public class UpdateUserRequest implements StmEntityActionRequest {
     }
 
     /**
-     * Gets the operating system that will be sent in the update user request
-     * @return The operating system
-     */
-    public String getOperatingSystem() {
-        return operatingSystem;
-    }
-
-    /**
-     * Sets the operating system that will be sent in the update user request. There is no enum for
-     * this value as client developers can specify values based on their organization's conventions
-     * @param operatingSystem The operating system
-     */
-    public void setOperatingSystem(String operatingSystem) {
-        this.operatingSystem = operatingSystem;
-    }
-
-    /**
-     * Gets the operating system version that will be sent in the update user request
-     * @return The operating system version
-     */
-    public String getOperatingSystemVersion() {
-        return operatingSystemVersion;
-    }
-
-    /**
-     * Sets the operating system version that will be sent in the update user request. There is no
-     * enum for this value as client developers can specify values based on their organization's
-     * conventions
-     * @param operatingSystemVersion The operating system version
-     */
-    public void setOperatingSystemVersion(String operatingSystemVersion) {
-        this.operatingSystemVersion = operatingSystemVersion;
-    }
-
-    /**
      * Gets the user's phone number
      * @return The user's phone number
      */
@@ -181,8 +144,6 @@ public class UpdateUserRequest implements StmEntityActionRequest {
                 && email == null
                 && gender == null
                 && handle == null
-                && operatingSystem == null
-                && operatingSystemVersion == null
                 && phone == null
                 && platformEndpointArn == null
                 && platformEndpointEnabled == null
@@ -225,11 +186,9 @@ public class UpdateUserRequest implements StmEntityActionRequest {
             user.setTopicPreferences(topicPreferences);
         }
 
-        if (gender != null || operatingSystem != null || operatingSystemVersion != null) {
+        if (gender != null) {
             User.MetaInfo metaInfo = new User.MetaInfo();
             metaInfo.setGender(gender);
-            metaInfo.setOperatingSystem(operatingSystem);
-            metaInfo.setOperatingSystemVersion(operatingSystemVersion);
             user.setMetaInfo(metaInfo);
         }
 

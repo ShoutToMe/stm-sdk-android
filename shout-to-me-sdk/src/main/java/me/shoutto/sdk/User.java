@@ -434,8 +434,6 @@ public class User extends StmBaseEntity {
     public static class MetaInfo {
 
         private String gender;
-        private String operatingSystem;
-        private String operatingSystemVersion;
 
         public String getGender() {
             return gender;
@@ -443,22 +441,6 @@ public class User extends StmBaseEntity {
 
         public void setGender(String gender) {
             this.gender = gender;
-        }
-
-        public String getOperatingSystem() {
-            return operatingSystem;
-        }
-
-        public void setOperatingSystem(String operatingSystem) {
-            this.operatingSystem = operatingSystem;
-        }
-
-        public String getOperatingSystemVersion() {
-            return operatingSystemVersion;
-        }
-
-        public void setOperatingSystemVersion(String operatingSystemVersion) {
-            this.operatingSystemVersion = operatingSystemVersion;
         }
     }
 
