@@ -170,8 +170,6 @@ updateUserRequest.setEmail("user@example.com");
 updateUserRequest.setHandle("BobSmith");
 updateUserRequest.setPhone("8885551212");
 updateUserRequest.setGender("female");
-updateUserRequest.setOperatingSystem("android");
-updateUserRequest.setOperatingSystemVersion("26");
 
 stmService.updateUser(updateUserRequest, new Callback<User>() {
     @Override
