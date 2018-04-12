@@ -143,29 +143,6 @@ public class User extends StmBaseEntity {
     }
 
     /**
-     * Gets the <code>Date</code> of the last time the user read messages.
-     * @return The <code>Date</code> representing the last time the user read their messages.
-     *
-     * @deprecated This property is no longer used
-     */
-    @SuppressWarnings("unused")
-    @Deprecated
-    public Date getLastReadMessagesDate() {
-        return null;
-    }
-
-    /**
-     * Sets the <code>Date</code> of the last time the user read their messages.
-     * @param lastReadMessagesDate The <code>Date</code> representing the last time the user read their messages.
-     *
-     * @deprecated This property is no longer used
-     */
-    @Deprecated
-    public void setLastReadMessagesDate(Date lastReadMessagesDate) {
-        // Stubbed for backwards compatibility but does not do anything
-    }
-
-    /**
      * Gets the locations associated with the user
      * @return A Locations object
      */
