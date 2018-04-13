@@ -63,7 +63,11 @@ public class UpdateUserRequest implements StmEntityActionRequest {
      * @param gender
      */
     public void setGender(String gender) {
-        this.gender = gender;
+        if (gender == null) {
+            this.gender = "";
+        } else {
+            this.gender = gender;
+        }
     }
 
     /**

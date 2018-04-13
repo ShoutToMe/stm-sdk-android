@@ -28,7 +28,6 @@ import me.shoutto.sdk.internal.http.GsonListResponseAdapter;
 import me.shoutto.sdk.internal.http.GsonUserResponseAdapter;
 import me.shoutto.sdk.internal.http.NullResponseAdapter;
 import me.shoutto.sdk.internal.http.MessageCountUrlProvider;
-import me.shoutto.sdk.internal.http.StmRequestProcessor;
 import me.shoutto.sdk.internal.http.TopicUrlProvider;
 import me.shoutto.sdk.internal.location.LocationServicesClient;
 import me.shoutto.sdk.internal.location.UserLocationListener;
@@ -727,6 +726,6 @@ public class StmService extends Service {
         );
 
         UpdateUser updateUser = new UpdateUser(defaultEntityRequestProcessorAsync, this);
-        updateUser.update(updateUserRequest, user.getId(), callback);
+        updateUser.update(updateUserRequest, user.getId(), true, callback);
     }
 }

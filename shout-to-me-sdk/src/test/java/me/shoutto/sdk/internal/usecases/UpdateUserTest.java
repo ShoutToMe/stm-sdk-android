@@ -49,7 +49,7 @@ public class UpdateUserTest {
         doNothing().when(mockStmRequestProcessor).addObserver(any(StmObserver.class));
         UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
-        updateUser.update(updateUserRequest, "userId", new Callback<User>() {
+        updateUser.update(updateUserRequest, "userId", false, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
                 fail("Should not callback with successful response");
@@ -68,7 +68,7 @@ public class UpdateUserTest {
         UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
-        updateUser.update(updateUserRequest, null, new Callback<User>() {
+        updateUser.update(updateUserRequest, null, false, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
                 fail("Should not call back with successful response");
@@ -89,7 +89,7 @@ public class UpdateUserTest {
         UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setEmail("email");
-        updateUser.update(updateUserRequest, "", new Callback<User>() {
+        updateUser.update(updateUserRequest, "", false, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
                 fail("Should not callback with successful response");
@@ -128,7 +128,7 @@ public class UpdateUserTest {
         updateUserRequest.setPhone(phone);
         updateUserRequest.setChannelSubscriptions(channelSubscriptions);
         updateUserRequest.setTopicPreferences(topicPreferences);
-        updateUser.update(updateUserRequest, userId, null);
+        updateUser.update(updateUserRequest, userId, false, null);
 
         verify(mockStmRequestProcessor, times(1)).processRequest(any(HttpMethod.class), userArgumentCaptor.capture());
         assertEquals(userId, userArgumentCaptor.getValue().getId());
@@ -149,7 +149,7 @@ public class UpdateUserTest {
         UpdateUser updateUser = new UpdateUser(mockStmRequestProcessor, null);
         UpdateUserRequest updateUserRequest = new UpdateUserRequest();
         updateUserRequest.setHandle("handle");
-        updateUser.update(updateUserRequest, "userId", new Callback<User>() {
+        updateUser.update(updateUserRequest, "userId", false, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
                 assertEquals(userResult.getId(), stmResponse.get().getId());
