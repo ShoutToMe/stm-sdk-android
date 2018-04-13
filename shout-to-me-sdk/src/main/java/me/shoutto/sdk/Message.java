@@ -37,9 +37,6 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     @SuppressWarnings("unused")
     private String channelId;
 
-    @SuppressWarnings("unused")
-    private String conversationId;
-
     private String idType;
 
     @SuppressWarnings("unused")
@@ -52,7 +49,6 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
     private Sender sender;
 
     @SuppressWarnings("unused")
-    @SerializedName("created_date")
     private Date sentDate;
 
     /**
@@ -68,14 +64,6 @@ public class Message extends StmBaseEntity implements Comparable<Message> {
      */
     public Channel getChannel() {
         return channel;
-    }
-
-    /**
-     * Gets the conversation ID for the Conversation associated with the Message.
-     * @return The conversation ID.
-     */
-    public String getConversationId() {
-        return conversationId;
     }
 
     /**
