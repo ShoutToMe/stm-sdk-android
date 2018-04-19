@@ -7,7 +7,9 @@ import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Binder;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -98,6 +100,7 @@ public class StmService extends Service {
     public static final String AWS_COGNITO_IDENTITY_POOL_ID = "us-east-1:4ec2b44e-0dde-43e6-a279-6ee1cf241b05";
 
     private static final String TAG = StmService.class.getSimpleName();
+    private static final Object initializationLock = new Object();
     private final IBinder stmBinder = new StmBinder();
     private String accessToken;
     private User user;
@@ -122,6 +125,14 @@ public class StmService extends Service {
             return StmService.this;
         }
     }
+
+    private Handler connectToLocationServicesHandler = new Handler(Looper.getMainLooper()) {
+        @Override
+        public void handleMessage(android.os.Message msg) {
+            userLocationListener = new UserLocationListener(LocationServicesClient.getInstance(), StmService.this);
+            userLocationListener.startTrackingUserLocation(StmService.this);
+        }
+    };
 
     /**
      * Adds a topic preference to the user's record. This will result in a user only receiving
@@ -342,51 +353,51 @@ public class StmService extends Service {
     }
 
     private void initializeUserSession() {
-        if (!user.isInitialized()) {
-            String userId = stmPreferenceManager.getUserId();
-            String authToken = stmPreferenceManager.getAuthToken();
-            if (userId == null || authToken == null) {
+        synchronized (initializationLock) {
+            if (!user.isInitialized()) {
+                String userId = stmPreferenceManager.getUserId();
+                String authToken = stmPreferenceManager.getAuthToken();
+                if (userId == null || authToken == null) {
 
-                User user = new User();
-                if (getUserLocationListener() != null && getUserLocationListener().getLatitude() != 0
-                        && getUserLocationListener().getLongitude() != 0) {
-                    double lat = getUserLocationListener().getLatitude();
-                    double lon = getUserLocationListener().getLongitude();
-                    Double[] coordinates = {lon, lat};
-                    User.Locations.Location location = new User.Locations.Location(coordinates);
-                    User.Locations locations = new User.Locations();
-                    locations.setLocation(location);
-                    user.setLocations(locations);
+                    User user = new User();
+                    user.setDeviceId(getInstallationId());
+
+                    DefaultEntityRequestProcessorSync<User> stmRequestProcessor = new DefaultEntityRequestProcessorSync<>(
+                            new GsonRequestAdapter<StmBaseEntity>(),
+                            new GsonUserResponseAdapter(),
+                            new BasicAuthHeaderProvider(getAccessToken()),
+                            new CreateUserUrlProvider(stmPreferenceManager.getServerUrl())
+                    );
+                    CreateOrGetUser createOrGetUser = new CreateOrGetUser(stmRequestProcessor);
+                    createOrGetUser.createOrGet(user, new Callback<User>() {
+                        @Override
+                        public void onSuccess(StmResponse<User> stmResponse) {
+                            User userFromResponse = stmResponse.get();
+                            stmPreferenceManager.setAuthToken(userFromResponse.getAuthToken());
+                            stmPreferenceManager.setUserId(userFromResponse.getId());
+
+                            getUser().setIsInitialized(true);
+                            getUser().setId(userFromResponse.getId());
+                            getUser().setAuthToken(userFromResponse.getAuthToken());
+
+                            Log.d(TAG, "User has been initialized from Shout to Me service");
+                        }
+
+                        @Override
+                        public void onFailure(StmError stmError) {
+                            Log.e(TAG, "Could not create or get user. " + stmError.getMessage());
+                        }
+                    });
+                } else {
+                    user.setId(userId);
+                    user.setAuthToken(authToken);
+                    user.setIsInitialized(true);
+
+                    Log.d(TAG, "User has been initialized via Shared Preferences");
                 }
-                user.setDeviceId(getInstallationId());
-
-                DefaultEntityRequestProcessorSync<User> stmRequestProcessor = new DefaultEntityRequestProcessorSync<>(
-                        new GsonRequestAdapter<StmBaseEntity>(),
-                        new GsonUserResponseAdapter(),
-                        new BasicAuthHeaderProvider(getAccessToken()),
-                        new CreateUserUrlProvider(stmPreferenceManager.getServerUrl())
-                );
-                CreateOrGetUser createOrGetUser = new CreateOrGetUser(stmRequestProcessor);
-                createOrGetUser.createOrGet(user, new Callback<User>() {
-                    @Override
-                    public void onSuccess(StmResponse<User> stmResponse) {
-                        stmPreferenceManager.setAuthToken(stmResponse.get().getAuthToken());
-                        stmPreferenceManager.setUserId(stmResponse.get().getId());
-                    }
-
-                    @Override
-                    public void onFailure(StmError stmError) {
-                        Log.e(TAG, "Could not create or get user. " + stmError.getMessage());
-                    }
-                });
-
-                authToken = stmPreferenceManager.getAuthToken();
-                userId = stmPreferenceManager.getUserId();
+            } else {
+                Log.d(TAG, "User is already initialized");
             }
-            user.setId(userId);
-            user.setAuthToken(authToken);
-            user.setIsInitialized(true);
-            Log.d(TAG, "User has been initialized");
         }
     }
 
@@ -396,10 +407,8 @@ public class StmService extends Service {
      * @return The user auth token.
      */
     public String getUserAuthToken() {
-        synchronized (this) {
-            initializeUserSession();
-            return stmPreferenceManager.getAuthToken();
-        }
+        initializeUserSession();
+        return stmPreferenceManager.getAuthToken();
     }
 
     /**
@@ -489,13 +498,14 @@ public class StmService extends Service {
         new Thread(new Runnable() {
             @Override
             public void run() {
+                // Needs to be done in background thread
                 initializeUserSession();
+
+                // Needs to be done in main thread
+                connectToLocationServicesHandler.sendEmptyMessage(0);
             }
         }).start();
 
-        userLocationListener = new UserLocationListener(LocationServicesClient.getInstance(), this);
-        userLocationListener.startTrackingUserLocation(this);
-        userLocationListener.updateUserLocation(this);
 
         executorService = Executors.newFixedThreadPool(10);
 
@@ -526,11 +536,9 @@ public class StmService extends Service {
      * @throws Exception The exception that occurred.
      */
     public void refreshUserAuthToken() throws Exception {
-        synchronized (this) {
-            stmPreferenceManager.setAuthToken(null);
-            stmPreferenceManager.setUserId(null);
-            getUserAuthToken();
-        }
+        stmPreferenceManager.setAuthToken(null);
+        stmPreferenceManager.setUserId(null);
+        getUserAuthToken();
     }
 
     public void refreshUserLocation() {
@@ -557,12 +565,10 @@ public class StmService extends Service {
      * @param callback The callback to be executed or null
      */
     public void reloadUser(final StmCallback<User> callback) {
-        synchronized (this) {
-            user.setIsInitialized(false);
-            stmPreferenceManager.setAuthToken(null);
-            stmPreferenceManager.setUserId(null);
-            getUser(callback);
-        }
+        user.setIsInitialized(false);
+        stmPreferenceManager.setAuthToken(null);
+        stmPreferenceManager.setUserId(null);
+        initializeUserSession();
     }
 
     /**

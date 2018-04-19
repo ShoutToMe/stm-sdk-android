@@ -22,8 +22,8 @@ public class CreateOrGetUser extends BaseUseCase<StmBaseEntity, User> {
     }
 
     public void createOrGet(User user, StmCallback<User> callback) {
-        Log.e(TAG, "Cannot create or get user from Shout to Me service.  Passed in User is null");
         if (user == null) {
+            Log.e(TAG, "Cannot create or get user from Shout to Me service.  Passed in User is null");
             if (callback != null) {
                 StmError stmError = new StmError("Cannot create or get user from Shout to Me service.  Passed in User is null", true, StmError.SEVERITY_MAJOR);
                 callback.onError(stmError);
