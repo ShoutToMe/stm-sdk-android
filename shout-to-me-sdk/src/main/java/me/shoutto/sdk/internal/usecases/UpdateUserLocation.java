@@ -83,17 +83,14 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
 
                 distanceSinceLastUpdate = lastUserLocation.distanceTo(location);
 
-                if (distanceSinceLastUpdate < (GeofenceManager.GEOFENCE_RADIUS_IN_METERS * 0.9)) {
+                if (lastUserLocationTime != null && (location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
+                    // TODO: May need to be able to handle older dates with project_until_date at some point
                     shouldUpdateUserLocation = false;
-                } else if (lastUserLocationTime != null) {
-                    if ((location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
-                        shouldUpdateUserLocation = false;
-                    }
                 }
             }
 
             if (!shouldUpdateUserLocation) {
-                Log.d(TAG, "User is still within geofence or minimum time for update not met. Location not updated.");
+                Log.d(TAG, "User is still within minimum time for update. Location not updated.");
                 if (callback != null) {
                     callback.onResponse(null);
                 }
@@ -104,13 +101,14 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
             stmPreferenceManager.setUserLocationLat(location.getLatitude());
             stmPreferenceManager.setUserLocationLon(location.getLongitude());
             stmPreferenceManager.setUserLocationTime(location.getTime());
+
+            this.callback = callback;
+
+            sendLocationUpdateBroadcast(location, distanceSinceLastUpdate);
+            updateGeofence(location);
+            processUpdateRequest(location, distanceSinceLastUpdate);
         }
 
-        this.callback = callback;
-
-        sendLocationUpdateBroadcast(location, distanceSinceLastUpdate);
-        updateGeofence(location);
-        processUpdateRequest(location, distanceSinceLastUpdate);
     }
 
     /**
