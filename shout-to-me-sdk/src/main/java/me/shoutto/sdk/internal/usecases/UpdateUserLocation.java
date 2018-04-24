@@ -83,32 +83,32 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
 
                 distanceSinceLastUpdate = lastUserLocation.distanceTo(location);
 
-                if (distanceSinceLastUpdate < (GeofenceManager.GEOFENCE_RADIUS_IN_METERS * 0.9)) {
+                if (lastUserLocationTime != null && (location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
+                    // TODO: May need to be able to handle older dates with project_until_date at some point
                     shouldUpdateUserLocation = false;
-                } else if (lastUserLocationTime != null) {
-                    if ((location.getTime() - lastUserLocationTime) < MINIMUM_UPDATE_PERIOD) {
-                        shouldUpdateUserLocation = false;
-                    }
                 }
             }
 
             if (!shouldUpdateUserLocation) {
+                Log.d(TAG, "User is still within minimum time for update. Location not updated.");
                 if (callback != null) {
                     callback.onResponse(null);
                 }
                 return;
             }
 
+            Log.d(TAG, "Location requires updating. Updating now.");
             stmPreferenceManager.setUserLocationLat(location.getLatitude());
             stmPreferenceManager.setUserLocationLon(location.getLongitude());
             stmPreferenceManager.setUserLocationTime(location.getTime());
+
+            this.callback = callback;
+
+            sendLocationUpdateBroadcast(location, distanceSinceLastUpdate);
+            updateGeofence(location);
+            processUpdateRequest(location, distanceSinceLastUpdate);
         }
 
-        this.callback = callback;
-
-        sendLocationUpdateBroadcast(location, distanceSinceLastUpdate);
-        updateGeofence(location);
-        processUpdateRequest(location, distanceSinceLastUpdate);
     }
 
     /**
@@ -164,6 +164,7 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
 
     @Override
     public void processCallback(StmObservableResults stmObservableResults) {
+        Log.d(TAG, "User location was updated.");
         userLocationDao.deleteAllUserLocationRecords();
         super.processCallback(stmObservableResults);
     }
@@ -171,6 +172,7 @@ public class UpdateUserLocation extends BaseUseCase<SortedSet<? extends StmBaseE
     @Override
     public void processCallbackError(StmObservableResults stmObservableResults) {
 
+        Log.w(TAG, "An error occurred during user location update. " + stmObservableResults.getErrorMessage());
         // Insert the failed object into the db
         UserLocationRecord userLocationRecord = new UserLocationRecord();
         userLocationRecord.setDate(userLocation.getDate());

@@ -78,44 +78,46 @@ public class UserLocationListener implements LocationUpdateListener, StmObservab
                 String userAuthToken = stmPreferenceManager.getAuthToken();
                 String userId = stmPreferenceManager.getUserId();
 
-                User user = new User();
-                user.setId(userId);
+                if (userAuthToken != null && userId != null) {
+                    User user = new User();
+                    user.setId(userId);
 
-                EntityListRequestProcessorSync<Void, SortedSet<? extends StmBaseEntity>> entityListRequestProcessorSync =
-                        new EntityListRequestProcessorSync<>(
-                                new UserLocationsRequestAdapter(),
-                                new NullResponseAdapter(),
-                                userAuthToken,
-                                new UserLocationUrlProvider(serverUrl, user)
-                        );
+                    EntityListRequestProcessorSync<Void, SortedSet<? extends StmBaseEntity>> entityListRequestProcessorSync =
+                            new EntityListRequestProcessorSync<>(
+                                    new UserLocationsRequestAdapter(),
+                                    new NullResponseAdapter(),
+                                    userAuthToken,
+                                    new UserLocationUrlProvider(serverUrl, user)
+                            );
 
-                UpdateUserLocation updateUserLocation = new UpdateUserLocation(
-                        entityListRequestProcessorSync,
-                        new GeofenceManager(context),
-                        stmPreferenceManager,
-                        new UserLocationDaoImpl(context),
-                        context,
-                        "LOCATION_SERVICE_UPDATE");
+                    UpdateUserLocation updateUserLocation = new UpdateUserLocation(
+                            entityListRequestProcessorSync,
+                            new GeofenceManager(context),
+                            stmPreferenceManager,
+                            new UserLocationDaoImpl(context),
+                            context,
+                            "LOCATION_SERVICE_UPDATE");
 
-                updateUserLocation.update(location, new Callback<Void>() {
-                    @Override
-                    public void onSuccess(StmResponse stmResponse) {
-                        StmObservableResults<Void> stmObservableResults = new StmObservableResults<>();
-                        stmObservableResults.setError(false);
-                        stmObservableResults.setResult(null);
-                        stmObservableResults.setStmObservableType(StmObservableType.UPDATE_USER_LOCATION);
-                        notifyObservers(stmObservableResults);
-                    }
+                    updateUserLocation.update(location, new Callback<Void>() {
+                        @Override
+                        public void onSuccess(StmResponse stmResponse) {
+                            StmObservableResults<Void> stmObservableResults = new StmObservableResults<>();
+                            stmObservableResults.setError(false);
+                            stmObservableResults.setResult(null);
+                            stmObservableResults.setStmObservableType(StmObservableType.UPDATE_USER_LOCATION);
+                            notifyObservers(stmObservableResults);
+                        }
 
-                    @Override
-                    public void onFailure(StmError stmError) {
-                        Log.e(TAG, stmError.getMessage());
-                        StmObservableResults<Void> stmObservableResults = new StmObservableResults<>();
-                        stmObservableResults.setError(true);
-                        stmObservableResults.setErrorMessage(stmError.getMessage());
-                        notifyObservers(stmObservableResults);
-                    }
-                });
+                        @Override
+                        public void onFailure(StmError stmError) {
+                            Log.e(TAG, stmError.getMessage());
+                            StmObservableResults<Void> stmObservableResults = new StmObservableResults<>();
+                            stmObservableResults.setError(true);
+                            stmObservableResults.setErrorMessage(stmError.getMessage());
+                            notifyObservers(stmObservableResults);
+                        }
+                    });
+                }
             }
         }).start();
     }

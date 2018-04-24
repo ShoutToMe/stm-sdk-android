@@ -328,7 +328,7 @@ public class GcmNotificationRegistrationIntentService extends IntentService {
                 new DefaultUrlProvider(serverUrl)
         );
         UpdateUser updateUser = new UpdateUser(defaultEntityRequestProcessorSync, null);
-        updateUser.update(updateUserRequest, userId, new Callback<User>() {
+        updateUser.update(updateUserRequest, userId, false, new Callback<User>() {
             @Override
             public void onSuccess(StmResponse<User> stmResponse) {
                 Log.d(TAG, "Successfully updated platform endpoint properties");

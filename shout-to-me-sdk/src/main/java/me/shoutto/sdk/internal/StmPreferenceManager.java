@@ -88,7 +88,11 @@ public class StmPreferenceManager {
     }
 
     public void setUserLocationLat(Double lat) {
-        setPreferenceString(PREF_USER_LOCATION_LAT, Double.toString(lat));
+        if (lat == null) {
+            setPreferenceString(PREF_USER_LOCATION_LAT, null);
+        } else {
+            setPreferenceString(PREF_USER_LOCATION_LAT, Double.toString(lat));
+        }
     }
 
     public Double getUserLocationLon() {
@@ -105,7 +109,11 @@ public class StmPreferenceManager {
     }
 
     public void setUserLocationLon(Double lon) {
-        setPreferenceString(PREF_USER_LOCATION_LON, Double.toString(lon));
+        if (lon == null) {
+            setPreferenceString(PREF_USER_LOCATION_LON, null);
+        } else {
+            setPreferenceString(PREF_USER_LOCATION_LON, Double.toString(lon));
+        }
     }
 
     public Long getUserLocationTime() {

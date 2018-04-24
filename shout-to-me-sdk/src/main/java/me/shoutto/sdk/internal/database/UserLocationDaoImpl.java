@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
-import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.text.TextUtils;
 import android.util.Log;
@@ -41,13 +40,25 @@ public class UserLocationDaoImpl implements UserLocationDao {
         values.put(UserLocationContract.UserLocation.COLUMN_NAME_TYPE, userLocationRecord.getType());
 
         SQLiteDatabase db = stmDbHelper.getWritableDatabase();
-        db.insert(UserLocationContract.UserLocation.TABLE_NAME, null, values);
+        try {
+            db.insert(UserLocationContract.UserLocation.TABLE_NAME, null, values);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
     }
 
     @Override
     public void deleteAllUserLocationRecords() {
         SQLiteDatabase db = stmDbHelper.getWritableDatabase();
-        db.delete(UserLocationContract.UserLocation.TABLE_NAME, null, null);
+        try {
+            db.delete(UserLocationContract.UserLocation.TABLE_NAME, null, null);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
     }
 
     @Override
@@ -65,27 +76,37 @@ public class UserLocationDaoImpl implements UserLocationDao {
                 UserLocationContract.UserLocation.COLUMN_NAME_TYPE
         };
 
-        Cursor cursor = db.query(
-                UserLocationContract.UserLocation.TABLE_NAME,
-                projection,
-                null,
-                null,
-                null,
-                null,
-                null
-        );
+        Cursor cursor = null;
 
-        while(cursor.moveToNext()) {
-            UserLocationRecord userLocationRecord = new UserLocationRecord();
-            userLocationRecord.setDate(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_DATE))));
-            userLocationRecord.setLat(cursor.getDouble(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_LAT)));
-            userLocationRecord.setLon(cursor.getDouble(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_LON)));
-            userLocationRecord.setMetersSinceLastUpdate(cursor.getFloat(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_METERS_SINCE_LAST_UPDDATE)));
-            userLocationRecord.setRadius(cursor.getFloat(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_RADIUS)));
-            userLocationRecord.setType(cursor.getString(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_TYPE )));
-            userLocationRecords.add(userLocationRecord);
+        try {
+            cursor  = db.query(
+                    UserLocationContract.UserLocation.TABLE_NAME,
+                    projection,
+                    null,
+                    null,
+                    null,
+                    null,
+                    null
+            );
+
+            while(cursor.moveToNext()) {
+                UserLocationRecord userLocationRecord = new UserLocationRecord();
+                userLocationRecord.setDate(new Date(cursor.getLong(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_DATE))));
+                userLocationRecord.setLat(cursor.getDouble(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_LAT)));
+                userLocationRecord.setLon(cursor.getDouble(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_LON)));
+                userLocationRecord.setMetersSinceLastUpdate(cursor.getFloat(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_METERS_SINCE_LAST_UPDDATE)));
+                userLocationRecord.setRadius(cursor.getFloat(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_RADIUS)));
+                userLocationRecord.setType(cursor.getString(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation.COLUMN_NAME_TYPE )));
+                userLocationRecords.add(userLocationRecord);
+            }
+        } finally {
+            if (cursor != null && !cursor.isClosed()) {
+                cursor.close();
+            }
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
         }
-        cursor.close();
 
         return userLocationRecords;
     }
@@ -112,7 +133,17 @@ public class UserLocationDaoImpl implements UserLocationDao {
     @Override
     public long getNumRows() {
         SQLiteDatabase db = stmDbHelper.getReadableDatabase();
-        return DatabaseUtils.queryNumEntries(db, UserLocationContract.UserLocation.TABLE_NAME);
+        long numRows = 0;
+
+        try {
+            numRows = DatabaseUtils.queryNumEntries(db, UserLocationContract.UserLocation.TABLE_NAME);
+        } finally {
+            if (db != null && db.isOpen()) {
+                db.close();
+            }
+        }
+
+        return numRows;
     }
 
     @Override
@@ -122,33 +153,49 @@ public class UserLocationDaoImpl implements UserLocationDao {
             long numRowsToDelete = numRows - MAX_NUM_RECORDS;
             String[] idsToDelete = new String[(int)(numRowsToDelete)];
             SQLiteDatabase readableDatabase = stmDbHelper.getReadableDatabase();
+            List<String> placeholderList = new ArrayList<>((int)(numRowsToDelete));
 
             String[] projection = { UserLocationContract.UserLocation._ID };
-            Cursor cursor = readableDatabase.query(
-                    UserLocationContract.UserLocation.TABLE_NAME,
-                    projection,
-                    null,
-                    null,
-                    null,
-                    null,
-                    "date asc",
-                    String.valueOf(numRowsToDelete)
-            );
+            Cursor cursor = null;
+            try {
+                cursor = readableDatabase.query(
+                        UserLocationContract.UserLocation.TABLE_NAME,
+                        projection,
+                        null,
+                        null,
+                        null,
+                        null,
+                        "date asc",
+                        String.valueOf(numRowsToDelete)
+                );
 
-            int index = 0;
-            List<String> placeholderList = new ArrayList<>((int)(numRowsToDelete));
-            while(cursor.moveToNext()) {
-                idsToDelete[index] = String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation._ID)));
-                placeholderList.add(index, "?");
-                index++;
+                int index = 0;
+                while(cursor.moveToNext()) {
+                    idsToDelete[index] = String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(UserLocationContract.UserLocation._ID)));
+                    placeholderList.add(index, "?");
+                    index++;
+                }
+            } finally {
+                if (cursor != null && !cursor.isClosed()) {
+                    cursor.close();
+                }
+                if (readableDatabase != null && readableDatabase.isOpen()) {
+                    readableDatabase.close();
+                }
             }
-            cursor.close();
 
             String placeholdersStr = TextUtils.join(",", placeholderList);
 
             SQLiteDatabase writableDatabase = stmDbHelper.getWritableDatabase();
-            int result = writableDatabase.delete(UserLocationContract.UserLocation.TABLE_NAME, "_id in (" + placeholdersStr + ")", idsToDelete);
-            Log.d(TAG, String.format("Removed %d record(s) from the User Location database", result));
+            try {
+                int result = writableDatabase.delete(UserLocationContract.UserLocation.TABLE_NAME, "_id in (" + placeholdersStr + ")", idsToDelete);
+                Log.d(TAG, String.format("Removed %d record(s) from the User Location database", result));
+            } finally {
+                if (writableDatabase != null && writableDatabase.isOpen()) {
+                    writableDatabase.close();
+                }
+            }
+
         }
     }
 }

@@ -114,9 +114,25 @@ public class DefaultEntityRequestProcessorSync<T>
                 notifyObservers(stmObservableResults);
                 return;
             } else {
-                final InputStream in = new BufferedInputStream(connection.getErrorStream());
-                response = convertStreamToString(in);
-                in.close();
+                InputStream in;
+
+                in = connection.getErrorStream();
+
+                if (null == in) {
+                    in = connection.getInputStream();
+                }
+
+                if (null == in) {
+                    response = "Unknown error occurred.";
+                } else {
+                    response = convertStreamToString(in);
+                }
+
+                if (!(null == in)) {
+                    in.close();
+                }
+
+                Log.w(TAG, "Error info: " + response);
             }
 
             JSONObject responseJson = new JSONObject(response);
