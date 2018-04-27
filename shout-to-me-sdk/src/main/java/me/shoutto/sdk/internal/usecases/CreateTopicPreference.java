@@ -40,6 +40,8 @@ public class CreateTopicPreference extends BaseUseCase<StmBaseEntity, Void> {
         TopicPreference topicPreference = new TopicPreference();
         topicPreference.setTopic(topic);
 
-        stmRequestProcessor.processRequest(HttpMethod.POST, topicPreference);
+        stmRequestProcessor.processRequest(HttpMethod.PUT, topicPreference);
     }
+
+
 }

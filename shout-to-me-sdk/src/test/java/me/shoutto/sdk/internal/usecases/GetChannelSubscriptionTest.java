@@ -40,19 +40,19 @@ public class GetChannelSubscriptionTest {
     private static final String USER_ID = "userId";
 
     @Mock
-    StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
+    private StmRequestProcessor<StmBaseEntity> mockStmRequestProcessor;
 
     @Mock
-    StmCallback<Boolean> mockCallback;
+    private StmCallback<Boolean> mockCallback;
 
     @Captor
-    ArgumentCaptor<User> userArgumentCaptor;
+    private ArgumentCaptor<User> userArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<StmError> errorArgumentCaptor;
+    private ArgumentCaptor<StmError> errorArgumentCaptor;
 
     @Captor
-    ArgumentCaptor<StmError> stmErrorArgumentCaptor;
+    private ArgumentCaptor<StmError> stmErrorArgumentCaptor;
 
     @Test
     public void get_WithNullChannelId_ShouldCallBackWithError() {
